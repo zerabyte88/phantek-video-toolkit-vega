@@ -45,8 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    final defaultPreset = SpeedPreset.fromCpuPreset(
-      _settingsService.settings.cpuPreset,
+    final defaultPreset = SpeedPreset.fromEncodingPreset(
+      _settingsService.settings.encodingPreset,
     );
     _encodingOptions = EncodingOptions(
       speedPreset: defaultPreset,
@@ -67,8 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onSettingsChanged() {
     if (!mounted) return;
-    final preset = SpeedPreset.fromCpuPreset(
-      _settingsService.settings.cpuPreset,
+    final preset = SpeedPreset.fromEncodingPreset(
+      _settingsService.settings.encodingPreset,
     );
     setState(() {
       if (_encodingOptions.speedPreset != preset) {
@@ -261,8 +261,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _resetOptions() {
     setState(() {
-      final defaultPreset = SpeedPreset.fromCpuPreset(
-        _settingsService.settings.cpuPreset,
+      final defaultPreset = SpeedPreset.fromEncodingPreset(
+        _settingsService.settings.encodingPreset,
       );
       _encodingOptions = EncodingOptions(
         speedPreset: defaultPreset,

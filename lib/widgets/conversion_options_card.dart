@@ -1122,33 +1122,18 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
   }
 
   Widget _buildActivePresetIndicator(ThemeData theme, AppLocalizations l10n) {
-    final appSettings = SettingsService().settings;
-    final isCustomPreset =
-        appSettings.isAdvancedSettingsEnabled &&
-        (appSettings.customPreset != 'default' ||
-            appSettings.customScaler != 'default');
-
     final preset = widget.encodingOptions.speedPreset;
-    final presetLabel = isCustomPreset
-        ? l10n.t('preset_custom_title')
-        : (preset == SpeedPreset.fast
-              ? l10n.t('preset_fast_title')
-              : (preset == SpeedPreset.max
-                    ? l10n.t('preset_slow_title')
-                    : l10n.t('preset_normal_title')));
+    final presetLabel = preset == SpeedPreset.fast
+        ? l10n.t('preset_fast_title')
+        : (preset == SpeedPreset.max
+              ? l10n.t('preset_slow_title')
+              : l10n.t('preset_normal_title'));
 
     final presetDesc = preset == SpeedPreset.fast
         ? l10n.t('preset_fast_desc')
         : (preset == SpeedPreset.max
               ? l10n.t('preset_slow_desc')
               : l10n.t('preset_normal_desc'));
-
-    final effectivePreset = appSettings.customPreset != 'default'
-        ? appSettings.customPreset
-        : preset.x264Preset;
-    final effectiveScaler = appSettings.customScaler != 'default'
-        ? appSettings.customScaler
-        : preset.scaler;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1166,7 +1151,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Icon(
-              isCustomPreset ? Icons.tune_rounded : Icons.speed_rounded,
+              Icons.speed_rounded,
               size: 16,
               color: theme.colorScheme.primary,
             ),
@@ -1179,7 +1164,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
               children: [
                 Text.rich(
                   TextSpan(
-                    text: '${l10n.t('settings_cpu_preset')}: ',
+                    text: '${l10n.t('settings_encoding_preset')}: ',
                     style: TextStyle(
                       fontSize: 12,
                       color: theme.colorScheme.onSurface.withAlpha(160),
@@ -1196,80 +1181,16 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
                     ],
                   ),
                 ),
-                if (isCustomPreset) ...[
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: [
-                      _buildPresetChoiceBadge(
-                        theme: theme,
-                        icon: Icons.speed_rounded,
-                        label:
-                            'Preset: ${appSettings.customPreset == 'default' ? "${l10n.t('preset_default')} ($effectivePreset)" : appSettings.customPreset}',
-                      ),
-                      _buildPresetChoiceBadge(
-                        theme: theme,
-                        icon: Icons.photo_size_select_large_rounded,
-                        label:
-                            'Scaler: ${appSettings.customScaler == 'default' ? "${l10n.t('scaler_default')} ($effectiveScaler)" : appSettings.customScaler}',
-                      ),
-                    ],
+                const SizedBox(height: 3),
+                Text(
+                  presetDesc,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    height: 1.3,
+                    color: theme.colorScheme.onSurface.withAlpha(140),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'x264 $effectivePreset • Scaler $effectiveScaler',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      height: 1.3,
-                      color: theme.colorScheme.onSurface.withAlpha(140),
-                    ),
-                  ),
-                ] else ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    presetDesc,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      height: 1.3,
-                      color: theme.colorScheme.onSurface.withAlpha(140),
-                    ),
-                  ),
-                ],
+                ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPresetChoiceBadge({
-    required ThemeData theme,
-    required IconData icon,
-    required String label,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withAlpha(25),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: theme.colorScheme.primary.withAlpha(60),
-          width: 0.8,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: theme.colorScheme.primary),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.primary,
             ),
           ),
         ],

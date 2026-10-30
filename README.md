@@ -17,7 +17,7 @@
 ---
 
 > [!WARNING]
-> **Active Development & Pre-Release Notice**:  
+> **Active Development & Pre-Release Notice** :  
 > Phantek - Video Toolkit Vega is currently under active development and in pre-release stage. You may encounter bugs, instability, or unexpected behavior.
 
 **Phantek - Video Toolkit Vega** uses native `MediaCodec` and AndroidX Media3 Transformer. For software encoding via `libx264` and FFmpeg, see [phantek-video-toolkit](https://github.com/zerabyte88/phantek-video-toolkit).
@@ -32,7 +32,7 @@
 - **Audio Extraction** : Extract audio streams to M4A/AAC, MP3 (64–320 kbps), or uncompressed 16-bit PCM WAV, with direct bitstream copy when formats match.
 - **Foreground Execution** : Android Foreground Service with CPU `WakeLock` and crash-recovery job markers to prevent background termination.
 - **Real-Time Telemetry** : Live encoding progress, elapsed/remaining time, storage I/O rate, and device thermal status.
-- **AMOLED Themes & Localization** : 6 visual themes (*AMOLED Pure*, *Midnight*, *Snowfall*, *Sakura*, *Light*, *Clean Light*) and 22 languages.
+- **AMOLED Themes** : 6 visual themes (*AMOLED Pure*, *Midnight*, *Snowfall*, *Sakura*, *Light*, *Clean Light*).
 - **100% Offline** : Zero network permissions (`android.permission.INTERNET` omitted), no telemetry, and no external trackers.
 
 ---

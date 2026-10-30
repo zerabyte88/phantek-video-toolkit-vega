@@ -325,7 +325,7 @@ class MainActivity : FlutterActivity() {
                 if (rateControlMode.equals("bitrate", ignoreCase = true)) {
                     videoSettingsBuilder.setBitrateMode(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR)
                 } else {
-                    videoSettingsBuilder.experimentalSetEnableHighQualityTargeting(true)
+                    videoSettingsBuilder.setBitrateMode(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR)
                 }
                 encoderFactoryBuilder.setRequestedVideoEncoderSettings(videoSettingsBuilder.build())
             }

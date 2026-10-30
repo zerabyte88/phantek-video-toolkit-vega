@@ -143,7 +143,7 @@ enum SpeedPreset {
     }
   }
 
-  static SpeedPreset fromCpuPreset(String? preset) {
+  static SpeedPreset fromEncodingPreset(String? preset) {
     switch (preset) {
       case 'fast':
         return SpeedPreset.fast;
@@ -154,6 +154,9 @@ enum SpeedPreset {
         return SpeedPreset.normal;
     }
   }
+
+  /// Backward-compatible alias for [fromEncodingPreset].
+  static SpeedPreset fromCpuPreset(String? preset) => fromEncodingPreset(preset);
 }
 
 class EncodingOptions {

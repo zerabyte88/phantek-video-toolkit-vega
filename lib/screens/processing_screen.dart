@@ -66,11 +66,11 @@ class _ProcessingScreenState extends State<ProcessingScreen>
 
   int _memoryUsageMb = 0;
   double _storageIoRateMb = 0.0;
-  int _cpuUsagePercent = 0;
+  double _temperature = 35.0;
   static const int _historySampleCount = 18;
-  final List<double> _cpuHistory = List<double>.generate(
+  final List<double> _thermalHistory = List<double>.generate(
     _historySampleCount,
-    (_) => 0.05,
+    (_) => 0.25,
     growable: true,
   );
   final List<double> _memoryHistory = List<double>.generate(
@@ -154,9 +154,9 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     _latestOutputBytes = 0;
     _storageIoRateMb = 0.0;
     _memoryUsageMb = 0;
-    _cpuUsagePercent = 0;
-    _cpuHistory.clear();
-    _cpuHistory.addAll(List.filled(_historySampleCount, 0.05));
+    _temperature = 35.0;
+    _thermalHistory.clear();
+    _thermalHistory.addAll(List.filled(_historySampleCount, 0.25));
     _memoryHistory.clear();
     _memoryHistory.addAll(List.filled(_historySampleCount, 0.08));
     _storageHistory.clear();
@@ -189,23 +189,28 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         final elapsed = now.difference(_startTime!);
         final remaining = _calculateRemainingTime(_progress, elapsed);
 
-        // Check thermal status every 10s
-        if (timer.tick % 10 == 0) {
-          final temp = await DeviceSpecHelper.getBatteryTemperature();
-          if (temp >= 45.0 && mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  l10n.t(
-                    'device_temp_warning',
-                    args: {'temp': temp.toStringAsFixed(1)},
-                  ),
+        // Thermal status
+        final currentTemp = await DeviceSpecHelper.getBatteryTemperature();
+        _temperature = currentTemp;
+        final tempNorm = ((currentTemp - 25.0) / 30.0).clamp(0.05, 1.0);
+        _thermalHistory.add(tempNorm);
+        if (_thermalHistory.length > _historySampleCount) {
+          _thermalHistory.removeAt(0);
+        }
+
+        if (currentTemp >= 45.0 && mounted && timer.tick % 10 == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.t(
+                  'device_temp_warning',
+                  args: {'temp': currentTemp.toStringAsFixed(1)},
                 ),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 3),
               ),
-            );
-          }
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
         }
 
         // Memory (RSS)
@@ -247,37 +252,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           ioMb = (1.2 * baseSpeed + wave).clamp(0.5, 12.0);
         }
 
-        // CPU usage from /proc/self/stat
-        final totalCores = Platform.numberOfProcessors > 0
-            ? Platform.numberOfProcessors
-            : 8;
-        final threads = DeviceSpecHelper.resolveThreadCount(
-          video: widget.videoInfo,
-          requestedThreads: widget.appSettings.cpuThreads,
-        );
-
-        final realCpu = DeviceSpecHelper.getProcessCpuUsagePercent();
-        int cpuPercent = 0;
-        if (_isProcessing) {
-          if (realCpu > 0.0) {
-            cpuPercent = realCpu.round().clamp(5, 100);
-          } else {
-            // Workload-based fallback estimate
-            final threadRatio = (threads / totalCores).clamp(0.2, 1.0);
-            final basePercent = threadRatio * 82.0;
-            final jitter = ((elapsed.inSeconds * 7 + 2) % 11) - 5;
-            cpuPercent = (basePercent + jitter).round().clamp(15, 99);
-          }
-        }
-
-        final cpuNorm = _isProcessing
-            ? (cpuPercent / 100.0).clamp(0.05, 1.0)
-            : 0.05;
-        _cpuHistory.add(cpuNorm);
-        if (_cpuHistory.length > _historySampleCount) {
-          _cpuHistory.removeAt(0);
-        }
-
         final memRatio = (memMb / targetBuffer).clamp(0.05, 1.0);
         final memNorm = _isProcessing
             ? (0.12 + (memRatio * 0.75)).clamp(0.10, 0.95)
@@ -300,7 +274,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           }
           _memoryUsageMb = memMb;
           _storageIoRateMb = ioMb;
-          _cpuUsagePercent = cpuPercent;
         });
       } catch (e, stack) {
         debugPrint('Telemetry timer tick error: $e\n$stack');
@@ -422,9 +395,8 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     if (mounted) {
       setState(() {
         _isProcessing = false;
-        _cpuUsagePercent = 0;
         _storageIoRateMb = 0.0;
-        _cpuHistory.fillRange(0, _historySampleCount, 0.04);
+        _thermalHistory.fillRange(0, _historySampleCount, 0.25);
         _storageHistory.fillRange(0, _historySampleCount, 0.02);
         if (result != null) {
           _isSuccess = true;
@@ -694,26 +666,55 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     );
   }
 
-  /// Telemetry cards: CPU, RAM, and disk write speed.
-  Widget _buildLiveSystemTelemetry(ThemeData theme, l10n) {
-    final threads = DeviceSpecHelper.resolveThreadCount(
-      video: widget.videoInfo,
-      requestedThreads: widget.appSettings.cpuThreads,
-    );
+  Color _getThermalColor() {
+    if (_temperature < 38.0) {
+      return const Color(0xFF10B981);
+    } else if (_temperature <= 42.0) {
+      return const Color(0xFF06B6D4);
+    } else if (_temperature <= 45.0) {
+      return const Color(0xFFF59E0B);
+    } else {
+      return const Color(0xFFEF4444);
+    }
+  }
+
+  String _getThermalStatusText(AppLocalizations l10n) {
+    if (_temperature < 38.0) {
+      return l10n.t('thermal_cool');
+    } else if (_temperature <= 42.0) {
+      return l10n.t('thermal_optimal');
+    } else if (_temperature <= 45.0) {
+      return l10n.t('thermal_warm');
+    } else {
+      return l10n.t('thermal_hot');
+    }
+  }
+
+  String _getEncoderEngineName() {
+    if (widget.isAudioExtraction) {
+      return 'Media3 (${widget.encodingOptions.audioFormat.name.toUpperCase()})';
+    }
+    final codecName = widget.encodingOptions.codec.displayName.split(' ').first;
+    return 'MediaCodec ($codecName)';
+  }
+
+  /// Telemetry cards: Thermal status, RAM, and disk write speed.
+  Widget _buildLiveSystemTelemetry(ThemeData theme, AppLocalizations l10n) {
+    final thermalColor = _getThermalColor();
 
     return Row(
       children: [
-        // CPU load
+        // Thermal status
         Expanded(
           child: _buildTelemetryTile(
             theme: theme,
-            iconColor: const Color(0xFF0284C7),
-            label: l10n.t('telemetry_cpu_usage'),
-            value: '$_cpuUsagePercent%',
-            subValue: ' • ${threads}T',
+            iconColor: thermalColor,
+            label: l10n.t('telemetry_thermal'),
+            value: '${_temperature.toStringAsFixed(0)}°C',
+            subValue: ' • ${_getThermalStatusText(l10n)}',
             visualizer: _WindowsTaskGraph(
-              history: _cpuHistory,
-              color: const Color(0xFF0284C7),
+              history: _thermalHistory,
+              color: thermalColor,
               isProcessing: _isProcessing,
             ),
           ),
@@ -888,30 +889,28 @@ class _ProcessingScreenState extends State<ProcessingScreen>
               ),
             ],
           ),
-          if (_isProcessing &&
-              (_speedText.isNotEmpty || _currentSizeText.isNotEmpty)) ...[
+          if (_isProcessing) ...[
             Divider(height: 14, color: theme.colorScheme.outline.withAlpha(40)),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                if (_speedText.isNotEmpty)
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.speed_outlined,
-                        size: 14,
-                        color: theme.colorScheme.primary,
+                Row(
+                  children: [
+                    Icon(
+                      Icons.memory_rounded,
+                      size: 14,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      '${l10n.t('encoder_engine')}: ${_getEncoderEngineName()}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurface.withAlpha(180),
                       ),
-                      const SizedBox(width: 5),
-                      Text(
-                        '${l10n.t('fps')}: $_speedText',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: theme.colorScheme.onSurface.withAlpha(180),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
                 if (_currentSizeText.isNotEmpty)
                   Row(
                     children: [

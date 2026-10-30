@@ -829,29 +829,26 @@ void main() {
       }
     });
 
-    test(
-      'TransformerService getOutputDirectory respects custom path and isAudio flag',
-      () async {
-        final customDir = Directory(
-          '${tempDir.path}${Platform.pathSeparator}CustomAudio',
-        );
-        customDir.createSync();
+    test('TransformerService getOutputDirectory respects custom path and isAudio flag', () async {
+      final customDir = Directory(
+        '${tempDir.path}${Platform.pathSeparator}CustomAudio',
+      );
+      customDir.createSync();
 
-        // Custom path provided with isAudio: true
-        final outDirCustomAudio = await TransformerService.getOutputDirectory(
-          customPath: customDir.path,
-          isAudio: true,
-        );
-        expect(outDirCustomAudio.path, equals(customDir.path));
+      // Custom path provided with isAudio: true
+      final outDirCustomAudio = await TransformerService.getOutputDirectory(
+        customPath: customDir.path,
+        isAudio: true,
+      );
+      expect(outDirCustomAudio.path, equals(customDir.path));
 
-        // Custom path provided with isAudio: false
-        final outDirCustomVideo = await TransformerService.getOutputDirectory(
-          customPath: customDir.path,
-          isAudio: false,
-        );
-        expect(outDirCustomVideo.path, equals(customDir.path));
-      },
-    );
+      // Custom path provided with isAudio: false
+      final outDirCustomVideo = await TransformerService.getOutputDirectory(
+        customPath: customDir.path,
+        isAudio: false,
+      );
+      expect(outDirCustomVideo.path, equals(customDir.path));
+    });
 
     test('DeviceSpecHelper getMarketedRamGb calculates accurate marketing RAM capacities', () {
       expect(DeviceSpecHelper.getMarketedRamGb(7840), equals(8));
@@ -1293,17 +1290,9 @@ void main() {
           find.text('https://github.com/zerabyte88/phantek-video-toolkit-vega'),
           findsOneWidget,
         );
-        expect(find.text('Third-party notices'), findsOneWidget);
-        expect(
-          find.text(
-            'https://github.com/zerabyte88/phantek-video-toolkit-vega/blob/main/THIRD_PARTY_NOTICES.md',
-          ),
-          findsOneWidget,
-        );
+        expect(find.text('Third-party notices'), findsNothing);
 
         await tester.tap(find.text('Source code'));
-        await tester.pump();
-        await tester.tap(find.text('Third-party notices'));
         await tester.pump();
       },
     );
@@ -1894,29 +1883,35 @@ void main() {
       );
     });
 
-    test('TransformerService.isOomLog correctly identifies out-of-memory logs', () {
-      expect(TransformerService.isOomLog('Error: Cannot allocate memory'), isTrue);
-      expect(
-        TransformerService.isOomLog('fatal: Out of memory in x264_frame_new'),
-        isTrue,
-      );
-      expect(
-        TransformerService.isOomLog('av_malloc of size 10485760 failed'),
-        isTrue,
-      );
-      expect(
-        TransformerService.isOomLog(
-          'libx264 failed to allocate memory for lookahead',
-        ),
-        isTrue,
-      );
-      expect(
-        TransformerService.isOomLog(
-          'frame=  120 fps= 24 q=28.0 size=    1024kB time=00:00:05.00 bitrate=1677.7kbits/s speed=1.2x',
-        ),
-        isFalse,
-      );
-    });
+    test(
+      'TransformerService.isOomLog correctly identifies out-of-memory logs',
+      () {
+        expect(
+          TransformerService.isOomLog('Error: Cannot allocate memory'),
+          isTrue,
+        );
+        expect(
+          TransformerService.isOomLog('fatal: Out of memory in x264_frame_new'),
+          isTrue,
+        );
+        expect(
+          TransformerService.isOomLog('av_malloc of size 10485760 failed'),
+          isTrue,
+        );
+        expect(
+          TransformerService.isOomLog(
+            'libx264 failed to allocate memory for lookahead',
+          ),
+          isTrue,
+        );
+        expect(
+          TransformerService.isOomLog(
+            'frame=  120 fps= 24 q=28.0 size=    1024kB time=00:00:05.00 bitrate=1677.7kbits/s speed=1.2x',
+          ),
+          isFalse,
+        );
+      },
+    );
 
     test(
       'SettingsService job marker persists, retrieves, and clears correctly',
@@ -1945,56 +1940,32 @@ void main() {
       },
     );
 
-    testWidgets(
-      'SettingsScreen displays Auto baseline badge and recommendations',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets('SettingsScreen does not display CPU Cores setting', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-        final service = SettingsService();
-        await service.init();
-        await service.setCpuThreads(0); // Auto mode
+      final service = SettingsService();
+      await service.init();
+      await service.setCpuThreads(0);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.getTheme('oled_snowfall'),
-            home: const SettingsScreen(),
-          ),
-        );
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.getTheme('oled_snowfall'),
+          home: const SettingsScreen(),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-        final l10n = service.l10n;
-        final autoBaseline = DeviceSpecHelper.resolveThreadCount(
-          requestedThreads: 0,
-        );
+      final l10n = service.l10n;
 
-        // Verify header badge displays Auto (X Core)
-        expect(
-          find.text(
-            '${l10n.t('badge_auto')} ($autoBaseline ${l10n.t('unit_core')})',
-          ),
-          findsOneWidget,
-        );
-        // Verify subtitle is visible under badge
-        expect(find.text(l10n.t('settings_cpu_auto_subtitle')), findsOneWidget);
-        // Verify Auto chip is visible
-        expect(
-          find.widgetWithText(ChoiceChip, l10n.t('badge_auto')),
-          findsOneWidget,
-        );
-        // Verify recommended chip exists
-        expect(
-          find.widgetWithText(
-            ChoiceChip,
-            '$autoBaseline ${l10n.t('unit_core')} (${l10n.t('chip_recommended')})',
-          ),
-          findsOneWidget,
-        );
-      },
-    );
+      // Verify CPU Cores setting header is not displayed
+      expect(find.text(l10n.t('settings_cpu_threads')), findsNothing);
+    });
 
     testWidgets(
       'ConversionOptionsCard displays 4K stability note when video is 4K in Auto mode',
@@ -3266,7 +3237,7 @@ void main() {
     });
 
     testWidgets(
-      'ConversionOptionsCard displays Custom Preset and user choices when advanced options are modified',
+      'ConversionOptionsCard displays standard speed preset regardless of legacy advanced options',
       (WidgetTester tester) async {
         SharedPreferences.setMockInitialValues({});
         final service = SettingsService();
@@ -3312,40 +3283,27 @@ void main() {
           ),
         );
 
-        // 1. Initially advanced settings is disabled -> displays Normal preset
         await tester.pumpWidget(buildCard());
         expect(find.textContaining('Normal'), findsOneWidget);
         expect(find.textContaining('Custom Preset'), findsNothing);
 
-        // 2. Enable advanced settings with custom preset and scaler
         await service.setAdvancedSettingsEnabled(true);
         await service.setCustomPreset('ultrafast');
         await service.setCustomScaler('lanczos');
         await tester.pumpWidget(buildCard());
 
-        // Must display "Custom Preset" and user's selected choices
-        expect(find.textContaining('Custom Preset'), findsOneWidget);
-        expect(find.textContaining('Preset: ultrafast'), findsOneWidget);
-        expect(find.textContaining('Scaler: lanczos'), findsOneWidget);
-
-        // 3. Reverting advanced settings resets to standard display
-        await service.setAdvancedSettingsEnabled(false);
-        await tester.pumpWidget(buildCard());
         expect(find.textContaining('Normal'), findsOneWidget);
         expect(find.textContaining('Custom Preset'), findsNothing);
       },
     );
 
     testWidgets(
-      'SettingsScreen toggles Advanced Settings directly without dialog or Early Access badge',
+      'SettingsScreen does not display Advanced Settings card or custom preset controls',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
-
-        final service = SettingsService();
-        await service.setAdvancedSettingsEnabled(false);
 
         await tester.pumpWidget(
           MaterialApp(
@@ -3356,31 +3314,18 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
 
-        // 1. Early Access badge should NOT be present
-        expect(find.text('EARLY ACCESS'), findsNothing);
+        final service = SettingsService();
+        final l10n = service.l10n;
 
-        // 2. Custom Preset and Scaler are hidden when Advanced Settings is off
-        expect(find.text('Custom Preset'), findsNothing);
-
-        // 3. Toggle Advanced Settings Switch directly
-        final advSwitchFinder = find.byKey(
-          const Key('advanced_settings_switch'),
-        );
-        expect(advSwitchFinder, findsOneWidget);
-        await tester.tap(advSwitchFinder);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-
-        // No confirmation dialog should pop up
-        expect(find.byType(AlertDialog), findsNothing);
-
-        // State is toggled to true directly
-        expect(service.settings.isAdvancedSettingsEnabled, isTrue);
+        expect(find.byKey(const Key('advanced_settings_switch')), findsNothing);
+        expect(find.text(l10n.t('settings_advanced_title')), findsNothing);
+        expect(find.text(l10n.t('settings_custom_preset')), findsNothing);
+        expect(find.text(l10n.t('settings_custom_scaler')), findsNothing);
       },
     );
 
     testWidgets(
-      'SettingsScreen greys out fast, normal, and slow presets when advanced custom preset or scaler is active',
+      'SettingsScreen speed preset chips are always enabled and selectable',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 1.0;
@@ -3390,10 +3335,7 @@ void main() {
         final service = SettingsService();
         await service.setThemeMode('oled_pure');
         await service.setLanguage('id');
-        await service.setCpuPreset('medium');
-        await service.setAdvancedSettingsEnabled(false);
-        await service.setCustomPreset('default');
-        await service.setCustomScaler('default');
+        await service.setEncodingPreset('medium');
 
         await tester.pumpWidget(
           MaterialApp(
@@ -3408,73 +3350,23 @@ void main() {
         final normalChipFinder = find.widgetWithText(ChoiceChip, 'Normal');
         final slowChipFinder = find.widgetWithText(ChoiceChip, 'Maksimal');
 
-        // Case 1: Advanced disabled -> chips are enabled
         expect(fastChipFinder, findsOneWidget);
         expect(normalChipFinder, findsOneWidget);
         expect(slowChipFinder, findsOneWidget);
 
-        ChoiceChip fastChip = tester.widget<ChoiceChip>(fastChipFinder);
-        ChoiceChip normalChip = tester.widget<ChoiceChip>(normalChipFinder);
-        ChoiceChip slowChip = tester.widget<ChoiceChip>(slowChipFinder);
+        final fastChip = tester.widget<ChoiceChip>(fastChipFinder);
+        final normalChip = tester.widget<ChoiceChip>(normalChipFinder);
+        final slowChip = tester.widget<ChoiceChip>(slowChipFinder);
 
         expect(fastChip.onSelected, isNotNull);
         expect(normalChip.onSelected, isNotNull);
         expect(slowChip.onSelected, isNotNull);
         expect(normalChip.selected, isTrue);
 
-        // Case 2: Advanced enabled, customPreset != 'default' -> greyed out (disabled)
-        await service.setAdvancedSettingsEnabled(true);
-        await service.setCustomPreset('ultrafast');
+        await tester.tap(fastChipFinder);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
-
-        fastChip = tester.widget<ChoiceChip>(fastChipFinder);
-        normalChip = tester.widget<ChoiceChip>(normalChipFinder);
-        slowChip = tester.widget<ChoiceChip>(slowChipFinder);
-
-        expect(fastChip.onSelected, isNull);
-        expect(normalChip.onSelected, isNull);
-        expect(slowChip.onSelected, isNull);
-        expect(fastChip.selected, isFalse);
-        expect(normalChip.selected, isFalse);
-        expect(slowChip.selected, isFalse);
-
-        // Tapping disabled chip should not change cpuPreset
-        await tester.tap(fastChipFinder, warnIfMissed: false);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-        expect(service.settings.cpuPreset, equals('medium'));
-
-        // Case 3: Advanced enabled, customPreset == 'default', customScaler != 'default' -> greyed out (disabled)
-        await service.setCustomPreset('default');
-        await service.setCustomScaler('lanczos');
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-
-        fastChip = tester.widget<ChoiceChip>(fastChipFinder);
-        normalChip = tester.widget<ChoiceChip>(normalChipFinder);
-        slowChip = tester.widget<ChoiceChip>(slowChipFinder);
-
-        expect(fastChip.onSelected, isNull);
-        expect(normalChip.onSelected, isNull);
-        expect(slowChip.onSelected, isNull);
-
-        // Case 4: Advanced enabled, both customPreset and customScaler are 'default' -> enabled again
-        await service.setCustomScaler('default');
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-
-        fastChip = tester.widget<ChoiceChip>(fastChipFinder);
-        normalChip = tester.widget<ChoiceChip>(normalChipFinder);
-        slowChip = tester.widget<ChoiceChip>(slowChipFinder);
-
-        expect(fastChip.onSelected, isNotNull);
-        expect(normalChip.onSelected, isNotNull);
-        expect(slowChip.onSelected, isNotNull);
-        expect(normalChip.selected, isTrue);
-
-        // Cleanup
-        await service.setAdvancedSettingsEnabled(false);
+        expect(service.settings.encodingPreset, equals('fast'));
       },
     );
 
@@ -3824,11 +3716,16 @@ void main() {
         expect(await MediaScannerService.scanFile(''), isFalse);
       });
 
-      test('scanFile safely handles non-Android platform or host test runner', () async {
-        // When running tests on Windows host, Platform.isAndroid is false
-        final result = await MediaScannerService.scanFile('/storage/emulated/0/Movies/sample.mp4');
-        expect(result, isFalse);
-      });
+      test(
+        'scanFile safely handles non-Android platform or host test runner',
+        () async {
+          // When running tests on Windows host, Platform.isAndroid is false
+          final result = await MediaScannerService.scanFile(
+            '/storage/emulated/0/Movies/sample.mp4',
+          );
+          expect(result, isFalse);
+        },
+      );
     });
   });
 }

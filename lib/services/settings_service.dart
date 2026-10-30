@@ -91,7 +91,7 @@ class SettingsService extends ChangeNotifier {
 
     _settings = _settings.copyWith(
       isFirstLaunch: false,
-      cpuPreset: preset,
+      encodingPreset: preset,
       cpuThreads: 0, // Auto
       themeMode: initialTheme,
       languageCode: initialLang,
@@ -152,9 +152,12 @@ class SettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(ramBufferMb: ramBufferMb));
   }
 
-  Future<void> setCpuPreset(String preset) async {
-    await updateSettings(_settings.copyWith(cpuPreset: preset));
+  Future<void> setEncodingPreset(String preset) async {
+    await updateSettings(_settings.copyWith(encodingPreset: preset));
   }
+
+  /// Backward-compatible alias for [setEncodingPreset].
+  Future<void> setCpuPreset(String preset) => setEncodingPreset(preset);
 
   Future<void> setAudioBitrate(int kbps) async {
     await updateSettings(_settings.copyWith(audioBitrateKbps: kbps));

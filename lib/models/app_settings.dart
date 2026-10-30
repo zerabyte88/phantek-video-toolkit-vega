@@ -11,7 +11,10 @@ class AppSettings {
   final int ramBufferMb;
 
   /// Encoding speed preset.
-  final String cpuPreset;
+  final String encodingPreset;
+
+  /// Backward-compatible alias for [encodingPreset].
+  String get cpuPreset => encodingPreset;
 
   /// Audio bitrate in kbps. 0 mutes audio.
   final int audioBitrateKbps;
@@ -49,7 +52,8 @@ class AppSettings {
   const AppSettings({
     this.cpuThreads = 0,
     this.ramBufferMb = 512,
-    this.cpuPreset = 'medium',
+    String? encodingPreset,
+    String? cpuPreset,
     this.audioBitrateKbps = 128,
     this.languageCode = 'en',
     this.themeMode = 'oled_pure',
@@ -61,7 +65,7 @@ class AppSettings {
     this.isAdvancedSettingsEnabled = false,
     this.customPreset = 'default',
     this.customScaler = 'default',
-  });
+  }) : encodingPreset = encodingPreset ?? cpuPreset ?? 'medium';
 
   /// Physical CPU core count.
   static int get deviceCoreCount => Platform.numberOfProcessors;
@@ -69,6 +73,7 @@ class AppSettings {
   AppSettings copyWith({
     int? cpuThreads,
     int? ramBufferMb,
+    String? encodingPreset,
     String? cpuPreset,
     int? audioBitrateKbps,
     String? languageCode,
@@ -87,7 +92,7 @@ class AppSettings {
       ramBufferMb: ramBufferMb != null
           ? (ramBufferMb > 2048 ? 2048 : ramBufferMb)
           : this.ramBufferMb,
-      cpuPreset: cpuPreset ?? this.cpuPreset,
+      encodingPreset: encodingPreset ?? cpuPreset ?? this.encodingPreset,
       audioBitrateKbps: audioBitrateKbps ?? this.audioBitrateKbps,
       languageCode: languageCode ?? this.languageCode,
       themeMode: themeMode ?? this.themeMode,
@@ -109,7 +114,8 @@ class AppSettings {
     return {
       'cpuThreads': cpuThreads,
       'ramBufferMb': ramBufferMb,
-      'cpuPreset': cpuPreset,
+      'encodingPreset': encodingPreset,
+      'cpuPreset': encodingPreset,
       'audioBitrateKbps': audioBitrateKbps,
       'languageCode': languageCode,
       'themeMode': themeMode,
@@ -142,7 +148,9 @@ class AppSettings {
       ramBufferMb: ((json['ramBufferMb'] as int? ?? 512) > 2048)
           ? 2048
           : (json['ramBufferMb'] as int? ?? 512),
-      cpuPreset: sanitizePreset(json['cpuPreset'] as String?),
+      encodingPreset: sanitizePreset(
+        (json['encodingPreset'] ?? json['cpuPreset']) as String?,
+      ),
       audioBitrateKbps: json['audioBitrateKbps'] as int? ?? 128,
       languageCode: json['languageCode'] as String? ?? 'en',
       themeMode: json['themeMode'] as String? ?? 'oled_pure',
