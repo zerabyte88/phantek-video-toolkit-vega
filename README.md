@@ -20,7 +20,7 @@
 > **Active Development & Pre-Release Notice**:  
 > Phantek - Video Toolkit Vega is currently under active development and in pre-release stage. You may encounter bugs, instability, or unexpected behavior.
 
-**Hardware Edition (Vega)** uses native `MediaCodec` and AndroidX Media3 Transformer. For software encoding via `libx264` and FFmpeg, see [phantek-video-toolkit](https://github.com/zerabyte88/phantek-video-toolkit).
+**Phantek - Video Toolkit Vega** uses native `MediaCodec` and AndroidX Media3 Transformer. For software encoding via `libx264` and FFmpeg, see [phantek-video-toolkit](https://github.com/zerabyte88/phantek-video-toolkit).
 
 ---
 
