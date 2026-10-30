@@ -8,7 +8,7 @@
   [![Status](https://img.shields.io/badge/Status-Pre--release-f97316?style=flat-square&logo=github&logoColor=white)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
   [![Platform](https://img.shields.io/badge/Platform-Android%207.0+-10b981?style=flat-square&logo=android&logoColor=white)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
   [![Architecture](https://img.shields.io/badge/Arch-arm64--v8a-8b5cf6?style=flat-square&logo=arm&logoColor=white)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
-  [![Flutter](https://img.shields.io/badge/Flutter-3.13+-02569b?style=flat-square&logo=flutter&logoColor=white)](https://flutter.dev)
+  [![Engine](https://img.shields.io/badge/Engine-Flutter%20%7C%20Media3-6366f1?style=flat-square)](https://developer.android.com/media/media3)
   [![License](https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square&logo=open-source-initiative&logoColor=white)](LICENSE)
 
   [Download APK](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases/latest) • [Features](#features) • [Supported Formats](#supported-formats) • [Tech Stack](#tech-stack) • [Build](#build-from-source)
