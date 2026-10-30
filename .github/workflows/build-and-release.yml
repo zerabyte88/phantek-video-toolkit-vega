@@ -46,40 +46,58 @@ jobs:
         run: flutter test
 
       - name: Configure Keystore
-        if: secrets.KEYSTORE_BASE64 != ''
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 || secrets.KEYSTORE || secrets.SIGNING_KEY || secrets.ANDROID_KEYSTORE_BASE64 || secrets.KEY_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || secrets.KEY_PASS || secrets.KEYSTORE_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || secrets.KEYSTORE_PASSWORD || secrets.STORE_PASS || secrets.KEY_PASSWORD }}
         run: |
-          mkdir -p android/app
-          echo "$KEYSTORE_BASE64" | tr -d '\r\n ' | base64 -d > android/app/upload-keystore.jks
-          printf "storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=upload-keystore.jks\n" "$STORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > android/key.properties
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Keystore secret detected, configuring signing..."
+            mkdir -p android/app
+            echo "$KEYSTORE_BASE64" | tr -d '\r\n ' | base64 -d > android/app/upload-keystore.jks
+            cp android/app/upload-keystore.jks android/upload-keystore.jks
+            printf "storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=upload-keystore.jks\n" "$STORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > android/key.properties
+          else
+            echo "No keystore secret provided. Build will proceed with debug signing fallback."
+          fi
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
 
       - name: Build Android APK
+        env:
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || secrets.KEY_PASS || secrets.KEYSTORE_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || secrets.KEYSTORE_PASSWORD || secrets.STORE_PASS || secrets.KEY_PASSWORD }}
         run: flutter build apk --release
 
       - name: Build Android App Bundle (AAB)
+        env:
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || secrets.KEY_PASS || secrets.KEYSTORE_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || secrets.KEYSTORE_PASSWORD || secrets.STORE_PASS || secrets.KEY_PASSWORD }}
         run: flutter build appbundle --release
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/*.apk
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release-aab
-          path: build/app/outputs/bundle/release/app-release.aab
+          path: build/app/outputs/bundle/release/*.aab
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
           generate_release_notes: true

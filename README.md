@@ -1,126 +1,97 @@
-<p align="center">
-  <img src="assets/icon/app_icon.png" width="120" height="120" alt="Phantek Logo" />
-</p>
+<div align="center">
+  <img src="assets/icon/app_icon.png" alt="Phantek Logo" width="120" />
 
-<h1 align="center">Phantek - Video Toolkit Vega</h1>
+  # Phantek - Video Toolkit Vega
 
-<p align="center">
-  <strong>High-performance offline on-device video transcoding, downscaling, and audio extraction for Android powered by Hardware Acceleration (AndroidX Media3 Transformer).</strong>
-</p>
+  **Hardware-accelerated offline video transcoding, downscaling, and audio extraction for Android.**
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Status-Pre--release-orange?style=flat-square" alt="Status" />
-  <img src="https://img.shields.io/badge/Platform-Android%207.0%2B-059669?style=flat-square&logo=android&logoColor=white" alt="Platform" />
-  <img src="https://img.shields.io/badge/Arch-arm64--v8a%20%7C%20Hardware%20MediaCodec-2563eb?style=flat-square" alt="Architecture" />
-  <img src="https://img.shields.io/badge/Engine-AndroidX%20Media3%20Transformer-6366f1?style=flat-square" alt="Engine" />
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-334155?style=flat-square" alt="License" /></a>
-</p>
+  [![Status](https://img.shields.io/badge/Status-Pre--release-f97316?style=flat-square&logo=github&logoColor=white)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
+  [![Platform](https://img.shields.io/badge/Platform-Android%207.0+-10b981?style=flat-square&logo=android&logoColor=white)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
+  [![Architecture](https://img.shields.io/badge/Arch-arm64--v8a-8b5cf6?style=flat-square&logo=arm&logoColor=white)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
+  [![Flutter](https://img.shields.io/badge/Flutter-3.13+-02569b?style=flat-square&logo=flutter&logoColor=white)](https://flutter.dev)
+  [![License](https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square&logo=open-source-initiative&logoColor=white)](LICENSE)
 
-<p align="center">
-  <a href="#overview">Overview</a> •
-  <a href="#features">Features</a> •
-  <a href="#supported-formats">Formats</a> •
-  <a href="#installation">Installation</a> •
-  <a href="#building-from-source">Build</a> •
-  <a href="#privacy--security">Privacy</a> •
-  <a href="#license">License</a>
-</p>
+  [Download APK](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases/latest) • [Features](#features) • [Supported Formats](#supported-formats) • [Tech Stack](#tech-stack) • [Build](#build-from-source)
+</div>
 
 ---
 
-## Overview
-
-**Phantek - Video Toolkit Vega** is a fast, offline Android media toolkit for video transcoding, downscaling, and audio extraction. It uses hardware acceleration (AndroidX Media3 Transformer / `MediaCodec`) for fast exports, low battery draw, and a compact ~15 MB footprint without tracking or network permissions.
-
-- **Hardware Edition**: Hardware-accelerated (`MediaCodec`), ultra-fast exports, minimal battery consumption (~15 MB APK).
-- **CPU Edition**: Software encoding via native FFmpeg & `libx264` for fine-grained parameters → [phantek-video-toolkit](https://github.com/zerabyte88/phantek-video-toolkit).
-
-> [!WARNING]
-> **Active Development & Pre-Release Notice**:  
-> Phantek - Video Toolkit Vega is currently under active development and in pre-release stage. You may encounter bugs, instability, or unexpected behavior.
+> [!NOTE]
+> **Hardware Edition (Vega)** uses native `MediaCodec` and AndroidX Media3 Transformer. For software encoding via `libx264` and FFmpeg, see [phantek-video-toolkit](https://github.com/zerabyte88/phantek-video-toolkit).
 
 ---
 
 ## Features
 
-### Video Processing & Downscaling
-- **Resolution Downscaling:** Scale from 4K/2K down to 1080p, 720p, 480p, or 360p with OpenGL-accelerated aspect-ratio preservation and automatic even-dimension alignment.
-- **Hardware Rate Control:** Constant Quality (CQ/VBR) for visual fidelity or deterministic Target Bitrate (1–35 Mbps) for exact file sizes.
-- **Hardware Encoders:** Native H.264 / AVC (`video/avc`) and H.265 / HEVC (`video/hevc`) hardware pipelines.
-- **Framerate Clamping:** Preserve source FPS or clamp to standard rates (24, 25, 30, 48, 50, 60 FPS).
-- **Audio Handling:** Direct bitstream copy (`copy`), high-efficiency AAC re-encoding, or audio stripping.
-- **Web-Optimized Output:** Exports to `.mp4` (with `+faststart` for instant web streaming), `.mkv`, and `.mov`.
-
-### Audio Extraction
-- **Outputs:** Extract to **M4A / AAC** (Hardware accelerated), **MP3**, or lossless uncompressed **WAV** (16-bit linear PCM).
-- **Direct Bitstream Copy:** Preserves original audio streams without re-encoding when formats match.
-- **Bitrate Options:** Selectable bitrates from 64 to 320 kbps.
-
-### Hardware & Performance
-- **Hardware Acceleration:** Minimal battery consumption, cool thermals, and lightning-fast export speeds powered by Media3 Transformer and device SoC encoders.
-- **Ultra-Lightweight Footprint:** Free of heavyweight native binaries, reducing APK size from ~90 MB to ~15 MB.
-- **Foreground Reliability:** Runs as an Android Foreground Service with CPU WakeLock to prevent termination when the screen is locked.
-- **Real-Time Telemetry:** Monitors encoding progress, elapsed/remaining time, storage I/O rate, and temperature.
-- **Crash Recovery:** Automatic job marker persistence to clean up incomplete exports if interrupted.
+- **Hardware Transcoding** : Encode H.264 (`video/avc`) and H.265 (`video/hevc`) via device SoC hardware encoders.
+- **Resolution Downscaling** : Scale 4K/2K down to 1080p, 720p, 480p, or 360p with OpenGL aspect-ratio preservation and even-pixel alignment.
+- **Rate Control** : Constant Quality (CQ/VBR) or target bitrate (1–35 Mbps) with framerate clamping (24–60 FPS).
+- **Audio Extraction** : Extract audio streams to M4A/AAC, MP3 (64–320 kbps), or uncompressed 16-bit PCM WAV, with direct bitstream copy when formats match.
+- **Foreground Execution** : Android Foreground Service with CPU `WakeLock` and crash-recovery job markers to prevent background termination.
+- **Real-Time Telemetry** : Live encoding progress, elapsed/remaining time, storage I/O rate, and device thermal status.
+- **AMOLED Themes & Localization** : 6 visual themes (*AMOLED Pure*, *Midnight*, *Snowfall*, *Sakura*, *Light*, *Clean Light*) and 22 languages.
+- **100% Offline** : Zero network permissions (`android.permission.INTERNET` omitted), no telemetry, and no external trackers.
 
 ---
 
 ## Supported Formats
 
+<div align="center">
+
 | Type | Container | Codec / Format | Notes |
-| :--- | :--- | :--- | :--- |
-| **Video** | `.mp4` | H.264 (`video/avc`), H.265 (`video/hevc`) | Hardware accelerated, optimized with `+faststart` |
-| **Video** | `.mkv` | H.264 (`video/avc`), H.265 (`video/hevc`) | Wide container compatibility |
-| **Video** | `.mov` | H.264 (`video/avc`), H.265 (`video/hevc`) | Compatible with standard mobile & desktop editors |
+| :---: | :---: | :---: | :---: |
+| **Video** | `.mp4` | H.264 (`video/avc`), H.265 (`video/hevc`) | Hardware accelerated, `+faststart` |
+| **Video** | `.mkv` | H.264 (`video/avc`), H.265 (`video/hevc`) | Matroska container |
+| **Video** | `.mov` | H.264 (`video/avc`), H.265 (`video/hevc`) | QuickTime container |
 | **Audio** | `.m4a` | AAC (`audio/mp4a-latm`) | Hardware accelerated (64–320 kbps) |
 | **Audio** | `.mp3` | MP3 (`audio/mpeg`) | 64–320 kbps |
 | **Audio** | `.wav` | PCM (`audio/raw`) | 16-bit linear uncompressed PCM |
 
----
-
-## Installation
-
-Download the signed APK from [GitHub Releases](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases/latest) or compile from source.
-
-* **Architecture:** `arm64-v8a` (64-bit ARM)
-* **Minimum Android Version:** Android 7.0 (API Level 24) or higher
+</div>
 
 ---
 
-## Building from Source
+## Tech Stack
+
+<div align="center">
+
+| Layer | Package / Tool | Role |
+| :---: | :---: | :---: |
+| **Framework** | Flutter (Dart SDK `^3.13`) | Core UI and state management |
+| **Media Engine** | AndroidX Media3 (`1.5.1`) | Hardware `Transformer`, `MediaCodec`, and `Muxer` pipeline |
+| **Background** | `flutter_foreground_task`, `wakelock_plus` | Foreground service execution and CPU wake lock |
+| **Hardware Info** | `device_info_plus` | SoC, GPU, and thermal hardware detection |
+| **Storage** | `shared_preferences`, `file_picker` | Local settings persistence and media file selection |
+
+</div>
+
+---
+
+## Build from Source
 
 ### Prerequisites
-* [Flutter SDK](https://flutter.dev) (v3.13+)
-* Android SDK & NDK
-* Java 17+
 
-### Build
+- Flutter SDK `^3.13`
+- Android SDK & Java 17+
+
+### Steps
 
 ```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/zerabyte88/phantek-video-toolkit-vega.git
 cd phantek-video-toolkit-vega
 
-# Get dependencies
+# Install dependencies
 flutter pub get
 
 # Build release APK
 flutter build apk --release
 ```
 
-The output APK will be generated at:
-`build/app/outputs/flutter-apk/app-release.apk`
-
----
-
-## Privacy & Security
-
-* **No Network Access:** The app does not request `android.permission.INTERNET`. No network traffic can leave the device.
-* **100% Local:** All operations, temporary caches, and output files stay strictly on local storage.
-* **Zero Telemetry:** No analytics, advertising frameworks, or user trackers.
+Compiled binary : `build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 
 ## License
 
-This project is licensed under the **[MIT License](LICENSE)**.
+Distributed under the [MIT License](LICENSE).
