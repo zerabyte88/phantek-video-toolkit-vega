@@ -205,13 +205,38 @@ class TransformerService {
     required String fileName,
     required VideoResolution targetResolution,
     required VideoContainer container,
+    String? fileNamingFormat,
   }) async {
+    final format = fileNamingFormat ?? 'suffix';
     final ext = container.extension;
     final sanitizedBase = fileName.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$'), '');
-    final String resSuffix =
-        targetResolution.label.toLowerCase().startsWith('original')
-            ? '${targetResolution.height}p'
-            : targetResolution.label.toLowerCase();
+
+    String baseName;
+    switch (format) {
+      case 'timestamp':
+        final now = DateTime.now();
+        final y = now.year.toString().padLeft(4, '0');
+        final m = now.month.toString().padLeft(2, '0');
+        final d = now.day.toString().padLeft(2, '0');
+        final h = now.hour.toString().padLeft(2, '0');
+        final min = now.minute.toString().padLeft(2, '0');
+        final s = now.second.toString().padLeft(2, '0');
+        baseName = '${sanitizedBase}_$y$m${d}_$h$min$s';
+        break;
+      case 'simple':
+        baseName = '${sanitizedBase}_vega';
+        break;
+      case 'suffix':
+      default:
+        final String resSuffix =
+            targetResolution.label.toLowerCase().startsWith('original')
+                ? (targetResolution.height > 0
+                    ? '${targetResolution.height}p'
+                    : 'transcoded')
+                : targetResolution.label.toLowerCase();
+        baseName = '$sanitizedBase-$resSuffix';
+        break;
+    }
 
     final dirPath =
         outputDir.path.endsWith('/') || outputDir.path.endsWith('\\')
@@ -219,15 +244,14 @@ class TransformerService {
             : outputDir.path;
     final sep = Platform.pathSeparator;
 
-    final basePath = '$dirPath$sep$sanitizedBase-$resSuffix.$ext';
+    final basePath = '$dirPath$sep$baseName.$ext';
     if (!await File(basePath).exists()) {
       return basePath;
     }
 
     int counter = 2;
     while (true) {
-      final candidatePath =
-          '$dirPath$sep$sanitizedBase-$resSuffix-$counter.$ext';
+      final candidatePath = '$dirPath$sep$baseName-$counter.$ext';
       if (!await File(candidatePath).exists()) {
         return candidatePath;
       }
@@ -287,6 +311,7 @@ class TransformerService {
       fileName: sourceVideo.fileName,
       targetResolution: targetResolution,
       container: encodingOptions.container,
+      fileNamingFormat: appSettings.fileNamingFormat,
     );
 
     // Target dimensions
@@ -333,6 +358,9 @@ class TransformerService {
       // Mock completion for desktop / test runner
       onProgress(0.5, 'Size: 1.2 MB | Speed: 3.5x', 1200000);
       onProgress(1.0, 'Size: 2.5 MB | Completed', 2500000);
+      if (appSettings.preserveMediaDate) {
+        await _syncMediaDate(sourceVideo.filePath, outputPath);
+      }
       await SettingsService().clearJobMarker();
       return outputPath;
     }
@@ -354,6 +382,9 @@ class TransformerService {
       if (result != null) {
         onProgress(1.0, 'Completed', await File(outputPath).length());
         onLog('Encoding completed successfully via Media3 Hardware Encoder!');
+        if (appSettings.preserveMediaDate) {
+          await _syncMediaDate(sourceVideo.filePath, outputPath);
+        }
         return result;
       }
       return null;
@@ -370,6 +401,21 @@ class TransformerService {
     } finally {
       _activeProgressCallback = null;
       _activeLogCallback = null;
+    }
+  }
+
+  static Future<void> _syncMediaDate(
+    String inputPath,
+    String outputPath,
+  ) async {
+    try {
+      final inputFile = File(inputPath);
+      final outputFile = File(outputPath);
+      if (await inputFile.exists() && await outputFile.exists()) {
+        await outputFile.setLastModified(await inputFile.lastModified());
+      }
+    } catch (e) {
+      debugPrint('Error syncing media date: $e');
     }
   }
 
@@ -410,6 +456,9 @@ class TransformerService {
 
     if (!Platform.isAndroid) {
       onProgress(1.0, 'Completed', 500000);
+      if (appSettings.preserveMediaDate) {
+        await _syncMediaDate(sourceVideo.filePath, outputPath);
+      }
       await SettingsService().clearJobMarker();
       return outputPath;
     }
@@ -426,6 +475,9 @@ class TransformerService {
       if (result != null) {
         onProgress(1.0, 'Completed', await File(outputPath).length());
         onLog('Audio extraction completed successfully!');
+        if (appSettings.preserveMediaDate) {
+          await _syncMediaDate(sourceVideo.filePath, outputPath);
+        }
         return result;
       }
       return null;

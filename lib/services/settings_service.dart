@@ -198,6 +198,18 @@ class SettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(customScaler: scaler));
   }
 
+  Future<void> setDefaultVideoCodec(String codec) async {
+    await updateSettings(_settings.copyWith(defaultVideoCodec: codec));
+  }
+
+  Future<void> setFileNamingFormat(String format) async {
+    await updateSettings(_settings.copyWith(fileNamingFormat: format));
+  }
+
+  Future<void> setPreserveMediaDate(bool preserve) async {
+    await updateSettings(_settings.copyWith(preserveMediaDate: preserve));
+  }
+
   void setCardOpacityFast(double opacity) {
     final clamped = opacity.clamp(0.5, 1.0);
     if ((_settings.cardOpacity - clamped).abs() > 0.001) {

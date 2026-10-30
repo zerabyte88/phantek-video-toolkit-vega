@@ -49,6 +49,15 @@ class AppSettings {
   /// Custom scaler algorithm ('default', 'fast_bilinear', 'bilinear', 'bicubic', 'area', 'lanczos', 'spline', 'gauss').
   final String customScaler;
 
+  /// Default video codec ('h264' or 'hevc').
+  final String defaultVideoCodec;
+
+  /// File naming pattern ('suffix', 'timestamp', 'simple').
+  final String fileNamingFormat;
+
+  /// Preserve original media file modification date.
+  final bool preserveMediaDate;
+
   const AppSettings({
     this.cpuThreads = 0,
     this.ramBufferMb = 512,
@@ -65,6 +74,9 @@ class AppSettings {
     this.isAdvancedSettingsEnabled = false,
     this.customPreset = 'default',
     this.customScaler = 'default',
+    this.defaultVideoCodec = 'h264',
+    this.fileNamingFormat = 'suffix',
+    this.preserveMediaDate = true,
   }) : encodingPreset = encodingPreset ?? cpuPreset ?? 'medium';
 
   /// Physical CPU core count.
@@ -86,6 +98,9 @@ class AppSettings {
     bool? isAdvancedSettingsEnabled,
     String? customPreset,
     String? customScaler,
+    String? defaultVideoCodec,
+    String? fileNamingFormat,
+    bool? preserveMediaDate,
   }) {
     return AppSettings(
       cpuThreads: cpuThreads ?? this.cpuThreads,
@@ -107,6 +122,9 @@ class AppSettings {
           isAdvancedSettingsEnabled ?? this.isAdvancedSettingsEnabled,
       customPreset: customPreset ?? this.customPreset,
       customScaler: customScaler ?? this.customScaler,
+      defaultVideoCodec: defaultVideoCodec ?? this.defaultVideoCodec,
+      fileNamingFormat: fileNamingFormat ?? this.fileNamingFormat,
+      preserveMediaDate: preserveMediaDate ?? this.preserveMediaDate,
     );
   }
 
@@ -127,6 +145,9 @@ class AppSettings {
       'isAdvancedSettingsEnabled': isAdvancedSettingsEnabled,
       'customPreset': customPreset,
       'customScaler': customScaler,
+      'defaultVideoCodec': defaultVideoCodec,
+      'fileNamingFormat': fileNamingFormat,
+      'preserveMediaDate': preserveMediaDate,
     };
   }
 
@@ -164,6 +185,13 @@ class AppSettings {
           json['isAdvancedSettingsEnabled'] as bool? ?? false,
       customPreset: json['customPreset'] as String? ?? 'default',
       customScaler: json['customScaler'] as String? ?? 'default',
+      defaultVideoCodec:
+          (json['defaultVideoCodec'] == 'hevc') ? 'hevc' : 'h264',
+      fileNamingFormat: (json['fileNamingFormat'] == 'timestamp' ||
+              json['fileNamingFormat'] == 'simple')
+          ? json['fileNamingFormat'] as String
+          : 'suffix',
+      preserveMediaDate: json['preserveMediaDate'] as bool? ?? true,
     );
   }
 }

@@ -318,6 +318,9 @@ void main() {
       expect(settings.keepScreenAwake, isFalse);
       expect(settings.outputDirectory, equals(''));
       expect(settings.audioOutputDirectory, equals(''));
+      expect(settings.defaultVideoCodec, equals('h264'));
+      expect(settings.fileNamingFormat, equals('suffix'));
+      expect(settings.preserveMediaDate, isTrue);
     });
 
     test('Serialization to and from JSON works', () {
@@ -331,6 +334,9 @@ void main() {
         keepScreenAwake: true,
         outputDirectory: '/custom/storage/Movies',
         audioOutputDirectory: '/custom/storage/Music',
+        defaultVideoCodec: 'hevc',
+        fileNamingFormat: 'timestamp',
+        preserveMediaDate: false,
       );
 
       final json = original.toJson();
@@ -343,6 +349,9 @@ void main() {
       expect(restored.languageCode, equals('ja'));
       expect(restored.themeMode, equals('oled_midnight'));
       expect(restored.keepScreenAwake, isTrue);
+      expect(restored.defaultVideoCodec, equals('hevc'));
+      expect(restored.fileNamingFormat, equals('timestamp'));
+      expect(restored.preserveMediaDate, isFalse);
       expect(restored.outputDirectory, equals('/custom/storage/Movies'));
       expect(restored.audioOutputDirectory, equals('/custom/storage/Music'));
     });
@@ -377,6 +386,13 @@ void main() {
         expect(l10n.t('settings_audio_folder_changed').isNotEmpty, isTrue);
         expect(l10n.t('settings_audio_folder_default').isNotEmpty, isTrue);
         expect(l10n.t('theme_oled_sakura_desc').isNotEmpty, isTrue);
+        expect(l10n.t('settings_default_codec').isNotEmpty, isTrue);
+        expect(l10n.t('settings_file_naming').isNotEmpty, isTrue);
+        expect(l10n.t('naming_format_suffix').isNotEmpty, isTrue);
+        expect(l10n.t('naming_format_timestamp').isNotEmpty, isTrue);
+        expect(l10n.t('naming_format_simple').isNotEmpty, isTrue);
+        expect(l10n.t('settings_preserve_date').isNotEmpty, isTrue);
+        expect(l10n.t('settings_preserve_date_desc').isNotEmpty, isTrue);
       }
     });
 
@@ -3321,6 +3337,10 @@ void main() {
         expect(find.text(l10n.t('settings_advanced_title')), findsNothing);
         expect(find.text(l10n.t('settings_custom_preset')), findsNothing);
         expect(find.text(l10n.t('settings_custom_scaler')), findsNothing);
+        expect(find.text(l10n.t('settings_ram_buffer')), findsNothing);
+        expect(find.text(l10n.t('settings_default_codec')), findsOneWidget);
+        expect(find.text(l10n.t('settings_file_naming')), findsOneWidget);
+        expect(find.text(l10n.t('settings_preserve_date')), findsOneWidget);
       },
     );
 

@@ -162,8 +162,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // RAM buffer
-                    _buildRamBufferSection(theme, settings, l10n),
+                    // Default video codec
+                    _buildDefaultCodecSection(theme, settings, l10n),
 
                     _buildDivider(theme),
 
@@ -291,6 +291,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : null,
                       l10n: l10n,
                     ),
+
+                    _buildDivider(theme),
+
+                    // File naming pattern
+                    _buildFileNamingSection(theme, settings, l10n),
+
+                    _buildDivider(theme),
+
+                    // Preserve original media date
+                    _buildPreserveMediaDateTile(theme, settings, l10n),
                   ],
                 ),
               ),
@@ -1115,9 +1125,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // RAM buffer section
+  // Default video codec section
 
-  Widget _buildRamBufferSection(
+  Widget _buildDefaultCodecSection(
     ThemeData theme,
     AppSettings settings,
     AppLocalizations l10n,
@@ -1126,44 +1136,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.dns_outlined,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.t('settings_ram_buffer'),
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            Icon(
+              Icons.video_settings_rounded,
+              size: 16,
+              color: theme.colorScheme.primary,
             ),
             const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withAlpha(20),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                '${settings.ramBufferMb} MB',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.primary,
-                ),
+            Text(
+              l10n.t('settings_default_codec'),
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
               ),
             ),
           ],
@@ -1172,32 +1157,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Center(
           child: Wrap(
             alignment: WrapAlignment.center,
-            spacing: 10,
-            runSpacing: 8,
+            spacing: 8,
+            runSpacing: 6,
             children: [
               _buildChoiceChip(
                 theme: theme,
-                label: '256 MB',
-                selected: settings.ramBufferMb == 256,
-                onSelected: () => _settingsService.setRamBuffer(256),
+                label: 'H.264 / AVC',
+                selected: settings.defaultVideoCodec == 'h264',
+                onSelected: () => _settingsService.setDefaultVideoCodec('h264'),
               ),
               _buildChoiceChip(
                 theme: theme,
-                label: '512 MB',
-                selected: settings.ramBufferMb == 512,
-                onSelected: () => _settingsService.setRamBuffer(512),
-              ),
-              _buildChoiceChip(
-                theme: theme,
-                label: '1024 MB',
-                selected: settings.ramBufferMb == 1024,
-                onSelected: () => _settingsService.setRamBuffer(1024),
-              ),
-              _buildChoiceChip(
-                theme: theme,
-                label: '2048 MB',
-                selected: settings.ramBufferMb == 2048,
-                onSelected: () => _settingsService.setRamBuffer(2048),
+                label: 'H.265 / HEVC',
+                selected: settings.defaultVideoCodec == 'hevc',
+                onSelected: () => _settingsService.setDefaultVideoCodec('hevc'),
               ),
             ],
           ),
@@ -1205,10 +1178,151 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         Center(
           child: Text(
-            settings.ramBufferMb <= 512
-                ? l10n.t('settings_ram_low_desc')
-                : l10n.t('settings_ram_high_desc'),
+            settings.defaultVideoCodec == 'hevc'
+                ? l10n.t('desc_hevc')
+                : l10n.t('desc_h264'),
             textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11.5,
+              height: 1.35,
+              color: theme.colorScheme.onSurface.withAlpha(140),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // File naming pattern section
+
+  Widget _buildFileNamingSection(
+    ThemeData theme,
+    AppSettings settings,
+    AppLocalizations l10n,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.edit_note_rounded,
+              size: 16,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              l10n.t('settings_file_naming'),
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Center(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              _buildChoiceChip(
+                theme: theme,
+                label: l10n.t('naming_format_suffix'),
+                selected: settings.fileNamingFormat == 'suffix',
+                onSelected: () => _settingsService.setFileNamingFormat('suffix'),
+              ),
+              _buildChoiceChip(
+                theme: theme,
+                label: l10n.t('naming_format_timestamp'),
+                selected: settings.fileNamingFormat == 'timestamp',
+                onSelected: () =>
+                    _settingsService.setFileNamingFormat('timestamp'),
+              ),
+              _buildChoiceChip(
+                theme: theme,
+                label: l10n.t('naming_format_simple'),
+                selected: settings.fileNamingFormat == 'simple',
+                onSelected: () => _settingsService.setFileNamingFormat('simple'),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Center(
+          child: Text(
+            settings.fileNamingFormat == 'timestamp'
+                ? l10n.t('naming_format_timestamp_desc')
+                : (settings.fileNamingFormat == 'simple'
+                    ? l10n.t('naming_format_simple_desc')
+                    : l10n.t('naming_format_suffix_desc')),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11.5,
+              height: 1.35,
+              color: theme.colorScheme.onSurface.withAlpha(140),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Preserve media date tile
+
+  Widget _buildPreserveMediaDateTile(
+    ThemeData theme,
+    AppSettings settings,
+    AppLocalizations l10n,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withAlpha(20),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                settings.preserveMediaDate
+                    ? Icons.event_available_rounded
+                    : Icons.event_busy_rounded,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.t('settings_preserve_date'),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            RepaintBoundary(
+              child: Switch(
+                value: settings.preserveMediaDate,
+                onChanged: (val) {
+                  _settingsService.setPreserveMediaDate(val);
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.only(left: 42),
+          child: Text(
+            l10n.t('settings_preserve_date_desc'),
             style: TextStyle(
               fontSize: 11.5,
               height: 1.35,

@@ -85,10 +85,14 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   );
   int _prevSizeBytes = 0;
   int _latestOutputBytes = 0;
+  int _marketedRamGb = 4;
 
   @override
   void initState() {
     super.initState();
+    _marketedRamGb = DeviceSpecHelper.getMarketedRamGb(
+      DeviceSpecHelper.getTotalRamMb(),
+    );
     ForegroundServiceManager().requestPermissions();
     _statusText = widget.isAudioExtraction
         ? _settingsService.l10n.t('proc_extracting')
@@ -728,7 +732,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             iconColor: const Color(0xFF818CF8),
             label: l10n.t('telemetry_memory'),
             value: '${_memoryUsageMb > 0 ? _memoryUsageMb : 60} MB',
-            subValue: ' / ${widget.appSettings.ramBufferMb} MB',
+            subValue: ' / $_marketedRamGb GB',
             visualizer: _WindowsTaskGraph(
               history: _memoryHistory,
               color: const Color(0xFF818CF8),

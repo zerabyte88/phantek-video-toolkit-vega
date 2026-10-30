@@ -48,9 +48,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final defaultPreset = SpeedPreset.fromEncodingPreset(
       _settingsService.settings.encodingPreset,
     );
+    final defaultCodec = _settingsService.settings.defaultVideoCodec == 'hevc'
+        ? VideoCodec.hevc
+        : VideoCodec.h264;
     _encodingOptions = EncodingOptions(
       speedPreset: defaultPreset,
       crfValue: defaultPreset.defaultCrf,
+      codec: defaultCodec,
     );
     _settingsService.addListener(_onSettingsChanged);
     CacheManagerService().clearAllCache();
@@ -70,12 +74,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final preset = SpeedPreset.fromEncodingPreset(
       _settingsService.settings.encodingPreset,
     );
+    final defaultCodec = _settingsService.settings.defaultVideoCodec == 'hevc'
+        ? VideoCodec.hevc
+        : VideoCodec.h264;
     setState(() {
       if (_encodingOptions.speedPreset != preset) {
         _encodingOptions = _encodingOptions.copyWith(
           speedPreset: preset,
           crfValue: preset.defaultCrf,
         );
+      }
+      if (_videoInfo == null && _encodingOptions.codec != defaultCodec) {
+        _encodingOptions = _encodingOptions.copyWith(codec: defaultCodec);
       }
     });
   }
@@ -92,9 +102,13 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final info = await TransformerService.getVideoInfo(path);
       if (!mounted) return;
+      final defaultCodec = _settingsService.settings.defaultVideoCodec == 'hevc'
+          ? VideoCodec.hevc
+          : VideoCodec.h264;
       setState(() {
         _isLoading = false;
         _videoInfo = info;
+        _encodingOptions = _encodingOptions.copyWith(codec: defaultCodec);
         if (info != null) {
           final resolutions = _getResolutionsForMode(_selectedMode, info);
           if (resolutions.isNotEmpty) {
@@ -264,10 +278,13 @@ class _HomeScreenState extends State<HomeScreen> {
       final defaultPreset = SpeedPreset.fromEncodingPreset(
         _settingsService.settings.encodingPreset,
       );
+      final defaultCodec = _settingsService.settings.defaultVideoCodec == 'hevc'
+          ? VideoCodec.hevc
+          : VideoCodec.h264;
       _encodingOptions = EncodingOptions(
         speedPreset: defaultPreset,
         crfValue: defaultPreset.defaultCrf,
-        codec: VideoCodec.h264,
+        codec: defaultCodec,
         container: VideoContainer.mp4,
       );
       if (_videoInfo != null) {
@@ -341,7 +358,11 @@ class _HomeScreenState extends State<HomeScreen> {
         _selectedResolution = resolutions.first;
       }
       if (mode != _AppMode.convert) {
-        _encodingOptions = _encodingOptions.copyWith(codec: VideoCodec.h264);
+        final defaultCodec =
+            _settingsService.settings.defaultVideoCodec == 'hevc'
+                ? VideoCodec.hevc
+                : VideoCodec.h264;
+        _encodingOptions = _encodingOptions.copyWith(codec: defaultCodec);
       }
     });
   }
@@ -366,9 +387,13 @@ class _HomeScreenState extends State<HomeScreen> {
           height: _videoInfo!.height,
         );
 
+    final defaultCodec =
+        _settingsService.settings.defaultVideoCodec == 'hevc'
+            ? VideoCodec.hevc
+            : VideoCodec.h264;
     EncodingOptions options = _selectedMode == _AppMode.convert
         ? _encodingOptions
-        : _encodingOptions.copyWith(codec: VideoCodec.h264);
+        : _encodingOptions.copyWith(codec: defaultCodec);
 
     final isSource4K = _videoInfo!.is4K;
     final isTarget4K =
