@@ -23,8 +23,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.1.4';
-  String _buildNumber = '21401';
+  String _appVersion = 'v2.1.5';
+  String _buildNumber = '21501';
   double? _dragCardOpacity;
 
   @override
@@ -53,14 +53,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '21001';
+              : '21501';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.1.4';
-          _buildNumber = '21401';
+          _appVersion = 'v2.1.5';
+          _buildNumber = '21501';
         });
       }
     }
@@ -1379,7 +1379,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildDetailRow(
             theme,
             l10n.t('license_label'),
-            'MIT',
+            'MIT License',
             onTap: () => _showAppLicensePage(context, theme),
           ),
 

@@ -1294,7 +1294,7 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
 
-        final licenseRow = find.text('MIT');
+        final licenseRow = find.text('MIT License');
         expect(licenseRow, findsOneWidget);
         await tester.tap(licenseRow);
         await tester.pumpAndSettle();

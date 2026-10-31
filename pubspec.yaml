@@ -2,7 +2,7 @@ name: phantek_video_toolkit_vega
 description: "High-performance offline on-device video transcoding, downscaling, and audio extraction for Android powered by Hardware Acceleration (AndroidX Media3 Transformer)."
 publish_to: 'none'
 
-version: 2.1.5+215
+version: 2.1.5+21501
 
 environment:
   sdk: ^3.13.0
