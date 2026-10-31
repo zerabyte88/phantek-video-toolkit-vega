@@ -21,7 +21,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('R1: Notification Icon Configuration & Android Resources', () {
-    test('ForegroundServiceManager configures NOTIFICATION_ICON metadata', () {
+    test('ForegroundServiceManager configures NOTIFICATION_ICON metadata and background color', () {
       expect(
         ForegroundServiceManager.notificationIconMetaData,
         equals('com.phantek.lyra.vega.service.NOTIFICATION_ICON'),
@@ -29,6 +29,10 @@ void main() {
       expect(
         ForegroundServiceManager.defaultNotificationIcon.metaDataName,
         equals(ForegroundServiceManager.notificationIconMetaData),
+      );
+      expect(
+        ForegroundServiceManager.defaultNotificationIcon.backgroundColor,
+        equals(const Color(0xFF9333EA)),
       );
     });
 

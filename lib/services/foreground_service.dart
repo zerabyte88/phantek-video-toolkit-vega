@@ -3,6 +3,8 @@
 
 import 'dart:io';
 
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
@@ -27,6 +29,7 @@ class ForegroundServiceManager {
       'com.phantek.lyra.vega.service.NOTIFICATION_ICON';
   static const NotificationIcon defaultNotificationIcon = NotificationIcon(
     metaDataName: notificationIconMetaData,
+    backgroundColor: Color(0xFF9333EA),
   );
 
   static final ForegroundServiceManager _instance =
@@ -43,7 +46,7 @@ class ForegroundServiceManager {
       FlutterForegroundTask.initCommunicationPort();
       FlutterForegroundTask.init(
         androidNotificationOptions: AndroidNotificationOptions(
-          channelId: 'video_conversion_channel_v4',
+          channelId: 'video_conversion_channel_v5',
           channelName: 'Video Processing',
           channelDescription: 'Background video conversion notification',
           channelImportance: NotificationChannelImportance.HIGH,
