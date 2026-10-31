@@ -62,15 +62,6 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
       _isCustomFps = false;
       _customFps = (currentFps > 0 ? currentFps : maxFps).clamp(10, maxFps);
     }
-
-    if (widget.encodingOptions.crfValue !=
-            widget.encodingOptions.speedPreset.defaultCrf ||
-        widget.encodingOptions.rateControlMode != RateControlMode.crf ||
-        widget.encodingOptions.targetFps > 0 ||
-        widget.encodingOptions.codec == VideoCodec.hevc ||
-        widget.encodingOptions.videoAudioBitrateKbps != 128) {
-      _isAdvancedExpanded = true;
-    }
   }
 
   void _onSettingsUpdated() {
@@ -90,9 +81,6 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.encodingOptions.crfValue != widget.encodingOptions.crfValue) {
       _crfValue = widget.encodingOptions.crfValue;
-      if (_crfValue != widget.encodingOptions.speedPreset.defaultCrf) {
-        _isAdvancedExpanded = true;
-      }
     }
     if (oldWidget.encodingOptions.customBitrateKbps !=
         widget.encodingOptions.customBitrateKbps) {

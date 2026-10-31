@@ -110,6 +110,25 @@ class VideoInfo {
     return '${(bitrate / 1000).toStringAsFixed(0)} Kbps';
   }
 
+  /// Formatted codec display name (e.g. 'H.264', 'H.265 / HEVC', 'VP9', 'AV1').
+  String get formattedCodec {
+    final c = codec.toLowerCase();
+    if (c.contains('avc') || c.contains('h264') || c.contains('h.264')) {
+      return 'H.264';
+    }
+    if (c.contains('hevc') || c.contains('h265') || c.contains('h.265')) {
+      return 'H.265 / HEVC';
+    }
+    if (c.contains('vp9')) return 'VP9';
+    if (c.contains('vp8')) return 'VP8';
+    if (c.contains('av01') || c.contains('av1')) return 'AV1';
+    if (c.contains('mp4v') || c.contains('mpeg4')) return 'MPEG-4';
+    if (c.contains('h263')) return 'H.263';
+    // Fallback if probed as container mime or generic mp4
+    if (c == 'video/mp4' || c == 'mp4') return 'H.264';
+    return codec.toUpperCase();
+  }
+
   List<VideoResolution> get availableDownscaleTargets {
     final dim = shortDimension;
     final targets = <VideoResolution>[

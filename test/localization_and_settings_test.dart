@@ -1597,6 +1597,12 @@ void main() {
         );
         await tester.pumpAndSettle();
 
+        await tester.ensureVisible(
+          find.byKey(const Key('advanced_options_toggle')),
+        );
+        await tester.tap(find.byKey(const Key('advanced_options_toggle')));
+        await tester.pumpAndSettle();
+
         // Ensure active preset indicator and key explanations are present and rendered fully without truncation
         expect(find.byIcon(Icons.speed_rounded), findsOneWidget);
         expect(find.text(l10n.t('desc_crf')), findsOneWidget);
@@ -3752,9 +3758,39 @@ void main() {
           reason: 'heavy_process_continue missing in $code',
         );
         expect(
+          l10n.t('heavy_process_continue').contains('...'),
+          isFalse,
+          reason: 'heavy_process_continue contains ellipsis in $code',
+        );
+        expect(
           l10n.t('heavy_process_cancel'),
           isNotEmpty,
           reason: 'heavy_process_cancel missing in $code',
+        );
+        expect(
+          l10n.t('heavy_process_cancel').contains('...'),
+          isFalse,
+          reason: 'heavy_process_cancel contains ellipsis in $code',
+        );
+        expect(
+          l10n.t('heavy_process_desc').contains('...'),
+          isFalse,
+          reason: 'heavy_process_desc contains ellipsis in $code',
+        );
+        expect(
+          l10n.t('heavy_process_desc_4k').contains('...'),
+          isFalse,
+          reason: 'heavy_process_desc_4k contains ellipsis in $code',
+        );
+        expect(
+          l10n.t('heavy_process_desc_long', args: {'duration': '15m 10s'}).contains('...'),
+          isFalse,
+          reason: 'heavy_process_desc_long contains ellipsis in $code',
+        );
+        expect(
+          l10n.t('heavy_process_desc_4k_long', args: {'duration': '15m 10s'}).contains('...'),
+          isFalse,
+          reason: 'heavy_process_desc_4k_long contains ellipsis in $code',
         );
       }
     });

@@ -362,8 +362,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mode != _AppMode.convert) {
         final defaultCodec =
             _settingsService.settings.defaultVideoCodec == 'hevc'
-                ? VideoCodec.hevc
-                : VideoCodec.h264;
+            ? VideoCodec.hevc
+            : VideoCodec.h264;
         _encodingOptions = _encodingOptions.copyWith(codec: defaultCodec);
       }
     });
@@ -389,10 +389,9 @@ class _HomeScreenState extends State<HomeScreen> {
           height: _videoInfo!.height,
         );
 
-    final defaultCodec =
-        _settingsService.settings.defaultVideoCodec == 'hevc'
-            ? VideoCodec.hevc
-            : VideoCodec.h264;
+    final defaultCodec = _settingsService.settings.defaultVideoCodec == 'hevc'
+        ? VideoCodec.hevc
+        : VideoCodec.h264;
     EncodingOptions options = _selectedMode == _AppMode.convert
         ? _encodingOptions
         : _encodingOptions.copyWith(codec: defaultCodec);
@@ -431,43 +430,59 @@ class _HomeScreenState extends State<HomeScreen> {
       final proceed = await showDialog<bool>(
         context: context,
         builder: (ctx) {
+          final theme = Theme.of(ctx);
           return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, color: Colors.amber),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withAlpha(25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.amber,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     l10n.t('heavy_process_title'),
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
             ),
             content: Text(
               descText,
-              style: const TextStyle(fontSize: 13, height: 1.4),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text(l10n.t('heavy_process_cancel')),
+              style: TextStyle(
+                fontSize: 13.5,
+                height: 1.45,
+                color: theme.colorScheme.onSurface.withAlpha(200),
               ),
-              if (options.speedPreset == SpeedPreset.max)
-                TextButton(
-                  onPressed: () {
-                    // Switch to Normal preset
-                    options = options.copyWith(
-                      speedPreset: SpeedPreset.normal,
-                      crfValue: SpeedPreset.normal.defaultCrf,
-                    );
-                    Navigator.of(ctx).pop(true);
-                  },
-                  child: Text(l10n.t('heavy_process_use_normal')),
-                ),
-              FilledButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text(l10n.t('heavy_process_continue')),
+            ),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: Text(l10n.t('heavy_process_cancel')),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: Text(l10n.t('heavy_process_continue')),
+                  ),
+                ],
               ),
             ],
           );

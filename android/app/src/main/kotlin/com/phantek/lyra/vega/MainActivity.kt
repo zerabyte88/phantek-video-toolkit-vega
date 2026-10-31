@@ -14,6 +14,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import androidx.media3.common.C
 import androidx.media3.common.Effect
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -25,6 +26,7 @@ import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.Effects
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
+import androidx.media3.transformer.InAppMuxer
 import androidx.media3.transformer.ProgressHolder
 import androidx.media3.transformer.Transformer
 import androidx.media3.transformer.VideoEncoderSettings
@@ -159,6 +161,7 @@ class MainActivity : FlutterActivity() {
         }
 
         // Inspect tracks with MediaExtractor
+        var videoTrackMime: String? = null
         val extractor = MediaExtractor()
         try {
             extractor.setDataSource(filePath)
@@ -167,9 +170,7 @@ class MainActivity : FlutterActivity() {
                 val format = extractor.getTrackFormat(i)
                 val trackMime = format.getString(MediaFormat.KEY_MIME) ?: ""
                 if (trackMime.startsWith("video/")) {
-                    if (mime == "unknown" || !mime.startsWith("video/")) {
-                        mime = trackMime
-                    }
+                    videoTrackMime = trackMime
                     if (format.containsKey(MediaFormat.KEY_FRAME_RATE)) {
                         fps = try {
                             format.getInteger(MediaFormat.KEY_FRAME_RATE).toDouble()
@@ -209,13 +210,15 @@ class MainActivity : FlutterActivity() {
             height = temp
         }
 
+        val effectiveMime = videoTrackMime ?: mime
         val cleanCodec = when {
-            mime.contains("avc", ignoreCase = true) || mime.contains("h264", ignoreCase = true) -> "h264"
-            mime.contains("hevc", ignoreCase = true) || mime.contains("h265", ignoreCase = true) -> "hevc"
-            mime.contains("vp9", ignoreCase = true) -> "vp9"
-            mime.contains("av01", ignoreCase = true) || mime.contains("av1", ignoreCase = true) -> "av1"
-            mime.contains("mp4v", ignoreCase = true) -> "mp4v"
-            else -> mime
+            effectiveMime.contains("avc", ignoreCase = true) || effectiveMime.contains("h264", ignoreCase = true) -> "h264"
+            effectiveMime.contains("hevc", ignoreCase = true) || effectiveMime.contains("h265", ignoreCase = true) -> "hevc"
+            effectiveMime.contains("vp9", ignoreCase = true) -> "vp9"
+            effectiveMime.contains("av01", ignoreCase = true) || effectiveMime.contains("av1", ignoreCase = true) -> "av1"
+            effectiveMime.contains("mp4v", ignoreCase = true) -> "mp4v"
+            effectiveMime.contains("3gpp", ignoreCase = true) -> "h263"
+            else -> effectiveMime.removePrefix("video/").lowercase()
         }
 
         return mapOf(
@@ -331,11 +334,14 @@ class MainActivity : FlutterActivity() {
             }
             val encoderFactory = encoderFactoryBuilder.build()
 
-            // Build Transformer
+            // Build Transformer with InAppMuxer to bypass native platform MediaMuxer limitations and sample timeouts on long/TS media
+            val muxerFactory = InAppMuxer.Factory.Builder().build()
             val transformerBuilder = Transformer.Builder(applicationContext)
                 .setVideoMimeType(targetVideoMime)
                 .setAudioMimeType(MimeTypes.AUDIO_AAC)
                 .setEncoderFactory(encoderFactory)
+                .setMuxerFactory(muxerFactory)
+                .setMaxDelayBetweenMuxerSamplesMs(C.TIME_UNSET)
 
             transformerBuilder.addListener(object : Transformer.Listener {
                 override fun onCompleted(composition: Composition, exportResult: ExportResult) {
@@ -360,10 +366,12 @@ class MainActivity : FlutterActivity() {
                     val res = activeTranscodeResult
                     activeTranscodeResult = null
                     val err = exportException.localizedMessage ?: "Transcoding failed"
-                    sendLog("Hardware transcoding error: $err")
+                    val causeMsg = exportException.cause?.localizedMessage ?: exportException.cause?.message
+                    val fullErr = if (!causeMsg.isNullOrBlank() && causeMsg != err) "$err ($causeMsg)" else err
+                    sendLog("Hardware transcoding error [${exportException.errorCodeName}]: $fullErr")
                     cleanupOutput(outputPath)
                     mainHandler.post {
-                        res?.error("TRANSCODE_FAILED", err, null)
+                        res?.error("TRANSCODE_FAILED", fullErr, null)
                     }
                 }
             })
@@ -474,8 +482,11 @@ class MainActivity : FlutterActivity() {
                 .setRemoveVideo(true)
                 .build()
 
+            val muxerFactory = InAppMuxer.Factory.Builder().build()
             val transformer = Transformer.Builder(applicationContext)
                 .setAudioMimeType(MimeTypes.AUDIO_AAC)
+                .setMuxerFactory(muxerFactory)
+                .setMaxDelayBetweenMuxerSamplesMs(C.TIME_UNSET)
                 .addListener(object : Transformer.Listener {
                     override fun onCompleted(composition: Composition, exportResult: ExportResult) {
                         stopProgressPolling()
@@ -499,9 +510,12 @@ class MainActivity : FlutterActivity() {
                         val res = activeAudioExtractResult
                         activeAudioExtractResult = null
                         val err = exportException.localizedMessage ?: "Audio extraction failed"
+                        val causeMsg = exportException.cause?.localizedMessage ?: exportException.cause?.message
+                        val fullErr = if (!causeMsg.isNullOrBlank() && causeMsg != err) "$err ($causeMsg)" else err
+                        sendLog("Audio extraction error [${exportException.errorCodeName}]: $fullErr")
                         cleanupOutput(outputPath)
                         mainHandler.post {
-                            res?.error("EXTRACTION_FAILED", err, null)
+                            res?.error("EXTRACTION_FAILED", fullErr, null)
                         }
                     }
                 })

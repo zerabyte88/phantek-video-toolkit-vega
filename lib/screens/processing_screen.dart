@@ -608,33 +608,12 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                     Text(
                       _formatPercentage(_progress),
                       style: TextStyle(
-                        fontSize: 30,
+                        fontSize: 34,
                         fontWeight: FontWeight.w800,
                         color: progressColor,
                         letterSpacing: -1.0,
                       ),
                     ),
-                    if (_speedText.isNotEmpty) ...[
-                      const SizedBox(height: 3),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: progressColor.withAlpha(20),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          _speedText,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: progressColor,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
                   ] else ...[
                     Icon(
                       _isSuccess
@@ -981,15 +960,18 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: theme.colorScheme.onSurface.withAlpha(130),
-                  height: 1.15,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: theme.colorScheme.onSurface.withAlpha(130),
+                    height: 1.15,
+                  ),
+                  maxLines: 1,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 1),
               FittedBox(
@@ -1123,7 +1105,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     final srcExt = widget.videoInfo.fileName.contains('.')
         ? widget.videoInfo.fileName.split('.').last.toUpperCase()
         : 'VIDEO';
-    final srcCodec = widget.videoInfo.codec.toUpperCase();
+    final srcCodec = widget.videoInfo.formattedCodec;
 
     final targetResLabel = widget.targetResolution.label.startsWith('Original')
         ? '${l10n.t('res_original')} (${widget.targetResolution.label.substring(widget.targetResolution.label.indexOf('(') + 1)}'
@@ -1131,15 +1113,15 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     final isPortrait = widget.videoInfo.height > widget.videoInfo.width;
     final targetW =
         (isPortrait && !widget.targetResolution.label.startsWith('Original'))
-            ? widget.targetResolution.height
-            : widget.targetResolution.width;
+        ? widget.targetResolution.height
+        : widget.targetResolution.width;
     final targetH =
         (isPortrait && !widget.targetResolution.label.startsWith('Original'))
-            ? widget.targetResolution.width
-            : widget.targetResolution.height;
+        ? widget.targetResolution.width
+        : widget.targetResolution.height;
 
-    final targetContainer =
-        widget.encodingOptions.container.displayName.toUpperCase();
+    final targetContainer = widget.encodingOptions.container.displayName
+        .toUpperCase();
     final targetCodec = widget.encodingOptions.codec.displayName;
 
     return Row(
