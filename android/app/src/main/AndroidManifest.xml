@@ -16,6 +16,7 @@
         android:label="Phantek Vega"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:requestLegacyExternalStorage="true">
         <activity
             android:name=".MainActivity"

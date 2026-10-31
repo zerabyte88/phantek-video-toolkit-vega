@@ -44,26 +44,29 @@ void main() {
       expect(content.contains('@drawable/ic_notification'), isTrue);
     });
 
-    test('All required notification drawable resources exist and are non-empty', () {
-      final notificationDrawables = [
-        'android/app/src/main/res/drawable/ic_notification.png',
-        'android/app/src/main/res/drawable-mdpi/ic_notification.png',
-        'android/app/src/main/res/drawable-hdpi/ic_notification.png',
-        'android/app/src/main/res/drawable-xhdpi/ic_notification.png',
-        'android/app/src/main/res/drawable-xxhdpi/ic_notification.png',
-        'android/app/src/main/res/drawable-xxxhdpi/ic_notification.png',
-      ];
+    test(
+      'All required notification drawable resources exist and are non-empty',
+      () {
+        final notificationDrawables = [
+          'android/app/src/main/res/drawable/ic_notification.png',
+          'android/app/src/main/res/drawable-mdpi/ic_notification.png',
+          'android/app/src/main/res/drawable-hdpi/ic_notification.png',
+          'android/app/src/main/res/drawable-xhdpi/ic_notification.png',
+          'android/app/src/main/res/drawable-xxhdpi/ic_notification.png',
+          'android/app/src/main/res/drawable-xxxhdpi/ic_notification.png',
+        ];
 
-      for (final path in notificationDrawables) {
-        final file = File(path);
-        expect(file.existsSync(), isTrue, reason: '$path should exist');
-        expect(
-          file.lengthSync(),
-          greaterThan(0),
-          reason: '$path should not be empty',
-        );
-      }
-    });
+        for (final path in notificationDrawables) {
+          final file = File(path);
+          expect(file.existsSync(), isTrue, reason: '$path should exist');
+          expect(
+            file.lengthSync(),
+            greaterThan(0),
+            reason: '$path should not be empty',
+          );
+        }
+      },
+    );
 
     test('All launcher mipmap icons exist and are updated', () {
       final mipmapIcons = [
@@ -75,6 +78,29 @@ void main() {
       ];
 
       for (final path in mipmapIcons) {
+        final file = File(path);
+        expect(file.existsSync(), isTrue, reason: '$path should exist');
+        expect(
+          file.lengthSync(),
+          greaterThan(0),
+          reason: '$path should not be empty',
+        );
+      }
+    });
+
+    test('Adaptive icon XMLs and foreground drawables exist', () {
+      final adaptiveFiles = [
+        'android/app/src/main/res/values/colors.xml',
+        'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
+        'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml',
+        'android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png',
+        'android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png',
+        'android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png',
+        'android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png',
+        'android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png',
+      ];
+
+      for (final path in adaptiveFiles) {
         final file = File(path);
         expect(file.existsSync(), isTrue, reason: '$path should exist');
         expect(
@@ -116,55 +142,56 @@ void main() {
       FlutterForegroundTask.skipServiceResponseCheck = true;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('flutter_foreground_task/methods'),
-        (MethodCall call) async {
-          switch (call.method) {
-            case 'checkNotificationPermission':
-              return 0;
-            case 'requestNotificationPermission':
-              return 0;
-            case 'isRunningService':
-              return false;
-            case 'startService':
-              return 'started';
-            case 'updateService':
-              return 'updated';
-            case 'stopService':
-              return 'stopped';
-            default:
-              return null;
-          }
-        },
+            const MethodChannel('flutter_foreground_task/methods'),
+            (MethodCall call) async {
+              switch (call.method) {
+                case 'checkNotificationPermission':
+                  return 0;
+                case 'requestNotificationPermission':
+                  return 0;
+                case 'isRunningService':
+                  return false;
+                case 'startService':
+                  return 'started';
+                case 'updateService':
+                  return 'updated';
+                case 'stopService':
+                  return 'stopped';
+                default:
+                  return null;
+              }
+            },
+          );
+      final testCacheDir = Directory.systemTemp.createTempSync(
+        'vega_test_cache_',
       );
-      final testCacheDir =
-          Directory.systemTemp.createTempSync('vega_test_cache_');
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/path_provider'),
-        (MethodCall call) async {
-          if (call.method == 'getTemporaryDirectory') {
-            return testCacheDir.path;
-          }
-          if (call.method == 'getExternalCacheDirectories') {
-            return <String>[testCacheDir.path];
-          }
-          return testCacheDir.path;
-        },
-      );
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall call) async {
+              if (call.method == 'getTemporaryDirectory') {
+                return testCacheDir.path;
+              }
+              if (call.method == 'getExternalCacheDirectories') {
+                return <String>[testCacheDir.path];
+              }
+              return testCacheDir.path;
+            },
+          );
     });
 
     tearDown(() {
       FlutterForegroundTask.skipServiceResponseCheck = false;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('flutter_foreground_task/methods'),
-        null,
-      );
+            const MethodChannel('flutter_foreground_task/methods'),
+            null,
+          );
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/path_provider'),
-        null,
-      );
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            null,
+          );
     });
 
     testWidgets(
@@ -215,7 +242,8 @@ void main() {
           final customPaintFinder = find.byWidgetPredicate(
             (widget) =>
                 widget is CustomPaint &&
-                widget.painter.runtimeType.toString() == '_DualRingProgressPainter',
+                widget.painter.runtimeType.toString() ==
+                    '_DualRingProgressPainter',
           );
           expect(
             customPaintFinder,
@@ -260,17 +288,18 @@ void main() {
         void Function(double, String, [int?])? progressCallback;
         final completer = Completer<String?>();
 
-        TransformerService.mockProcessVideo = ({
-          required sourceVideo,
-          required targetResolution,
-          encodingOptions = const EncodingOptions(),
-          appSettings = const AppSettings(),
-          required onProgress,
-          required onLog,
-        }) async {
-          progressCallback = onProgress;
-          return completer.future;
-        };
+        TransformerService.mockProcessVideo =
+            ({
+              required sourceVideo,
+              required targetResolution,
+              encodingOptions = const EncodingOptions(),
+              appSettings = const AppSettings(),
+              required onProgress,
+              required onLog,
+            }) async {
+              progressCallback = onProgress;
+              return completer.future;
+            };
 
         addTearDown(() {
           TransformerService.mockProcessVideo = null;
@@ -315,11 +344,13 @@ void main() {
         final customPaintFinder = find.byWidgetPredicate(
           (widget) =>
               widget is CustomPaint &&
-              widget.painter.runtimeType.toString() == '_DualRingProgressPainter',
+              widget.painter.runtimeType.toString() ==
+                  '_DualRingProgressPainter',
         );
         expect(customPaintFinder, findsOneWidget);
-        final dynamic painter =
-            tester.widget<CustomPaint>(customPaintFinder).painter;
+        final dynamic painter = tester
+            .widget<CustomPaint>(customPaintFinder)
+            .painter;
         final text10 = tester.widget<Text>(find.text('10.0%'));
         expect(painter.color, equals(text10.style?.color));
         expect(painter.secondaryColor, equals(text10.style?.color));
@@ -358,69 +389,87 @@ void main() {
       },
     );
 
-    testWidgets(
-      'ProcessingScreen displays error state when task fails',
-      (WidgetTester tester) async {
-        final completer = Completer<String?>();
+    testWidgets('ProcessingScreen displays error state when task fails', (
+      WidgetTester tester,
+    ) async {
+      final completer = Completer<String?>();
 
-        TransformerService.mockProcessVideo = ({
-          required sourceVideo,
-          required targetResolution,
-          encodingOptions = const EncodingOptions(),
-          appSettings = const AppSettings(),
-          required onProgress,
-          required onLog,
-        }) async {
-          return completer.future;
-        };
+      TransformerService.mockProcessVideo =
+          ({
+            required sourceVideo,
+            required targetResolution,
+            encodingOptions = const EncodingOptions(),
+            appSettings = const AppSettings(),
+            required onProgress,
+            required onLog,
+          }) async {
+            return completer.future;
+          };
 
-        addTearDown(() {
-          TransformerService.mockProcessVideo = null;
-          if (!completer.isCompleted) {
-            completer.complete(null);
-          }
-        });
+      addTearDown(() {
+        TransformerService.mockProcessVideo = null;
+        if (!completer.isCompleted) {
+          completer.complete(null);
+        }
+      });
 
-        await tester.pumpWidget(
-          const MaterialApp(
-            home: ProcessingScreen(
-              videoInfo: testVideo,
-              targetResolution: testResolution,
-              encodingOptions: EncodingOptions(),
-              appSettings: AppSettings(),
-            ),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ProcessingScreen(
+            videoInfo: testVideo,
+            targetResolution: testResolution,
+            encodingOptions: EncodingOptions(),
+            appSettings: AppSettings(),
           ),
-        );
+        ),
+      );
 
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 50));
-        await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
 
-        completer.complete(null);
-        await tester.pump();
-        await tester.pump(const Duration(seconds: 5));
-        expect(find.byIcon(Icons.error_rounded), findsOneWidget);
-        expect(find.text('Error'), findsOneWidget);
-      },
-    );
+      completer.complete(null);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 5));
+      expect(find.byIcon(Icons.error_rounded), findsOneWidget);
+      expect(find.text('Error'), findsOneWidget);
+    });
 
     test('ProcessingScreen.formatProgressPercentage formats smooth decimals and handles edge cases', () {
       expect(ProcessingScreen.formatProgressPercentage(0.0), equals('0.0%'));
       expect(ProcessingScreen.formatProgressPercentage(0.001), equals('0.1%'));
       expect(ProcessingScreen.formatProgressPercentage(0.002), equals('0.2%'));
       expect(ProcessingScreen.formatProgressPercentage(0.005), equals('0.5%'));
-      expect(ProcessingScreen.formatProgressPercentage(0.1412), equals('14.1%'));
-      expect(ProcessingScreen.formatProgressPercentage(0.1426), equals('14.3%'));
+      expect(
+        ProcessingScreen.formatProgressPercentage(0.1412),
+        equals('14.1%'),
+      );
+      expect(
+        ProcessingScreen.formatProgressPercentage(0.1426),
+        equals('14.3%'),
+      );
       expect(ProcessingScreen.formatProgressPercentage(0.5), equals('50.0%'));
-      expect(ProcessingScreen.formatProgressPercentage(0.9994), equals('99.9%'));
+      expect(
+        ProcessingScreen.formatProgressPercentage(0.9994),
+        equals('99.9%'),
+      );
       expect(ProcessingScreen.formatProgressPercentage(1.0), equals('100.0%'));
       // Boundary clamping
       expect(ProcessingScreen.formatProgressPercentage(-0.1), equals('0.0%'));
       expect(ProcessingScreen.formatProgressPercentage(1.05), equals('100.0%'));
       // Corrupt / non-finite inputs
-      expect(ProcessingScreen.formatProgressPercentage(double.nan), equals('0.0%'));
-      expect(ProcessingScreen.formatProgressPercentage(double.infinity), equals('0.0%'));
-      expect(ProcessingScreen.formatProgressPercentage(double.negativeInfinity), equals('0.0%'));
+      expect(
+        ProcessingScreen.formatProgressPercentage(double.nan),
+        equals('0.0%'),
+      );
+      expect(
+        ProcessingScreen.formatProgressPercentage(double.infinity),
+        equals('0.0%'),
+      );
+      expect(
+        ProcessingScreen.formatProgressPercentage(double.negativeInfinity),
+        equals('0.0%'),
+      );
     });
 
     testWidgets(
@@ -442,7 +491,8 @@ void main() {
         final customPaintFinder = find.byWidgetPredicate(
           (widget) =>
               widget is CustomPaint &&
-              widget.painter.runtimeType.toString() == '_DualRingProgressPainter',
+              widget.painter.runtimeType.toString() ==
+                  '_DualRingProgressPainter',
         );
         expect(customPaintFinder, findsOneWidget);
 
@@ -452,8 +502,14 @@ void main() {
         // Verify painter can paint with valid canvas and handles constrained sizes safely
         final recorder = ui.PictureRecorder();
         final canvas = Canvas(recorder);
-        expect(() => painter.paint(canvas, const Size(196, 196)), returnsNormally);
-        expect(() => painter.paint(canvas, const Size(20, 20)), returnsNormally);
+        expect(
+          () => painter.paint(canvas, const Size(196, 196)),
+          returnsNormally,
+        );
+        expect(
+          () => painter.paint(canvas, const Size(20, 20)),
+          returnsNormally,
+        );
         expect(() => painter.paint(canvas, const Size(0, 0)), returnsNormally);
 
         // Verify shouldRepaint handles NaN comparisons safely
@@ -467,17 +523,18 @@ void main() {
         void Function(double, String, [int?])? progressCallback;
         final completer = Completer<String?>();
 
-        TransformerService.mockProcessVideo = ({
-          required sourceVideo,
-          required targetResolution,
-          encodingOptions = const EncodingOptions(),
-          appSettings = const AppSettings(),
-          required onProgress,
-          required onLog,
-        }) async {
-          progressCallback = onProgress;
-          return completer.future;
-        };
+        TransformerService.mockProcessVideo =
+            ({
+              required sourceVideo,
+              required targetResolution,
+              encodingOptions = const EncodingOptions(),
+              appSettings = const AppSettings(),
+              required onProgress,
+              required onLog,
+            }) async {
+              progressCallback = onProgress;
+              return completer.future;
+            };
 
         addTearDown(() {
           TransformerService.mockProcessVideo = null;
