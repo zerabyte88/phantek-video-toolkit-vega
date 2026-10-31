@@ -45,19 +45,19 @@ void main() {
         content.contains('com.phantek.lyra.vega.service.NOTIFICATION_ICON'),
         isTrue,
       );
-      expect(content.contains('@drawable/ic_notification'), isTrue);
+      expect(content.contains('@drawable/ic_notification_vega'), isTrue);
     });
 
     test(
       'All required notification drawable resources exist and are non-empty',
       () {
         final notificationDrawables = [
-          'android/app/src/main/res/drawable/ic_notification.png',
-          'android/app/src/main/res/drawable-mdpi/ic_notification.png',
-          'android/app/src/main/res/drawable-hdpi/ic_notification.png',
-          'android/app/src/main/res/drawable-xhdpi/ic_notification.png',
-          'android/app/src/main/res/drawable-xxhdpi/ic_notification.png',
-          'android/app/src/main/res/drawable-xxxhdpi/ic_notification.png',
+          'android/app/src/main/res/drawable/ic_notification_vega.png',
+          'android/app/src/main/res/drawable-mdpi/ic_notification_vega.png',
+          'android/app/src/main/res/drawable-hdpi/ic_notification_vega.png',
+          'android/app/src/main/res/drawable-xhdpi/ic_notification_vega.png',
+          'android/app/src/main/res/drawable-xxhdpi/ic_notification_vega.png',
+          'android/app/src/main/res/drawable-xxxhdpi/ic_notification_vega.png',
         ];
 
         for (final path in notificationDrawables) {
@@ -74,11 +74,11 @@ void main() {
 
     test('All launcher mipmap icons exist and are updated', () {
       final mipmapIcons = [
-        'android/app/src/main/res/mipmap-mdpi/ic_launcher.png',
-        'android/app/src/main/res/mipmap-hdpi/ic_launcher.png',
-        'android/app/src/main/res/mipmap-xhdpi/ic_launcher.png',
-        'android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png',
-        'android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png',
+        'android/app/src/main/res/mipmap-mdpi/ic_launcher_vega.png',
+        'android/app/src/main/res/mipmap-hdpi/ic_launcher_vega.png',
+        'android/app/src/main/res/mipmap-xhdpi/ic_launcher_vega.png',
+        'android/app/src/main/res/mipmap-xxhdpi/ic_launcher_vega.png',
+        'android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_vega.png',
       ];
 
       for (final path in mipmapIcons) {
@@ -95,13 +95,13 @@ void main() {
     test('Adaptive icon XMLs and foreground drawables exist', () {
       final adaptiveFiles = [
         'android/app/src/main/res/values/colors.xml',
-        'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
-        'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml',
-        'android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png',
-        'android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png',
-        'android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png',
-        'android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png',
-        'android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png',
+        'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_vega.xml',
+        'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_vega_round.xml',
+        'android/app/src/main/res/mipmap-mdpi/ic_launcher_vega_foreground.png',
+        'android/app/src/main/res/mipmap-hdpi/ic_launcher_vega_foreground.png',
+        'android/app/src/main/res/mipmap-xhdpi/ic_launcher_vega_foreground.png',
+        'android/app/src/main/res/mipmap-xxhdpi/ic_launcher_vega_foreground.png',
+        'android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_vega_foreground.png',
       ];
 
       for (final path in adaptiveFiles) {

@@ -15,8 +15,8 @@
     <application
         android:label="Phantek Vega"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:icon="@mipmap/ic_launcher_vega"
+        android:roundIcon="@mipmap/ic_launcher_vega_round"
         android:requestLegacyExternalStorage="true">
         <activity
             android:name=".MainActivity"
@@ -47,7 +47,7 @@
 
         <meta-data
             android:name="com.phantek.lyra.vega.service.NOTIFICATION_ICON"
-            android:resource="@drawable/ic_notification" />
+            android:resource="@drawable/ic_notification_vega" />
     </application>
     <queries>
         <intent>
