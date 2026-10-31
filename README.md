@@ -11,7 +11,7 @@
   [![Engine](https://img.shields.io/badge/Engine-Flutter%20%7C%20Media3-6366f1?style=flat-square)](https://developer.android.com/media/media3)
   [![License](https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square&logo=open-source-initiative&logoColor=white)](LICENSE)
 
-  [Download APK](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases/latest) • [Features](#features) • [Supported Formats](#supported-formats) • [Tech Stack](#tech-stack) • [Build](#build-from-source)
+  [Download APK](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases/latest) • [Features](#features) • [Supported Formats](#supported-formats) • [Tech Stack](#tech-stack) • [Build](#build-from-source) • [License](#license)
 </div>
 
 ---
@@ -97,4 +97,6 @@ Compiled binary : `build/app/outputs/flutter-apk/app-release.apk`
 
 ## License
 
-Distributed under the [MIT License](LICENSE).
+This project is open-source software licensed under the **[MIT License](LICENSE)**.
+
+Third-party components (AndroidX Media3, Flutter, and bundled packages) are subject to their respective licenses (Apache 2.0, BSD, MIT) and can be inspected in-app under **Settings > About > License**.
