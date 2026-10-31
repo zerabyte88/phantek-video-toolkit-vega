@@ -23,6 +23,12 @@ class _VideoProcessingTaskHandler extends TaskHandler {
 }
 
 class ForegroundServiceManager {
+  static const String notificationIconMetaData =
+      'com.phantek.lyra.vega.service.NOTIFICATION_ICON';
+  static const NotificationIcon defaultNotificationIcon = NotificationIcon(
+    metaDataName: notificationIconMetaData,
+  );
+
   static final ForegroundServiceManager _instance =
       ForegroundServiceManager._internal();
   factory ForegroundServiceManager() => _instance;
@@ -92,9 +98,11 @@ class ForegroundServiceManager {
   Future<void> startService({
     required String title,
     required String text,
+    NotificationIcon? notificationIcon,
   }) async {
     try {
       await init();
+      final icon = notificationIcon ?? defaultNotificationIcon;
       final isRunning = await FlutterForegroundTask.isRunningService;
       if (!isRunning) {
         final result = await FlutterForegroundTask.startService(
@@ -105,6 +113,7 @@ class ForegroundServiceManager {
           ],
           notificationTitle: title,
           notificationText: text,
+          notificationIcon: icon,
           callback: _foregroundTaskCallback,
         );
         debugPrint('Foreground service started result: $result');
@@ -112,6 +121,7 @@ class ForegroundServiceManager {
         await FlutterForegroundTask.updateService(
           notificationTitle: title,
           notificationText: text,
+          notificationIcon: icon,
         );
       }
     } catch (e) {
@@ -122,6 +132,7 @@ class ForegroundServiceManager {
   Future<void> updateService({
     required String title,
     required String text,
+    NotificationIcon? notificationIcon,
     bool force = false,
   }) async {
     try {
@@ -138,6 +149,7 @@ class ForegroundServiceManager {
         await FlutterForegroundTask.updateService(
           notificationTitle: title,
           notificationText: text,
+          notificationIcon: notificationIcon ?? defaultNotificationIcon,
         );
       }
     } catch (e) {

@@ -43,6 +43,10 @@
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
             android:foregroundServiceType="dataSync|mediaProcessing"
             android:exported="false" />
+
+        <meta-data
+            android:name="com.phantek.lyra.vega.service.NOTIFICATION_ICON"
+            android:resource="@drawable/ic_notification" />
     </application>
     <queries>
         <intent>

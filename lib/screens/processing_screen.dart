@@ -40,6 +40,14 @@ class ProcessingScreen extends StatefulWidget {
     this.isAudioExtraction = false,
   });
 
+  /// Formats a normalized progress ratio (0.0 to 1.0) into a percentage string
+  /// with 1 decimal place precision (e.g. 14.1%, 100.0%), safely handling NaN and infinity.
+  static String formatProgressPercentage(double progress) {
+    if (progress.isNaN || progress.isInfinite) return '0.0%';
+    final percent = (progress * 100).clamp(0.0, 100.0);
+    return '${percent.toStringAsFixed(1)}%';
+  }
+
   @override
   State<ProcessingScreen> createState() => _ProcessingScreenState();
 }
@@ -122,10 +130,8 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     super.dispose();
   }
 
-  String _formatPercentage(double progress) {
-    final percent = (progress * 100).clamp(0.0, 100.0);
-    return '${percent.toStringAsFixed(1)}%';
-  }
+  String _formatPercentage(double progress) =>
+      ProcessingScreen.formatProgressPercentage(progress);
 
   Duration? _calculateRemainingTime(double progress, Duration elapsed) {
     if (progress < 0.005 || progress >= 0.999) return null;
@@ -380,7 +386,11 @@ class _ProcessingScreenState extends State<ProcessingScreen>
       );
     }
     // Restore user wakelock preference
-    WakelockPlus.toggle(enable: _settingsService.settings.keepScreenAwake);
+    try {
+      WakelockPlus.toggle(enable: _settingsService.settings.keepScreenAwake);
+    } catch (e) {
+      debugPrint('Error toggling wakelock: $e');
+    }
     Future.delayed(const Duration(seconds: 4), () {
       ForegroundServiceManager().stopService();
     });
@@ -390,10 +400,14 @@ class _ProcessingScreenState extends State<ProcessingScreen>
       _totalDuration = DateTime.now().difference(_startTime!);
     }
 
-    if (result != null) {
-      await CacheManagerService().clearAllCache(
-        specificInputPath: widget.videoInfo.filePath,
-      );
+    if (result != null && Platform.isAndroid) {
+      try {
+        await CacheManagerService().clearAllCache(
+          specificInputPath: widget.videoInfo.filePath,
+        );
+      } catch (e) {
+        debugPrint('Error clearing cache: $e');
+      }
     }
 
     if (mounted) {
@@ -423,6 +437,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   void _showSuccessSheet() {
     if (!mounted || _outputPath == null) return;
     final file = File(_outputPath!);
+    if (!file.existsSync()) return;
     file.length().then((size) {
       if (!mounted) return;
       setState(() {
@@ -594,21 +609,31 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     final progressPrimary = _isProcessing
         ? palette.$1
         : (_isSuccess ? const Color(0xFF10B981) : const Color(0xFFEF4444));
-    final progressSecondary = _isProcessing
-        ? palette.$2
-        : (_isSuccess ? const Color(0xFF34D399) : const Color(0xFFF87171));
+    final progressSecondary = progressPrimary;
+    final targetProgress = _isSuccess
+        ? 1.0
+        : (_progress.isNaN || _progress.isInfinite
+            ? 0.0
+            : _progress.clamp(0.0, 1.0));
 
-    return Column(
-      children: [
-        SizedBox(
-          width: 196,
-          height: 196,
-          child: TweenAnimationBuilder<double>(
-            tween: Tween<double>(begin: 0.0, end: _isSuccess ? 1.0 : _progress),
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeOutCubic,
-            builder: (context, animatedProgress, child) {
-              return Stack(
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: targetProgress),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.linear,
+      builder: (context, animatedProgress, child) {
+        final actionText = widget.isAudioExtraction
+            ? l10n.t('proc_extracting')
+            : l10n.t('proc_converting');
+        final currentStatus = _isProcessing
+            ? '$actionText ${_formatPercentage(animatedProgress)}'
+            : _statusText;
+
+        return Column(
+          children: [
+            SizedBox(
+              width: 196,
+              height: 196,
+              child: Stack(
                 alignment: Alignment.center,
                 children: [
                   AnimatedBuilder(
@@ -652,7 +677,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _isSuccess ? '100%' : 'Error',
+                          _isSuccess ? _formatPercentage(1.0) : 'Error',
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
@@ -664,55 +689,54 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                     ],
                   ),
                 ],
-              );
-            },
-          ),
-        ),
-
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withAlpha(45),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: progressPrimary.withAlpha(40),
-              width: 1.0,
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_isProcessing) ...[
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: progressPrimary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: progressPrimary.withAlpha(160),
-                        blurRadius: 4,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 7),
-              ],
-              Text(
-                _statusText,
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withAlpha(45),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: progressPrimary.withAlpha(40),
+                  width: 1.0,
                 ),
               ),
-            ],
-          ),
-        ),
-      ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_isProcessing) ...[
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: progressPrimary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: progressPrimary.withAlpha(160),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                  ],
+                  Text(
+                    currentStatus,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -2093,6 +2117,7 @@ class _DualRingProgressPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     const mainStrokeWidth = 7.5;
     final mainRadius = (size.width - 28) / 2;
+    if (mainRadius <= 0) return;
     final mainRect = Rect.fromCircle(center: center, radius: mainRadius);
 
     if (isProcessing) {
@@ -2112,7 +2137,7 @@ class _DualRingProgressPainter extends CustomPainter {
       final wave1Radius = mainRadius + 5.0 + (wave1Phase * 16.0);
       final wave1Alpha = ((1.0 - wave1Phase) * 65).round().clamp(0, 255);
       final wave1Paint = Paint()
-        ..color = secondaryColor.withAlpha(wave1Alpha)
+        ..color = color.withAlpha(wave1Alpha)
         ..strokeWidth = 1.6
         ..style = PaintingStyle.stroke;
       canvas.drawCircle(center, wave1Radius, wave1Paint);
@@ -2134,16 +2159,13 @@ class _DualRingProgressPainter extends CustomPainter {
     canvas.drawCircle(center, mainRadius, trackPaint);
 
     if (isProcessing) {
-      final clampedProgress = progress.clamp(0.0, 1.0);
-      if (clampedProgress > 0.005) {
+      final safeProgress =
+          (progress.isNaN || progress.isInfinite) ? 0.0 : progress;
+      final clampedProgress = safeProgress.clamp(0.0, 1.0);
+      if (clampedProgress > 0.0) {
         final sweepAngle = clampedProgress * 2 * math.pi;
-        final sweepGradient = SweepGradient(
-          startAngle: -math.pi / 2,
-          endAngle: -math.pi / 2 + sweepAngle,
-          colors: [color, secondaryColor],
-        );
         final progressPaint = Paint()
-          ..shader = sweepGradient.createShader(mainRect)
+          ..color = color
           ..strokeWidth = mainStrokeWidth
           ..strokeCap = StrokeCap.round
           ..style = PaintingStyle.stroke;
@@ -2161,7 +2183,7 @@ class _DualRingProgressPainter extends CustomPainter {
         final tipY = center.dy + mainRadius * math.sin(tipAngle);
 
         final haloPaint = Paint()
-          ..color = secondaryColor.withAlpha(150)
+          ..color = color.withAlpha(150)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
         canvas.drawCircle(Offset(tipX, tipY), 5.5, haloPaint);
 
@@ -2183,7 +2205,9 @@ class _DualRingProgressPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DualRingProgressPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
+    final progressChanged = oldDelegate.progress != progress &&
+        !(oldDelegate.progress.isNaN && progress.isNaN);
+    return progressChanged ||
         oldDelegate.animationValue != animationValue ||
         oldDelegate.isProcessing != isProcessing ||
         oldDelegate.isSuccess != isSuccess ||

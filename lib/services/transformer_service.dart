@@ -289,6 +289,28 @@ class TransformerService {
     }
   }
 
+  @visibleForTesting
+  static Future<String?> Function({
+    required VideoInfo sourceVideo,
+    required VideoResolution targetResolution,
+    EncodingOptions encodingOptions,
+    AppSettings appSettings,
+    required void Function(double progress, String stats, [int? sizeBytes])
+    onProgress,
+    required void Function(String log) onLog,
+  })? mockProcessVideo;
+
+  @visibleForTesting
+  static Future<String?> Function({
+    required VideoInfo sourceVideo,
+    required AudioFormat audioFormat,
+    int audioBitrateKbps,
+    AppSettings appSettings,
+    required void Function(double progress, String stats, [int? sizeBytes])
+    onProgress,
+    required void Function(String log) onLog,
+  })? mockExtractAudio;
+
   /// Transcodes and downscales video using AndroidX Media3 Hardware Transformer.
   static Future<String?> processVideo({
     required VideoInfo sourceVideo,
@@ -299,6 +321,16 @@ class TransformerService {
     onProgress,
     required void Function(String log) onLog,
   }) async {
+    if (mockProcessVideo != null) {
+      return mockProcessVideo!(
+        sourceVideo: sourceVideo,
+        targetResolution: targetResolution,
+        encodingOptions: encodingOptions,
+        appSettings: appSettings,
+        onProgress: onProgress,
+        onLog: onLog,
+      );
+    }
     _ensureMethodCallHandler();
     _activeProgressCallback = onProgress;
     _activeLogCallback = onLog;
@@ -433,6 +465,16 @@ class TransformerService {
     onProgress,
     required void Function(String log) onLog,
   }) async {
+    if (mockExtractAudio != null) {
+      return mockExtractAudio!(
+        sourceVideo: sourceVideo,
+        audioFormat: audioFormat,
+        audioBitrateKbps: audioBitrateKbps,
+        appSettings: appSettings,
+        onProgress: onProgress,
+        onLog: onLog,
+      );
+    }
     _ensureMethodCallHandler();
     _activeProgressCallback = onProgress;
     _activeLogCallback = onLog;

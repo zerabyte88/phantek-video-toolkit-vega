@@ -23,8 +23,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.1.3';
-  String _buildNumber = '21301';
+  String _appVersion = 'v2.1.4';
+  String _buildNumber = '21401';
   double? _dragCardOpacity;
 
   @override
@@ -59,8 +59,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.1.3';
-          _buildNumber = '21301';
+          _appVersion = 'v2.1.4';
+          _buildNumber = '21401';
         });
       }
     }
@@ -1221,10 +1221,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
         const SizedBox(height: 6),
-        Padding(
-          padding: const EdgeInsets.only(left: 42),
+        Center(
           child: Text(
             l10n.t('settings_preserve_date_desc'),
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 11.5,
               height: 1.35,

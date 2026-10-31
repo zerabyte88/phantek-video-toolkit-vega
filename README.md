@@ -47,7 +47,7 @@
 | **Video** | `.mkv` | H.264 (`video/avc`), H.265 (`video/hevc`) | Matroska container |
 | **Video** | `.mov` | H.264 (`video/avc`), H.265 (`video/hevc`) | QuickTime container |
 | **Audio** | `.m4a` | AAC (`audio/mp4a-latm`) | Hardware accelerated (64-320 kbps) |
-| **Audio** | `.mp3` | MP3 (`audio/mpeg`) | 64–320 kbps |
+| **Audio** | `.mp3` | MP3 (`audio/mpeg`) | 64-320 kbps |
 | **Audio** | `.wav` | PCM (`audio/raw`) | 16-bit linear uncompressed PCM |
 
 </div>
