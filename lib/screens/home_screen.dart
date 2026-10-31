@@ -55,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       speedPreset: defaultPreset,
       crfValue: defaultPreset.defaultCrf,
       codec: defaultCodec,
+      videoAudioBitrateKbps: _settingsService.settings.audioBitrateKbps,
     );
     _settingsService.addListener(_onSettingsChanged);
     CacheManagerService().clearAllCache();
@@ -286,6 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crfValue: defaultPreset.defaultCrf,
         codec: defaultCodec,
         container: VideoContainer.mp4,
+        videoAudioBitrateKbps: _settingsService.settings.audioBitrateKbps,
       );
       if (_videoInfo != null) {
         final resolutions = _getResolutionsForMode(_selectedMode, _videoInfo);

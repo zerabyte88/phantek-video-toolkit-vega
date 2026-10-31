@@ -1011,67 +1011,119 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     );
   }
 
+  Widget _buildSpecBox({
+    required ThemeData theme,
+    required String header,
+    required String primaryText,
+    required String secondaryText,
+    bool isTarget = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: isTarget
+            ? theme.colorScheme.primary.withAlpha(14)
+            : theme.colorScheme.onSurface.withAlpha(8),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isTarget
+              ? theme.colorScheme.primary.withAlpha(45)
+              : theme.colorScheme.outline.withAlpha(30),
+          width: 0.8,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            header,
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+              color: isTarget
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withAlpha(130),
+            ),
+          ),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              primaryText,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+          const SizedBox(height: 1),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              secondaryText,
+              style: TextStyle(
+                fontSize: 10.5,
+                color: theme.colorScheme.onSurface.withAlpha(150),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCompactMediaSpecs(ThemeData theme, l10n) {
     if (widget.isAudioExtraction) {
+      final srcExt = widget.videoInfo.fileName.contains('.')
+          ? widget.videoInfo.fileName.split('.').last.toUpperCase()
+          : 'VIDEO';
+      final srcAudio = widget.videoInfo.audioCodec?.toUpperCase() ?? 'AUDIO';
       final audioFmt = widget.encodingOptions.audioFormat.name.toUpperCase();
       final bitrate = widget.encodingOptions.audioExtractBitrateKbps <= 0
           ? l10n.t('audio_copy')
           : '${widget.encodingOptions.audioExtractBitrateKbps} kbps';
-      final srcAudio = widget.videoInfo.audioCodec?.toUpperCase() ?? 'Audio';
 
       return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${l10n.t('proc_source')} ➔ ${l10n.t('proc_target')}',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    color: theme.colorScheme.onSurface.withAlpha(130),
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  '$srcAudio ➔ $audioFmt',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
+            child: _buildSpecBox(
+              theme: theme,
+              header: l10n.t('proc_source').toUpperCase(),
+              primaryText: l10n.t('audio_track'),
+              secondaryText: '$srcExt • $srcAudio',
+              isTarget: false,
             ),
           ),
-          const SizedBox(width: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Icon(
+              Icons.arrow_forward_rounded,
+              size: 16,
+              color: theme.colorScheme.primary,
+            ),
+          ),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  l10n.t('audio_format'),
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    color: theme.colorScheme.onSurface.withAlpha(130),
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  '$audioFmt • $bitrate',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
+            child: _buildSpecBox(
+              theme: theme,
+              header: l10n.t('proc_target').toUpperCase(),
+              primaryText: l10n.t('audio_extracted'),
+              secondaryText: '$audioFmt • $bitrate',
+              isTarget: true,
             ),
           ),
         ],
       );
     }
+
+    final srcExt = widget.videoInfo.fileName.contains('.')
+        ? widget.videoInfo.fileName.split('.').last.toUpperCase()
+        : 'VIDEO';
+    final srcCodec = widget.videoInfo.codec.toUpperCase();
 
     final targetResLabel = widget.targetResolution.label.startsWith('Original')
         ? '${l10n.t('res_original')} (${widget.targetResolution.label.substring(widget.targetResolution.label.indexOf('(') + 1)}'
@@ -1079,80 +1131,44 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     final isPortrait = widget.videoInfo.height > widget.videoInfo.width;
     final targetW =
         (isPortrait && !widget.targetResolution.label.startsWith('Original'))
-        ? widget.targetResolution.height
-        : widget.targetResolution.width;
+            ? widget.targetResolution.height
+            : widget.targetResolution.width;
     final targetH =
         (isPortrait && !widget.targetResolution.label.startsWith('Original'))
-        ? widget.targetResolution.width
-        : widget.targetResolution.height;
+            ? widget.targetResolution.width
+            : widget.targetResolution.height;
+
+    final targetContainer =
+        widget.encodingOptions.container.displayName.toUpperCase();
+    final targetCodec = widget.encodingOptions.codec.displayName;
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          flex: 6,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${l10n.t('proc_source')} ➔ ${l10n.t('proc_target')}',
-                style: TextStyle(
-                  fontSize: 10.5,
-                  color: theme.colorScheme.onSurface.withAlpha(130),
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                '${widget.videoInfo.resolution} ➔ $targetResLabel',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              Text(
-                '${widget.videoInfo.width}×${widget.videoInfo.height} ➔ $targetW×$targetH',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: theme.colorScheme.onSurface.withAlpha(115),
-                ),
-              ),
-            ],
+          child: _buildSpecBox(
+            theme: theme,
+            header: l10n.t('proc_source').toUpperCase(),
+            primaryText:
+                '${widget.videoInfo.resolution} (${widget.videoInfo.width}×${widget.videoInfo.height})',
+            secondaryText: '$srcExt • $srcCodec',
+            isTarget: false,
           ),
         ),
-        const SizedBox(width: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Icon(
+            Icons.arrow_forward_rounded,
+            size: 16,
+            color: theme.colorScheme.primary,
+          ),
+        ),
         Expanded(
-          flex: 4,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                l10n.t('container_format'),
-                style: TextStyle(
-                  fontSize: 10.5,
-                  color: theme.colorScheme.onSurface.withAlpha(130),
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                '${widget.encodingOptions.container.displayName.toUpperCase()} • ${widget.encodingOptions.codec.displayName.split(' ').first}',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
-                ),
-                textAlign: TextAlign.end,
-              ),
-              Text(
-                widget.encodingOptions.codec.displayName,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: theme.colorScheme.onSurface.withAlpha(115),
-                ),
-                textAlign: TextAlign.end,
-                softWrap: true,
-              ),
-            ],
+          child: _buildSpecBox(
+            theme: theme,
+            header: l10n.t('proc_target').toUpperCase(),
+            primaryText: '$targetResLabel ($targetW×$targetH)',
+            secondaryText: '$targetContainer • $targetCodec',
+            isTarget: true,
           ),
         ),
       ],

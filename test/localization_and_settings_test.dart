@@ -1415,6 +1415,12 @@ void main() {
         );
         await tester.pumpAndSettle();
 
+        await tester.ensureVisible(
+          find.byKey(const Key('advanced_options_toggle')),
+        );
+        await tester.tap(find.byKey(const Key('advanced_options_toggle')));
+        await tester.pumpAndSettle();
+
         // 60, 50, 48 FPS chips should be disabled for 30 FPS video with tooltip
         final chip60 = tester.widget<ChoiceChip>(
           find.widgetWithText(ChoiceChip, '60 FPS'),
@@ -1512,6 +1518,12 @@ void main() {
             ),
           ),
         );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(
+          find.byKey(const Key('advanced_options_toggle')),
+        );
+        await tester.tap(find.byKey(const Key('advanced_options_toggle')));
         await tester.pumpAndSettle();
 
         // 60 FPS chip SHOULD be present and enabled for 60 FPS video
@@ -3321,7 +3333,7 @@ void main() {
         );
 
         await tester.pumpWidget(buildCard());
-        expect(find.textContaining('Normal'), findsOneWidget);
+        expect(find.textContaining('Normal'), findsWidgets);
         expect(find.textContaining('Custom Preset'), findsNothing);
 
         await service.setAdvancedSettingsEnabled(true);
@@ -3329,7 +3341,7 @@ void main() {
         await service.setCustomScaler('lanczos');
         await tester.pumpWidget(buildCard());
 
-        expect(find.textContaining('Normal'), findsOneWidget);
+        expect(find.textContaining('Normal'), findsWidgets);
         expect(find.textContaining('Custom Preset'), findsNothing);
       },
     );
@@ -3359,14 +3371,14 @@ void main() {
         expect(find.text(l10n.t('settings_custom_preset')), findsNothing);
         expect(find.text(l10n.t('settings_custom_scaler')), findsNothing);
         expect(find.text(l10n.t('settings_ram_buffer')), findsNothing);
-        expect(find.text(l10n.t('settings_default_codec')), findsOneWidget);
+        expect(find.text(l10n.t('settings_default_codec')), findsNothing);
         expect(find.text(l10n.t('settings_file_naming')), findsOneWidget);
         expect(find.text(l10n.t('settings_preserve_date')), findsOneWidget);
       },
     );
 
     testWidgets(
-      'SettingsScreen speed preset chips are always enabled and selectable',
+      'ConversionOptionsCard speed preset chips are always enabled and selectable',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 1.0;
@@ -3374,14 +3386,49 @@ void main() {
         addTearDown(tester.view.resetDevicePixelRatio);
 
         final service = SettingsService();
-        await service.setThemeMode('oled_pure');
         await service.setLanguage('id');
-        await service.setEncodingPreset('medium');
+        final l10n = service.l10n;
+
+        const sampleVideo = VideoInfo(
+          filePath: '/storage/sample.mp4',
+          fileName: 'sample.mp4',
+          width: 1920,
+          height: 1080,
+          durationSeconds: 120,
+          bitrate: 10000000,
+          fps: 30,
+          codec: 'h264',
+          fileSizeBytes: 50000000,
+        );
+
+        EncodingOptions currentOpts = const EncodingOptions(
+          speedPreset: SpeedPreset.normal,
+          crfValue: 22,
+        );
+        VideoResolution currentRes = VideoResolution.standardResolutions.first;
 
         await tester.pumpWidget(
           MaterialApp(
             theme: AppTheme.getTheme('oled_pure'),
-            home: const SettingsScreen(),
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (context, setState) {
+                  return SingleChildScrollView(
+                    child: ConversionOptionsCard(
+                      sourceVideo: sampleVideo,
+                      resolutions: VideoResolution.standardResolutions,
+                      selectedResolution: currentRes,
+                      onResolutionChanged: (res) =>
+                          setState(() => currentRes = res),
+                      encodingOptions: currentOpts,
+                      onOptionsChanged: (opts) =>
+                          setState(() => currentOpts = opts),
+                      l10n: l10n,
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
         );
         await tester.pump();
@@ -3407,7 +3454,8 @@ void main() {
         await tester.tap(fastChipFinder);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
-        expect(service.settings.encodingPreset, equals('fast'));
+        expect(currentOpts.speedPreset, equals(SpeedPreset.fast));
+        expect(currentOpts.crfValue, equals(24));
       },
     );
 

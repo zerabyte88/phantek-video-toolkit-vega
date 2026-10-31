@@ -23,8 +23,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.1.0';
-  String _buildNumber = '21001';
+  String _appVersion = 'v2.1.1';
+  String _buildNumber = '21101';
   double? _dragCardOpacity;
 
   @override
@@ -59,8 +59,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.1.0';
-          _buildNumber = '21001';
+          _appVersion = 'v2.1.1';
+          _buildNumber = '21101';
         });
       }
     }
@@ -150,37 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               const SizedBox(height: 20),
 
-              // 2. Performance & Hardware
-              _buildSectionTitle(
-                icon: Icons.tune_rounded,
-                title: l10n.t('performance_encoding'),
-                theme: theme,
-              ),
-              const SizedBox(height: 8),
-              _buildModernCard(
-                theme: theme,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Default video codec
-                    _buildDefaultCodecSection(theme, settings, l10n),
 
-                    _buildDivider(theme),
-
-                    // Speed preset
-                    _buildEncodingPresetSection(theme, settings, l10n),
-
-                    _buildDivider(theme),
-
-                    // Audio bitrate
-                    _buildAudioQualitySection(theme, settings, l10n),
-                  ],
-                ),
-              ),
-
-
-
-              const SizedBox(height: 20),
 
               // 4. Storage
               _buildSectionTitle(
@@ -1125,74 +1095,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Default video codec section
-
-  Widget _buildDefaultCodecSection(
-    ThemeData theme,
-    AppSettings settings,
-    AppLocalizations l10n,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.video_settings_rounded,
-              size: 16,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              l10n.t('settings_default_codec'),
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Center(
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              _buildChoiceChip(
-                theme: theme,
-                label: 'H.264 / AVC',
-                selected: settings.defaultVideoCodec == 'h264',
-                onSelected: () => _settingsService.setDefaultVideoCodec('h264'),
-              ),
-              _buildChoiceChip(
-                theme: theme,
-                label: 'H.265 / HEVC',
-                selected: settings.defaultVideoCodec == 'hevc',
-                onSelected: () => _settingsService.setDefaultVideoCodec('hevc'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Center(
-          child: Text(
-            settings.defaultVideoCodec == 'hevc'
-                ? l10n.t('desc_hevc')
-                : l10n.t('desc_h264'),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11.5,
-              height: 1.35,
-              color: theme.colorScheme.onSurface.withAlpha(140),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   // File naming pattern section
 
   Widget _buildFileNamingSection(
@@ -1332,201 +1234,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ],
     );
-  }
-
-  // Speed preset section
-
-  Widget _buildEncodingPresetSection(
-    ThemeData theme,
-    AppSettings settings,
-    AppLocalizations l10n,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.speed_rounded,
-              size: 16,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              l10n.t('settings_encoding_preset'),
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Center(
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              _buildChoiceChip(
-                theme: theme,
-                label: l10n.t('preset_fast_title'),
-                selected: settings.encodingPreset == 'fast',
-                onSelected: () => _settingsService.setEncodingPreset('fast'),
-              ),
-              _buildChoiceChip(
-                theme: theme,
-                label: l10n.t('preset_normal_title'),
-                selected: settings.encodingPreset == 'medium',
-                onSelected: () => _settingsService.setEncodingPreset('medium'),
-              ),
-              _buildChoiceChip(
-                theme: theme,
-                label: l10n.t('preset_slow_title'),
-                selected: settings.encodingPreset == 'slow',
-                onSelected: () => _settingsService.setEncodingPreset('slow'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Center(
-          child: Text(
-            settings.encodingPreset == 'fast'
-                ? l10n.t('preset_fast_desc')
-                : (settings.encodingPreset == 'slow'
-                      ? l10n.t('preset_slow_desc')
-                      : l10n.t('preset_normal_desc')),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11.5,
-              height: 1.35,
-              color: theme.colorScheme.onSurface.withAlpha(140),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Audio quality section
-
-  Widget _buildAudioQualitySection(
-    ThemeData theme,
-    AppSettings settings,
-    AppLocalizations l10n,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.graphic_eq_rounded,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.t('settings_audio_quality'),
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withAlpha(20),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                settings.audioBitrateKbps == 0
-                    ? l10n.t('settings_audio_mute')
-                    : '${settings.audioBitrateKbps} kbps',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Center(
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              _buildChoiceChip(
-                theme: theme,
-                label: l10n.t('settings_audio_mute'),
-                selected: settings.audioBitrateKbps == 0,
-                onSelected: () => _settingsService.setAudioBitrate(0),
-              ),
-              ...[64, 128, 192, 256, 320].map(
-                (kbps) => _buildChoiceChip(
-                  theme: theme,
-                  label: '$kbps kbps',
-                  selected: settings.audioBitrateKbps == kbps,
-                  onSelected: () => _settingsService.setAudioBitrate(kbps),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Center(
-          child: Text(
-            _getAudioBitrateDesc(settings.audioBitrateKbps, l10n),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11.5,
-              height: 1.35,
-              color: theme.colorScheme.onSurface.withAlpha(140),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _getAudioBitrateDesc(int kbps, AppLocalizations l10n) {
-    switch (kbps) {
-      case 0:
-        return l10n.t('settings_audio_mute_desc');
-      case 64:
-        return l10n.t('settings_audio_bitrate_64_desc');
-      case 128:
-        return l10n.t('settings_audio_bitrate_128_desc');
-      case 192:
-        return l10n.t('settings_audio_bitrate_192_desc');
-      case 256:
-        return l10n.t('settings_audio_bitrate_256_desc');
-      case 320:
-        return l10n.t('settings_audio_bitrate_320_desc');
-      default:
-        return l10n.t(
-          'settings_audio_bitrate_desc',
-          args: {'kbps': kbps.toString()},
-        );
-    }
   }
 
   // Storage folder tile

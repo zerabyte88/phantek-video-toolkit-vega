@@ -172,9 +172,10 @@ class EncodingOptions {
   // Target FPS (0: original)
   final int targetFps;
 
-  // Audio extraction
+  // Audio options
   final AudioFormat audioFormat;
   final int audioExtractBitrateKbps; // 0 for stream copy, or target kbps
+  final int videoAudioBitrateKbps; // 0 for mute, or 128, 192, 256, 320
 
   /// Convenience alias for [crfValue].
   int get crf => crfValue;
@@ -189,6 +190,7 @@ class EncodingOptions {
     this.targetFps = 0,
     this.audioFormat = AudioFormat.m4a,
     this.audioExtractBitrateKbps = 192,
+    this.videoAudioBitrateKbps = 128,
   });
 
   EncodingOptions copyWith({
@@ -201,6 +203,7 @@ class EncodingOptions {
     int? targetFps,
     AudioFormat? audioFormat,
     int? audioExtractBitrateKbps,
+    int? videoAudioBitrateKbps,
   }) {
     return EncodingOptions(
       codec: codec ?? this.codec,
@@ -213,6 +216,8 @@ class EncodingOptions {
       audioFormat: audioFormat ?? this.audioFormat,
       audioExtractBitrateKbps:
           audioExtractBitrateKbps ?? this.audioExtractBitrateKbps,
+      videoAudioBitrateKbps:
+          videoAudioBitrateKbps ?? this.videoAudioBitrateKbps,
     );
   }
 

@@ -73,7 +73,14 @@ void main() {
 
       // Verify Active Speed Preset indicator is rendered
       expect(find.byIcon(Icons.speed_rounded), findsOneWidget);
-      expect(find.textContaining('Normal'), findsOneWidget);
+      expect(find.textContaining('Normal'), findsWidgets);
+
+      // Expand advanced options to inspect CRF controls
+      await tester.ensureVisible(
+        find.byKey(const Key('advanced_options_toggle')),
+      );
+      await tester.tap(find.byKey(const Key('advanced_options_toggle')));
+      await tester.pumpAndSettle();
 
       // Initial state: Normal preset -> default CRF 22, no custom indicator, no reset button
       expect(find.text('22'), findsOneWidget);

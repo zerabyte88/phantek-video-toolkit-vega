@@ -375,7 +375,7 @@ class TransformerService {
         'videoCodec': encodingOptions.codec.name,
         'rateControlMode': encodingOptions.rateControlMode.name,
         'removeAudio':
-            !sourceVideo.hasAudio || appSettings.audioBitrateKbps <= 0,
+            !sourceVideo.hasAudio || encodingOptions.videoAudioBitrateKbps <= 0,
       });
 
       await SettingsService().clearJobMarker();
