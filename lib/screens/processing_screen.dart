@@ -425,6 +425,10 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     final file = File(_outputPath!);
     file.length().then((size) {
       if (!mounted) return;
+      setState(() {
+        _latestOutputBytes = size;
+        _currentSizeText = _formatBytes(size);
+      });
       showModalBottomSheet<bool>(
         context: context,
         isScrollControlled: true,
@@ -694,12 +698,16 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     }
   }
 
-  String _getEncoderEngineName() {
-    if (widget.isAudioExtraction) {
-      return 'Media3 (${widget.encodingOptions.audioFormat.name.toUpperCase()})';
+  String _formatBytes(int bytes) {
+    if (bytes >= 1073741824) {
+      return '${(bytes / 1073741824).toStringAsFixed(2)} GB';
+    } else if (bytes >= 1048576) {
+      return '${(bytes / 1048576).toStringAsFixed(1)} MB';
+    } else if (bytes >= 1024) {
+      return '${(bytes / 1024).toStringAsFixed(0)} KB';
+    } else {
+      return '$bytes B';
     }
-    final codecName = widget.encodingOptions.codec.displayName.split(' ').first;
-    return 'MediaCodec ($codecName)';
   }
 
   /// Telemetry cards: Thermal status, RAM, and disk write speed.
@@ -854,11 +862,17 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   }
 
   Widget _buildUnifiedCard(ThemeData theme, l10n) {
+    final sizeValue = _currentSizeText.isNotEmpty
+        ? _currentSizeText
+        : (_latestOutputBytes > 0
+              ? _formatBytes(_latestOutputBytes)
+              : (_isProcessing ? l10n.t('proc_calculating') : '-'));
+
     return AppGlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Column(
         children: [
-          // Elapsed and remaining time
+          // Elapsed, remaining time, and video size
           Row(
             children: [
               Expanded(
@@ -875,8 +889,8 @@ class _ProcessingScreenState extends State<ProcessingScreen>
               ),
               Container(
                 width: 1,
-                height: 32,
-                margin: const EdgeInsets.symmetric(horizontal: 8),
+                height: 30,
+                margin: const EdgeInsets.symmetric(horizontal: 6),
                 color: theme.colorScheme.outline.withAlpha(50),
               ),
               Expanded(
@@ -891,51 +905,22 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                       : (_isSuccess ? l10n.t('proc_completed') : '-'),
                 ),
               ),
+              Container(
+                width: 1,
+                height: 30,
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                color: theme.colorScheme.outline.withAlpha(50),
+              ),
+              Expanded(
+                child: _buildMetricTile(
+                  theme: theme,
+                  icon: Icons.storage_outlined,
+                  label: l10n.t('file_size'),
+                  value: sizeValue,
+                ),
+              ),
             ],
           ),
-          if (_isProcessing) ...[
-            Divider(height: 14, color: theme.colorScheme.outline.withAlpha(40)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.memory_rounded,
-                      size: 14,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      '${l10n.t('encoder_engine')}: ${_getEncoderEngineName()}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: theme.colorScheme.onSurface.withAlpha(180),
-                      ),
-                    ),
-                  ],
-                ),
-                if (_currentSizeText.isNotEmpty)
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.storage_outlined,
-                        size: 14,
-                        color: theme.colorScheme.secondary,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        '${l10n.t('file_size')}: $_currentSizeText',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: theme.colorScheme.onSurface.withAlpha(180),
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ],
           if (!_isProcessing && _totalDuration != null && _isSuccess) ...[
             Divider(height: 14, color: theme.colorScheme.outline.withAlpha(40)),
             Row(
@@ -983,14 +968,14 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(5),
           decoration: BoxDecoration(
             color: theme.colorScheme.primary.withAlpha(20),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 16, color: theme.colorScheme.primary),
+          child: Icon(icon, size: 15, color: theme.colorScheme.primary),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -999,11 +984,12 @@ class _ProcessingScreenState extends State<ProcessingScreen>
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 10.5,
+                  fontSize: 10,
                   color: theme.colorScheme.onSurface.withAlpha(130),
                   height: 1.15,
                 ),
-                softWrap: true,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 1),
               FittedBox(
@@ -1012,7 +998,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                 child: Text(
                   value,
                   style: TextStyle(
-                    fontSize: 13.5,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurface,
                   ),
@@ -1178,14 +1164,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
       future: File(_outputPath!).length(),
       builder: (context, snapshot) {
         final size = snapshot.data ?? 0;
-        String sizeStr;
-        if (size >= 1073741824) {
-          sizeStr = '${(size / 1073741824).toStringAsFixed(2)} GB';
-        } else if (size >= 1048576) {
-          sizeStr = '${(size / 1048576).toStringAsFixed(1)} MB';
-        } else {
-          sizeStr = '${(size / 1024).toStringAsFixed(0)} KB';
-        }
+        final sizeStr = _formatBytes(size);
 
         final fileName = _outputPath?.split(Platform.pathSeparator).last ?? '';
         final isBigger = size > widget.videoInfo.fileSizeBytes;
