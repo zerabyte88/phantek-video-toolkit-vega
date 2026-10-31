@@ -185,9 +185,11 @@ class AppSettings {
           json['isAdvancedSettingsEnabled'] as bool? ?? false,
       customPreset: json['customPreset'] as String? ?? 'default',
       customScaler: json['customScaler'] as String? ?? 'default',
-      defaultVideoCodec:
-          (json['defaultVideoCodec'] == 'hevc') ? 'hevc' : 'h264',
-      fileNamingFormat: (json['fileNamingFormat'] == 'timestamp' ||
+      defaultVideoCodec: (json['defaultVideoCodec'] == 'hevc')
+          ? 'hevc'
+          : 'h264',
+      fileNamingFormat:
+          (json['fileNamingFormat'] == 'timestamp' ||
               json['fileNamingFormat'] == 'simple')
           ? json['fileNamingFormat'] as String
           : 'suffix',

@@ -354,10 +354,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
     );
   }
 
-  Widget _buildContainerFormatSelector(
-    ThemeData theme,
-    AppLocalizations l10n,
-  ) {
+  Widget _buildContainerFormatSelector(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -604,9 +601,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
                 onSelected: (selected) {
                   if (selected) {
                     widget.onOptionsChanged(
-                      widget.encodingOptions.copyWith(
-                        videoAudioBitrateKbps: 0,
-                      ),
+                      widget.encodingOptions.copyWith(videoAudioBitrateKbps: 0),
                     );
                   }
                 },
@@ -827,9 +822,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
                           _crfValue = defaultCrf;
                         });
                         widget.onOptionsChanged(
-                          widget.encodingOptions.copyWith(
-                            crfValue: defaultCrf,
-                          ),
+                          widget.encodingOptions.copyWith(crfValue: defaultCrf),
                         );
                       },
                       borderRadius: BorderRadius.circular(4),
@@ -943,10 +936,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withAlpha(25),
                   borderRadius: BorderRadius.circular(8),

@@ -28,8 +28,8 @@
 
 - **Hardware Transcoding** : Encode H.264 (`video/avc`) and H.265 (`video/hevc`) via device SoC hardware encoders.
 - **Resolution Downscaling** : Scale 4K/2K down to 1080p, 720p, 480p, or 360p with OpenGL aspect-ratio preservation and even-pixel alignment.
-- **Rate Control** : Constant Quality (CQ/VBR) or target bitrate (1–35 Mbps) with framerate clamping (24–60 FPS).
-- **Audio Extraction** : Extract audio streams to M4A/AAC, MP3 (64–320 kbps), or uncompressed 16-bit PCM WAV, with direct bitstream copy when formats match.
+- **Rate Control** : Constant Quality (CQ/VBR) or target bitrate (1-35 Mbps) with framerate clamping (24-60 FPS).
+- **Audio Extraction** : Extract audio streams to M4A/AAC, MP3 (64-320 kbps), or uncompressed 16-bit PCM WAV, with direct bitstream copy when formats match.
 - **Foreground Execution** : Android Foreground Service with CPU `WakeLock` and crash-recovery job markers to prevent background termination.
 - **Real-Time Telemetry** : Live encoding progress, elapsed/remaining time, storage I/O rate, and device thermal status.
 - **AMOLED Themes** : 6 visual themes (*AMOLED Pure*, *Midnight*, *Snowfall*, *Sakura*, *Light*, *Clean Light*).
@@ -46,7 +46,7 @@
 | **Video** | `.mp4` | H.264 (`video/avc`), H.265 (`video/hevc`) | Hardware accelerated, `+faststart` |
 | **Video** | `.mkv` | H.264 (`video/avc`), H.265 (`video/hevc`) | Matroska container |
 | **Video** | `.mov` | H.264 (`video/avc`), H.265 (`video/hevc`) | QuickTime container |
-| **Audio** | `.m4a` | AAC (`audio/mp4a-latm`) | Hardware accelerated (64–320 kbps) |
+| **Audio** | `.m4a` | AAC (`audio/mp4a-latm`) | Hardware accelerated (64-320 kbps) |
 | **Audio** | `.mp3` | MP3 (`audio/mpeg`) | 64–320 kbps |
 | **Audio** | `.wav` | PCM (`audio/raw`) | 16-bit linear uncompressed PCM |
 

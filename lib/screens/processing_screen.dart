@@ -570,83 +570,146 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     );
   }
 
+  (Color primary, Color secondary, Color btnFg) _getThemePalette() {
+    final mode = widget.appSettings.themeMode;
+    switch (mode) {
+      case 'oled_sakura':
+        return (const Color(0xFFF472B6), const Color(0xFFFDA4AF), Colors.black);
+      case 'oled_midnight':
+        return (const Color(0xFFA78BFA), const Color(0xFF7C3AED), Colors.black);
+      case 'oled_snowfall':
+        return (const Color(0xFF38BDF8), const Color(0xFF2563EB), Colors.white);
+      case 'light':
+        return (const Color(0xFFF59E0B), const Color(0xFF0284C7), Colors.white);
+      case 'light_clean':
+        return (const Color(0xFF0EA5E9), const Color(0xFF38BDF8), Colors.white);
+      case 'oled_pure':
+      default:
+        return (const Color(0xFF9333EA), const Color(0xFF60A5FA), Colors.white);
+    }
+  }
+
   Widget _buildProgressSection(ThemeData theme, l10n) {
-    final progressColor = _isProcessing
-        ? theme.colorScheme.primary
+    final palette = _getThemePalette();
+    final progressPrimary = _isProcessing
+        ? palette.$1
         : (_isSuccess ? const Color(0xFF10B981) : const Color(0xFFEF4444));
+    final progressSecondary = _isProcessing
+        ? palette.$2
+        : (_isSuccess ? const Color(0xFF34D399) : const Color(0xFFF87171));
 
     return Column(
       children: [
-        // Circular progress indicator
         SizedBox(
-          width: 190,
-          height: 190,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              AnimatedBuilder(
-                animation: _pulseController,
-                builder: (context, child) {
-                  return CustomPaint(
-                    size: const Size(190, 190),
-                    painter: _DualRingProgressPainter(
-                      progress: _progress,
-                      animationValue: _pulseController.value,
-                      isProcessing: _isProcessing,
-                      isSuccess: _isSuccess,
-                      color: progressColor,
-                      trackColor: theme.colorScheme.outline.withAlpha(30),
-                    ),
-                  );
-                },
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
+          width: 196,
+          height: 196,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0.0, end: _isSuccess ? 1.0 : _progress),
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutCubic,
+            builder: (context, animatedProgress, child) {
+              return Stack(
+                alignment: Alignment.center,
                 children: [
-                  if (_isProcessing) ...[
-                    Text(
-                      _formatPercentage(_progress),
-                      style: TextStyle(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w800,
-                        color: progressColor,
-                        letterSpacing: -1.0,
-                      ),
-                    ),
-                  ] else ...[
-                    Icon(
-                      _isSuccess
-                          ? Icons.check_circle_rounded
-                          : Icons.error_rounded,
-                      size: 44,
-                      color: progressColor,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _isSuccess ? '100%' : 'Error',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: progressColor,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ],
+                  AnimatedBuilder(
+                    animation: _pulseController,
+                    builder: (context, child) {
+                      return CustomPaint(
+                        size: const Size(196, 196),
+                        painter: _DualRingProgressPainter(
+                          progress: animatedProgress,
+                          animationValue: _pulseController.value,
+                          isProcessing: _isProcessing,
+                          isSuccess: _isSuccess,
+                          color: progressPrimary,
+                          secondaryColor: progressSecondary,
+                          trackColor: theme.colorScheme.outline.withAlpha(35),
+                        ),
+                      );
+                    },
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_isProcessing) ...[
+                        Text(
+                          _formatPercentage(animatedProgress),
+                          style: TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w800,
+                            color: progressPrimary,
+                            letterSpacing: -1.0,
+                          ),
+                        ),
+                      ] else ...[
+                        Icon(
+                          _isSuccess
+                              ? Icons.check_circle_rounded
+                              : Icons.error_rounded,
+                          size: 44,
+                          color: progressPrimary,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _isSuccess ? '100%' : 'Error',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: progressPrimary,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
 
-        const SizedBox(height: 10),
-        Text(
-          _statusText,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withAlpha(45),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: progressPrimary.withAlpha(40),
+              width: 1.0,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isProcessing) ...[
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: progressPrimary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: progressPrimary.withAlpha(160),
+                        blurRadius: 4,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 7),
+              ],
+              Text(
+                _statusText,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -695,7 +758,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
 
     return Row(
       children: [
-        // Thermal status
         Expanded(
           child: _buildTelemetryTile(
             theme: theme,
@@ -711,8 +773,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           ),
         ),
         const SizedBox(width: 8),
-
-        // RAM allocation
         Expanded(
           child: _buildTelemetryTile(
             theme: theme,
@@ -728,8 +788,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           ),
         ),
         const SizedBox(width: 8),
-
-        // Disk write speed
         Expanded(
           child: _buildTelemetryTile(
             theme: theme,
@@ -851,7 +909,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Column(
         children: [
-          // Elapsed, remaining time, and video size
           Row(
             children: [
               Expanded(
@@ -926,9 +983,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             ),
           ],
           Divider(height: 14, color: theme.colorScheme.outline.withAlpha(40)),
-          // Media specifications
           _buildCompactMediaSpecs(theme, l10n),
-          // Output size and location
           if (_isSuccess && _outputPath != null) ...[
             Divider(height: 14, color: theme.colorScheme.outline.withAlpha(40)),
             _buildOutputSummary(theme, l10n),
@@ -1268,6 +1323,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   }
 
   Widget _buildActionButtons(ThemeData theme, l10n) {
+    final palette = _getThemePalette();
     if (_isSuccess) {
       return Row(
         children: [
@@ -1277,7 +1333,15 @@ class _ProcessingScreenState extends State<ProcessingScreen>
               icon: const Icon(Icons.arrow_back_rounded, size: 18),
               label: Text(l10n.t('proc_back')),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                foregroundColor: theme.colorScheme.onSurface,
+                side: BorderSide(
+                  color: theme.colorScheme.outline.withAlpha(90),
+                  width: 1.0,
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -1288,7 +1352,13 @@ class _ProcessingScreenState extends State<ProcessingScreen>
               icon: const Icon(Icons.folder_open_outlined, size: 18),
               label: Text(l10n.t('proc_open_file')),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                backgroundColor: palette.$1,
+                foregroundColor: palette.$3,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
               ),
             ),
           ),
@@ -1399,7 +1469,15 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                   icon: const Icon(Icons.arrow_back_rounded, size: 18),
                   label: Text(l10n.t('proc_back')),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    foregroundColor: theme.colorScheme.onSurface,
+                    side: BorderSide(
+                      color: theme.colorScheme.outline.withAlpha(90),
+                      width: 1.0,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -1433,7 +1511,13 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                         : l10n.t('proc_retry'),
                   ),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor: palette.$1,
+                    foregroundColor: palette.$3,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
                   ),
                 ),
               ),
@@ -1458,10 +1542,27 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             Navigator.of(context).pop(true);
           }
         },
-        icon: const Icon(Icons.cancel_outlined, size: 18),
-        label: Text(l10n.t('proc_cancel_btn')),
+        icon: Icon(
+          Icons.cancel_outlined,
+          size: 18,
+          color: theme.colorScheme.error.withAlpha(210),
+        ),
+        label: Text(
+          l10n.t('proc_cancel_btn'),
+          style: TextStyle(
+            color: theme.colorScheme.error.withAlpha(220),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 11),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          side: BorderSide(
+            color: theme.colorScheme.error.withAlpha(70),
+            width: 1.0,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
     );
@@ -1516,7 +1617,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         actionsAlignment: MainAxisAlignment.spaceBetween,
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
-          // Tombol No di kiri (mentok kiri): Warna putih/netral, fungsi melanjutkan konversi
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             style: TextButton.styleFrom(
@@ -1531,7 +1631,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
               ),
             ),
           ),
-          // Tombol Yes di kanan (rata kanan): Warna merah, fungsi batalkan konversi & balik ke pemilihan video
           FilledButton(
             onPressed: () {
               TransformerService.cancelAll();
@@ -1974,6 +2073,7 @@ class _DualRingProgressPainter extends CustomPainter {
   final bool isProcessing;
   final bool isSuccess;
   final Color color;
+  final Color secondaryColor;
   final Color trackColor;
 
   _DualRingProgressPainter({
@@ -1982,6 +2082,7 @@ class _DualRingProgressPainter extends CustomPainter {
     required this.isProcessing,
     required this.isSuccess,
     required this.color,
+    required this.secondaryColor,
     required this.trackColor,
   });
 
@@ -1991,32 +2092,41 @@ class _DualRingProgressPainter extends CustomPainter {
 
     final center = Offset(size.width / 2, size.height / 2);
     const mainStrokeWidth = 7.5;
-    const outerStrokeWidth = 2.4;
-
-    // Track radius
     final mainRadius = (size.width - 28) / 2;
     final mainRect = Rect.fromCircle(center: center, radius: mainRadius);
 
-    // Orbit radius
-    final outerRadius = mainRadius + 8.5;
-    final outerRect = Rect.fromCircle(center: center, radius: outerRadius);
-
     if (isProcessing) {
-      // Center glow
       final glowPulse = 0.5 + 0.5 * math.sin(animationValue * 2 * math.pi);
       final glowRadius = mainRadius * 0.75;
       final glowPaint = Paint()
         ..shader = RadialGradient(
           colors: [
-            color.withAlpha((22 + glowPulse * 25).round()),
+            color.withAlpha((20 + glowPulse * 28).round()),
             color.withAlpha(0),
           ],
           stops: const [0.0, 1.0],
         ).createShader(Rect.fromCircle(center: center, radius: glowRadius));
       canvas.drawCircle(center, glowRadius, glowPaint);
+
+      final wave1Phase = animationValue;
+      final wave1Radius = mainRadius + 5.0 + (wave1Phase * 16.0);
+      final wave1Alpha = ((1.0 - wave1Phase) * 65).round().clamp(0, 255);
+      final wave1Paint = Paint()
+        ..color = secondaryColor.withAlpha(wave1Alpha)
+        ..strokeWidth = 1.6
+        ..style = PaintingStyle.stroke;
+      canvas.drawCircle(center, wave1Radius, wave1Paint);
+
+      final wave2Phase = (animationValue + 0.5) % 1.0;
+      final wave2Radius = mainRadius + 5.0 + (wave2Phase * 16.0);
+      final wave2Alpha = ((1.0 - wave2Phase) * 65).round().clamp(0, 255);
+      final wave2Paint = Paint()
+        ..color = color.withAlpha(wave2Alpha)
+        ..strokeWidth = 1.3
+        ..style = PaintingStyle.stroke;
+      canvas.drawCircle(center, wave2Radius, wave2Paint);
     }
 
-    // Base track
     final trackPaint = Paint()
       ..color = trackColor
       ..strokeWidth = mainStrokeWidth
@@ -2024,19 +2134,16 @@ class _DualRingProgressPainter extends CustomPainter {
     canvas.drawCircle(center, mainRadius, trackPaint);
 
     if (isProcessing) {
-      // Orbit guide track
-      final outerGuidePaint = Paint()
-        ..color = color.withAlpha(15)
-        ..strokeWidth = 1.0
-        ..style = PaintingStyle.stroke;
-      canvas.drawCircle(center, outerRadius, outerGuidePaint);
-
-      // Progress arc
       final clampedProgress = progress.clamp(0.0, 1.0);
       if (clampedProgress > 0.005) {
         final sweepAngle = clampedProgress * 2 * math.pi;
+        final sweepGradient = SweepGradient(
+          startAngle: -math.pi / 2,
+          endAngle: -math.pi / 2 + sweepAngle,
+          colors: [color, secondaryColor],
+        );
         final progressPaint = Paint()
-          ..color = color
+          ..shader = sweepGradient.createShader(mainRect)
           ..strokeWidth = mainStrokeWidth
           ..strokeCap = StrokeCap.round
           ..style = PaintingStyle.stroke;
@@ -2048,49 +2155,25 @@ class _DualRingProgressPainter extends CustomPainter {
           false,
           progressPaint,
         );
+
+        final tipAngle = -math.pi / 2 + sweepAngle;
+        final tipX = center.dx + mainRadius * math.cos(tipAngle);
+        final tipY = center.dy + mainRadius * math.sin(tipAngle);
+
+        final haloPaint = Paint()
+          ..color = secondaryColor.withAlpha(150)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
+        canvas.drawCircle(Offset(tipX, tipY), 5.5, haloPaint);
+
+        final corePaint = Paint()..color = Colors.white;
+        canvas.drawCircle(Offset(tipX, tipY), 2.2, corePaint);
       }
-
-      // Orbit pulse arc
-      canvas.save();
-      canvas.translate(center.dx, center.dy);
-      canvas.rotate(animationValue * 2 * math.pi);
-      canvas.translate(-center.dx, -center.dy);
-
-      const orbitSweep = math.pi * 0.85; // ~153 degrees
-      final orbitGradient = SweepGradient(
-        startAngle: 0.0,
-        endAngle: orbitSweep,
-        colors: [
-          color.withAlpha(0),
-          color.withAlpha(0),
-          color.withAlpha(35),
-          color.withAlpha(160),
-          color,
-        ],
-        stops: const [0.0, 0.06, 0.35, 0.75, 1.0],
-      );
-
-      final orbitPaint = Paint()
-        ..shader = orbitGradient.createShader(outerRect)
-        ..strokeWidth = outerStrokeWidth
-        ..strokeCap = StrokeCap.butt
-        ..style = PaintingStyle.stroke;
-
-      canvas.drawArc(outerRect, 0.0, orbitSweep, false, orbitPaint);
-
-      // Rounded leading tip
-      final headX = center.dx + outerRadius * math.cos(orbitSweep);
-      final headY = center.dy + outerRadius * math.sin(orbitSweep);
-      final headPaint = Paint()
-        ..color = color
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(Offset(headX, headY), outerStrokeWidth / 2, headPaint);
-
-      canvas.restore();
     } else {
-      // Full ring on complete or error
+      final resultColor = isSuccess
+          ? const Color(0xFF10B981)
+          : const Color(0xFFEF4444);
       final resultPaint = Paint()
-        ..color = isSuccess ? const Color(0xFF10B981) : const Color(0xFFEF4444)
+        ..color = resultColor
         ..strokeWidth = mainStrokeWidth
         ..strokeCap = StrokeCap.round
         ..style = PaintingStyle.stroke;
@@ -2105,6 +2188,7 @@ class _DualRingProgressPainter extends CustomPainter {
         oldDelegate.isProcessing != isProcessing ||
         oldDelegate.isSuccess != isSuccess ||
         oldDelegate.color != color ||
+        oldDelegate.secondaryColor != secondaryColor ||
         oldDelegate.trackColor != trackColor;
   }
 }

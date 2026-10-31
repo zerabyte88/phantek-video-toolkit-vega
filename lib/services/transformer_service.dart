@@ -16,11 +16,12 @@ import 'settings_service.dart';
 
 /// Service interfacing with native AndroidX Media3 Transformer Hardware Encoder.
 class TransformerService {
-  static const MethodChannel _channel =
-      MethodChannel('com.phantek.cygnus.albireo/transformer');
+  static const MethodChannel _channel = MethodChannel(
+    'com.phantek.cygnus.albireo/transformer',
+  );
 
   static void Function(double progress, String stats, [int? sizeBytes])?
-      _activeProgressCallback;
+  _activeProgressCallback;
   static void Function(String log)? _activeLogCallback;
   static bool _handlerInitialized = false;
 
@@ -83,11 +84,10 @@ class TransformerService {
         );
       }
 
-      final Map<dynamic, dynamic>? map =
-          await _channel.invokeMethod<Map<dynamic, dynamic>>(
-        'getVideoInfo',
-        {'filePath': filePath},
-      );
+      final Map<dynamic, dynamic>? map = await _channel
+          .invokeMethod<Map<dynamic, dynamic>>('getVideoInfo', {
+            'filePath': filePath,
+          });
       if (map == null) return null;
 
       final width = (map['width'] as num?)?.toInt() ?? 0;
@@ -129,8 +129,9 @@ class TransformerService {
   static Future<List<Map<String, dynamic>>> getHardwareEncoders() async {
     if (!Platform.isAndroid) return [];
     try {
-      final List<dynamic>? list =
-          await _channel.invokeMethod<List<dynamic>>('getHardwareEncoders');
+      final List<dynamic>? list = await _channel.invokeMethod<List<dynamic>>(
+        'getHardwareEncoders',
+      );
       if (list == null) return [];
       return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
     } catch (e) {
@@ -230,18 +231,18 @@ class TransformerService {
       default:
         final String resSuffix =
             targetResolution.label.toLowerCase().startsWith('original')
-                ? (targetResolution.height > 0
-                    ? '${targetResolution.height}p'
-                    : 'transcoded')
-                : targetResolution.label.toLowerCase();
+            ? (targetResolution.height > 0
+                  ? '${targetResolution.height}p'
+                  : 'transcoded')
+            : targetResolution.label.toLowerCase();
         baseName = '$sanitizedBase-$resSuffix';
         break;
     }
 
     final dirPath =
         outputDir.path.endsWith('/') || outputDir.path.endsWith('\\')
-            ? outputDir.path.substring(0, outputDir.path.length - 1)
-            : outputDir.path;
+        ? outputDir.path.substring(0, outputDir.path.length - 1)
+        : outputDir.path;
     final sep = Platform.pathSeparator;
 
     final basePath = '$dirPath$sep$baseName.$ext';
@@ -269,8 +270,8 @@ class TransformerService {
     final sanitizedBase = fileName.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$'), '');
     final dirPath =
         outputDir.path.endsWith('/') || outputDir.path.endsWith('\\')
-            ? outputDir.path.substring(0, outputDir.path.length - 1)
-            : outputDir.path;
+        ? outputDir.path.substring(0, outputDir.path.length - 1)
+        : outputDir.path;
     final sep = Platform.pathSeparator;
 
     final basePath = '$dirPath$sep$sanitizedBase-audio.$ext';
@@ -295,7 +296,7 @@ class TransformerService {
     EncodingOptions encodingOptions = const EncodingOptions(),
     AppSettings appSettings = const AppSettings(),
     required void Function(double progress, String stats, [int? sizeBytes])
-        onProgress,
+    onProgress,
     required void Function(String log) onLog,
   }) async {
     _ensureMethodCallHandler();
@@ -314,7 +315,6 @@ class TransformerService {
       fileNamingFormat: appSettings.fileNamingFormat,
     );
 
-    // Target dimensions
     int targetW = targetResolution.width;
     int targetH = targetResolution.height;
     if (sourceVideo.height > sourceVideo.width &&
@@ -351,7 +351,9 @@ class TransformerService {
 
     onLog('Engine: AndroidX Media3 Transformer (Hardware Accelerated)');
     onLog('Target: ${targetW}x$targetH (${encodingOptions.codec.displayName})');
-    onLog('Rate Control: ${encodingOptions.rateControlMode.displayName} @ $targetBitrateKbps kbps');
+    onLog(
+      'Rate Control: ${encodingOptions.rateControlMode.displayName} @ $targetBitrateKbps kbps',
+    );
     onLog('Output Path: $outputPath');
 
     if (!Platform.isAndroid) {
@@ -369,6 +371,8 @@ class TransformerService {
       final result = await _channel.invokeMethod<String>('transcodeVideo', {
         'inputPath': sourceVideo.filePath,
         'outputPath': outputPath,
+        'sourceWidth': sourceVideo.width,
+        'sourceHeight': sourceVideo.height,
         'targetWidth': targetW,
         'targetHeight': targetH,
         'bitrateBps': targetBitrateKbps * 1000,
@@ -426,7 +430,7 @@ class TransformerService {
     int audioBitrateKbps = 192,
     AppSettings appSettings = const AppSettings(),
     required void Function(double progress, String stats, [int? sizeBytes])
-        onProgress,
+    onProgress,
     required void Function(String log) onLog,
   }) async {
     _ensureMethodCallHandler();

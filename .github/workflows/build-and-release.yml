@@ -128,7 +128,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.prep.outputs.tag_name }}
-          name: ${{ inputs.release_name || format('Phantek Vega {0} (64-bit ARM)', steps.prep.outputs.tag_name) }}
+          name: ${{ inputs.release_name || format('{0}', steps.prep.outputs.tag_name) }}
           generate_release_notes: true
           prerelease: ${{ inputs.prerelease }}
           make_latest: ${{ !inputs.prerelease }}

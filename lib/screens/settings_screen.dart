@@ -23,8 +23,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.1.2';
-  String _buildNumber = '21201';
+  String _appVersion = 'v2.1.3';
+  String _buildNumber = '21301';
   double? _dragCardOpacity;
 
   @override
@@ -59,8 +59,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.1.2';
-          _buildNumber = '21201';
+          _appVersion = 'v2.1.3';
+          _buildNumber = '21301';
         });
       }
     }
@@ -149,8 +149,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
 
               const SizedBox(height: 20),
-
-
 
               // 4. Storage
               _buildSectionTitle(
@@ -1134,7 +1132,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 theme: theme,
                 label: l10n.t('naming_format_suffix'),
                 selected: settings.fileNamingFormat == 'suffix',
-                onSelected: () => _settingsService.setFileNamingFormat('suffix'),
+                onSelected: () =>
+                    _settingsService.setFileNamingFormat('suffix'),
               ),
               _buildChoiceChip(
                 theme: theme,
@@ -1147,7 +1146,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 theme: theme,
                 label: l10n.t('naming_format_simple'),
                 selected: settings.fileNamingFormat == 'simple',
-                onSelected: () => _settingsService.setFileNamingFormat('simple'),
+                onSelected: () =>
+                    _settingsService.setFileNamingFormat('simple'),
               ),
             ],
           ),
@@ -1158,8 +1158,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             settings.fileNamingFormat == 'timestamp'
                 ? l10n.t('naming_format_timestamp_desc')
                 : (settings.fileNamingFormat == 'simple'
-                    ? l10n.t('naming_format_simple_desc')
-                    : l10n.t('naming_format_suffix_desc')),
+                      ? l10n.t('naming_format_simple_desc')
+                      : l10n.t('naming_format_suffix_desc')),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 11.5,

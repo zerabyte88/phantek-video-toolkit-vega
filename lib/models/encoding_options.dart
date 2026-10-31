@@ -156,7 +156,8 @@ enum SpeedPreset {
   }
 
   /// Backward-compatible alias for [fromEncodingPreset].
-  static SpeedPreset fromCpuPreset(String? preset) => fromEncodingPreset(preset);
+  static SpeedPreset fromCpuPreset(String? preset) =>
+      fromEncodingPreset(preset);
 }
 
 class EncodingOptions {

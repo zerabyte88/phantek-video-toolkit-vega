@@ -3168,7 +3168,11 @@ void main() {
     });
 
     test('All 22 languages have clean MediaCodec preset descriptions without CPU scalers', () {
-      final keys = ['preset_fast_desc', 'preset_normal_desc', 'preset_slow_desc'];
+      final keys = [
+        'preset_fast_desc',
+        'preset_normal_desc',
+        'preset_slow_desc',
+      ];
       expect(AppLocalizations.supportedLanguages.length, equals(22));
 
       for (final lang in AppLocalizations.supportedLanguages) {
@@ -3177,13 +3181,41 @@ void main() {
 
         for (final k in keys) {
           final val = l10n.t(k);
-          expect(val, isNotEmpty, reason: 'Missing translation for $k in $code');
-          expect(val.contains('x264'), isFalse, reason: 'Contains x264 in $code ($k): $val');
-          expect(val.contains('x265'), isFalse, reason: 'Contains x265 in $code ($k): $val');
-          expect(val.contains('Scaler Area'), isFalse, reason: 'Contains Scaler Area in $code ($k): $val');
-          expect(val.contains('Scaler Lanczos'), isFalse, reason: 'Contains Scaler Lanczos in $code ($k): $val');
-          expect(val.contains('Scaler Bicubic'), isFalse, reason: 'Contains Scaler Bicubic in $code ($k): $val');
-          expect(val.contains('MediaCodec'), isTrue, reason: 'Missing MediaCodec keyword in $code ($k): $val');
+          expect(
+            val,
+            isNotEmpty,
+            reason: 'Missing translation for $k in $code',
+          );
+          expect(
+            val.contains('x264'),
+            isFalse,
+            reason: 'Contains x264 in $code ($k): $val',
+          );
+          expect(
+            val.contains('x265'),
+            isFalse,
+            reason: 'Contains x265 in $code ($k): $val',
+          );
+          expect(
+            val.contains('Scaler Area'),
+            isFalse,
+            reason: 'Contains Scaler Area in $code ($k): $val',
+          );
+          expect(
+            val.contains('Scaler Lanczos'),
+            isFalse,
+            reason: 'Contains Scaler Lanczos in $code ($k): $val',
+          );
+          expect(
+            val.contains('Scaler Bicubic'),
+            isFalse,
+            reason: 'Contains Scaler Bicubic in $code ($k): $val',
+          );
+          expect(
+            val.contains('MediaCodec'),
+            isTrue,
+            reason: 'Missing MediaCodec keyword in $code ($k): $val',
+          );
         }
       }
     });
@@ -3783,12 +3815,16 @@ void main() {
           reason: 'heavy_process_desc_4k contains ellipsis in $code',
         );
         expect(
-          l10n.t('heavy_process_desc_long', args: {'duration': '15m 10s'}).contains('...'),
+          l10n
+              .t('heavy_process_desc_long', args: {'duration': '15m 10s'})
+              .contains('...'),
           isFalse,
           reason: 'heavy_process_desc_long contains ellipsis in $code',
         );
         expect(
-          l10n.t('heavy_process_desc_4k_long', args: {'duration': '15m 10s'}).contains('...'),
+          l10n
+              .t('heavy_process_desc_4k_long', args: {'duration': '15m 10s'})
+              .contains('...'),
           isFalse,
           reason: 'heavy_process_desc_4k_long contains ellipsis in $code',
         );

@@ -273,6 +273,8 @@ class MainActivity : FlutterActivity() {
     private fun handleTranscodeVideo(call: MethodCall, result: MethodChannel.Result) {
         val inputPath = call.argument<String>("inputPath")
         val outputPath = call.argument<String>("outputPath")
+        val sourceWidth = call.argument<Int>("sourceWidth") ?: 0
+        val sourceHeight = call.argument<Int>("sourceHeight") ?: 0
         val targetWidth = call.argument<Int>("targetWidth") ?: 0
         val targetHeight = call.argument<Int>("targetHeight") ?: 0
         val bitrateBps = call.argument<Int>("bitrateBps") ?: 0
@@ -300,9 +302,12 @@ class MainActivity : FlutterActivity() {
             val inputFile = File(inputPath)
             val mediaItem = MediaItem.fromUri(Uri.fromFile(inputFile))
 
-            // Build effects (downscaling if requested)
+            // Bypass Presentation effect if dimensions match to skip GPU shader overhead
+            val isScalingNeeded = (targetWidth > 0 && targetHeight > 0) &&
+                (sourceWidth <= 0 || sourceHeight <= 0 || targetWidth != sourceWidth || targetHeight != sourceHeight)
+
             val videoEffects = mutableListOf<Effect>()
-            if (targetWidth > 0 && targetHeight > 0) {
+            if (isScalingNeeded) {
                 videoEffects.add(
                     Presentation.createForWidthAndHeight(
                         targetWidth,
@@ -317,24 +322,25 @@ class MainActivity : FlutterActivity() {
                 .setRemoveAudio(removeAudio)
                 .build()
 
-            // Setup Encoder Factory with requested video bitrate and OEM fallback
+            // Encoder factory with 2.0s GOP interval and OEM fallback
             val encoderFactoryBuilder = DefaultEncoderFactory.Builder(applicationContext)
                 .setEnableFallback(true)
 
-            if (bitrateBps > 0) {
-                val videoSettingsBuilder = VideoEncoderSettings.Builder()
-                    .setBitrate(bitrateBps)
+            val videoSettingsBuilder = VideoEncoderSettings.Builder()
+                .setiFrameIntervalSeconds(2.0f)
 
+            if (bitrateBps > 0) {
+                videoSettingsBuilder.setBitrate(bitrateBps)
                 if (rateControlMode.equals("bitrate", ignoreCase = true)) {
                     videoSettingsBuilder.setBitrateMode(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR)
                 } else {
                     videoSettingsBuilder.setBitrateMode(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR)
                 }
-                encoderFactoryBuilder.setRequestedVideoEncoderSettings(videoSettingsBuilder.build())
             }
+            encoderFactoryBuilder.setRequestedVideoEncoderSettings(videoSettingsBuilder.build())
             val encoderFactory = encoderFactoryBuilder.build()
 
-            // Build Transformer with InAppMuxer to bypass native platform MediaMuxer limitations and sample timeouts on long/TS media
+            // InAppMuxer prevents sample timeouts and timestamp gaps on long/TS media
             val muxerFactory = InAppMuxer.Factory.Builder().build()
             val transformerBuilder = Transformer.Builder(applicationContext)
                 .setVideoMimeType(targetVideoMime)
@@ -585,12 +591,12 @@ class MainActivity : FlutterActivity() {
                 } catch (_: Exception) {}
 
                 if (!isCancelled && activeTransformer == transformer) {
-                    mainHandler.postDelayed(this, 200)
+                    mainHandler.postDelayed(this, 500)
                 }
             }
         }
         progressRunnable = runnable
-        mainHandler.postDelayed(runnable, 200)
+        mainHandler.postDelayed(runnable, 500)
     }
 
     private fun stopProgressPolling() {
