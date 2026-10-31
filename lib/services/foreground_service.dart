@@ -22,6 +22,11 @@ class _VideoProcessingTaskHandler extends TaskHandler {
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {}
+
+  @override
+  void onNotificationButtonPressed(String id) {
+    FlutterForegroundTask.sendDataToMain(id);
+  }
 }
 
 class ForegroundServiceManager {
@@ -39,11 +44,17 @@ class ForegroundServiceManager {
 
   DateTime? _lastNotificationUpdate;
   bool _isInitialized = false;
+  void Function(String action)? onNotificationAction;
 
   Future<void> init() async {
     if (_isInitialized) return;
     try {
       FlutterForegroundTask.initCommunicationPort();
+      FlutterForegroundTask.addTaskDataCallback((data) {
+        if (data is String) {
+          onNotificationAction?.call(data);
+        }
+      });
       FlutterForegroundTask.init(
         androidNotificationOptions: AndroidNotificationOptions(
           channelId: 'video_conversion_channel_v6',
@@ -102,6 +113,7 @@ class ForegroundServiceManager {
     required String title,
     required String text,
     NotificationIcon? notificationIcon,
+    List<NotificationButton>? buttons,
   }) async {
     try {
       await init();
@@ -117,6 +129,7 @@ class ForegroundServiceManager {
           notificationTitle: title,
           notificationText: text,
           notificationIcon: icon,
+          notificationButtons: buttons,
           callback: _foregroundTaskCallback,
         );
         debugPrint('Foreground service started result: $result');
@@ -125,6 +138,7 @@ class ForegroundServiceManager {
           notificationTitle: title,
           notificationText: text,
           notificationIcon: icon,
+          notificationButtons: buttons,
         );
       }
     } catch (e) {
@@ -136,6 +150,7 @@ class ForegroundServiceManager {
     required String title,
     required String text,
     NotificationIcon? notificationIcon,
+    List<NotificationButton>? buttons,
     bool force = false,
   }) async {
     try {
@@ -153,11 +168,27 @@ class ForegroundServiceManager {
           notificationTitle: title,
           notificationText: text,
           notificationIcon: notificationIcon ?? defaultNotificationIcon,
+          notificationButtons: buttons,
         );
       }
     } catch (e) {
       debugPrint('Error updating foreground service: $e');
     }
+  }
+
+  Future<void> showCompletedNotification({
+    required String title,
+    required String text,
+    required String playButtonText,
+  }) async {
+    await updateService(
+      title: title,
+      text: text,
+      buttons: [
+        NotificationButton(id: 'btn_play', text: playButtonText),
+      ],
+      force: true,
+    );
   }
 
   Future<void> stopService() async {

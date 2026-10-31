@@ -23,8 +23,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.1.5';
-  String _buildNumber = '21501';
+  String _appVersion = 'v2.2.0';
+  String _buildNumber = '22001';
   double? _dragCardOpacity;
 
   @override
@@ -53,14 +53,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '21501';
+              : '22001';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.1.5';
-          _buildNumber = '21501';
+          _appVersion = 'v2.2.0';
+          _buildNumber = '22001';
         });
       }
     }
@@ -343,6 +343,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // About card
               _buildAboutCard(theme, l10n),
+
+              const SizedBox(height: 16),
+
+              // Reset configuration settings tile
+              _buildModernCard(
+                theme: theme,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => _confirmResetConfig(context),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withAlpha(20),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.tune_rounded,
+                            size: 20,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.t('settings_reset_config_title'),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                l10n.t('settings_reset_config_desc'),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: theme.colorScheme.onSurface.withAlpha(150),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20,
+                          color: theme.colorScheme.onSurface.withAlpha(120),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 20),
 
@@ -1785,6 +1844,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     }
     return rowContent;
+  }
+
+  void _confirmResetConfig(BuildContext context) {
+    final l10n = _settingsService.l10n;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Center(
+          child: Text(
+            l10n.t('settings_reset_config_title'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+        content: Text(
+          l10n.t('settings_reset_config_dialog_desc'),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(l10n.t('cancel')),
+              ),
+              const SizedBox(width: 16),
+              FilledButton(
+                onPressed: () async {
+                  final nav = Navigator.of(ctx);
+                  final messenger = ScaffoldMessenger.of(context);
+                  await _settingsService.resetEncodingConfigurationToDefaults();
+                  if (mounted) {
+                    nav.pop();
+                    setState(() {});
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.t('settings_reset_config_success')),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+                child: Text(l10n.t('reset')),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   void _confirmResetDefaults(BuildContext context) {

@@ -127,6 +127,99 @@ class CacheManagerService {
     return bytesFreed;
   }
 
+  /// Safely scans temporary and external cache directories and purges temporary files
+  /// matching `.tmp`, `.temp`, `.part`, `.crdownload`, or any files in `file_picker`,
+  /// `cache`, `tmp` directories, or files starting with `vega_temp_`, `cache_`.
+  /// Also calls [FilePicker.clearTemporaryFiles] and returns total bytes freed safely.
+  Future<int> autoPurgeTempFiles() async {
+    int bytesFreed = 0;
+
+    // 1. Clear native FilePicker temp files
+    try {
+      await FilePicker.clearTemporaryFiles();
+    } catch (e) {
+      debugPrint('FilePicker.clearTemporaryFiles error: $e');
+    }
+
+    bool shouldPurgeFile(FileSystemEntity entity) {
+      if (entity is! File) return false;
+      final fileName = entity.uri.pathSegments.isNotEmpty
+          ? entity.uri.pathSegments.last.toLowerCase()
+          : '';
+      final pathLower = entity.path.toLowerCase().replaceAll('\\', '/');
+
+      // Check extensions
+      if (fileName.endsWith('.tmp') ||
+          fileName.endsWith('.temp') ||
+          fileName.endsWith('.part') ||
+          fileName.endsWith('.crdownload')) {
+        return true;
+      }
+
+      // Check prefixes
+      if (fileName.startsWith('vega_temp_') || fileName.startsWith('cache_')) {
+        return true;
+      }
+
+      // Check directory paths
+      if (pathLower.contains('/file_picker/') ||
+          pathLower.contains('/cache/') ||
+          pathLower.contains('/tmp/') ||
+          pathLower.contains('/temp/')) {
+        return true;
+      }
+
+      return false;
+    }
+
+    Future<int> purgeFromDirectory(Directory dir) async {
+      int freed = 0;
+      try {
+        if (!await dir.exists()) return 0;
+        final entities = dir.listSync(recursive: true, followLinks: false);
+        for (final entity in entities) {
+          if (shouldPurgeFile(entity)) {
+            try {
+              final file = entity as File;
+              final len = await file.length();
+              await file.delete();
+              freed += len;
+              debugPrint('Auto-purged temp file: ${file.path} ($len bytes)');
+            } catch (e) {
+              debugPrint('Error purging temp file ${entity.path}: $e');
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Error scanning dir for auto-purge ${dir.path}: $e');
+      }
+      return freed;
+    }
+
+    // 2. Scan getTemporaryDirectory()
+    try {
+      final tempDir = await getTemporaryDirectory();
+      bytesFreed += await purgeFromDirectory(tempDir);
+    } catch (e) {
+      debugPrint('Error auto-purging tempDir: $e');
+    }
+
+    // 3. Scan getExternalCacheDirectories()
+    try {
+      final extCacheDirs = await getExternalCacheDirectories();
+      if (extCacheDirs != null) {
+        for (final dir in extCacheDirs) {
+          bytesFreed += await purgeFromDirectory(dir);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error auto-purging extCacheDirs: $e');
+    }
+
+    debugPrint('Auto-purge complete. Total freed: ${formatBytes(bytesFreed)}');
+    return bytesFreed;
+  }
+
   /// Returns true if [filePath] resides in a cache or temp directory.
   bool isCachedPath(String path) {
     final lower = path.toLowerCase().replaceAll('\\', '/');

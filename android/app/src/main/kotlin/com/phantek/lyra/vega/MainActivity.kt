@@ -4,6 +4,7 @@
 package com.phantek.lyra.vega
 
 import android.content.Context
+import android.content.Intent
 import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 import android.media.MediaExtractor
@@ -14,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.OpenableColumns
 import androidx.media3.common.C
 import androidx.media3.common.Effect
 import androidx.media3.common.MediaItem
@@ -47,6 +49,7 @@ class MainActivity : FlutterActivity() {
 
     private var methodChannel: MethodChannel? = null
     private val mainHandler = Handler(Looper.getMainLooper())
+    private var pendingSharedVideoPath: String? = null
 
     // Active transformer session
     private var activeTransformer: Transformer? = null
@@ -92,8 +95,98 @@ class MainActivity : FlutterActivity() {
                 "transcodeVideo" -> handleTranscodeVideo(call, result)
                 "extractAudio" -> handleExtractAudio(call, result)
                 "cancelTransformation" -> handleCancelTransformation(result)
+                "getInitialSharedVideo" -> {
+                    result.success(pendingSharedVideoPath)
+                    pendingSharedVideoPath = null
+                }
                 else -> result.notImplemented()
             }
+        }
+
+        handleShareIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleShareIntent(intent)
+    }
+
+    private fun handleShareIntent(intent: Intent?) {
+        if (intent == null) return
+        val action = intent.action
+        val type = intent.type
+
+        val isSend = Intent.ACTION_SEND == action
+        val isView = Intent.ACTION_VIEW == action
+
+        if (!isSend && !isView) return
+        if (type == null || !type.startsWith("video/")) return
+
+        val uri: Uri? = if (isSend) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_STREAM)
+            } ?: intent.data
+        } else {
+            intent.data
+        }
+
+        if (uri == null) return
+
+        Executors.newSingleThreadExecutor().execute {
+            try {
+                val resolvedPath = resolveUriToPath(uri)
+                if (resolvedPath != null) {
+                    pendingSharedVideoPath = resolvedPath
+                    mainHandler.post {
+                        methodChannel?.invokeMethod(
+                            "onSharedVideoReceived",
+                            mapOf("path" to resolvedPath)
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun resolveUriToPath(uri: Uri): String? {
+        return try {
+            if (uri.scheme == "file" || uri.scheme == null) {
+                val p = uri.path ?: return null
+                val f = File(p)
+                if (f.exists()) f.absolutePath else null
+            } else {
+                var displayName: String? = null
+                if (uri.scheme == "content") {
+                    contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                            if (nameIndex != -1) {
+                                displayName = cursor.getString(nameIndex)
+                            }
+                        }
+                    }
+                }
+                if (displayName.isNullOrBlank()) {
+                    displayName = uri.lastPathSegment ?: "shared_video.mp4"
+                }
+                val sanitized = displayName!!.replace(Regex("[^a-zA-Z0-9._-]"), "_")
+                val targetFile = File(cacheDir, "shared_video_${System.currentTimeMillis()}_$sanitized")
+                contentResolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(targetFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                targetFile.absolutePath
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 
@@ -281,6 +374,8 @@ class MainActivity : FlutterActivity() {
         val videoCodec = call.argument<String>("videoCodec") ?: "h264"
         val rateControlMode = call.argument<String>("rateControlMode") ?: "crf"
         val removeAudio = call.argument<Boolean>("removeAudio") ?: false
+        val trimStartMs = (call.argument<Number>("trimStartMs"))?.toLong()
+        val trimEndMs = (call.argument<Number>("trimEndMs"))?.toLong()
 
         if (inputPath.isNullOrEmpty() || outputPath.isNullOrEmpty()) {
             result.error("INVALID_ARGS", "inputPath and outputPath are required", null)
@@ -300,7 +395,14 @@ class MainActivity : FlutterActivity() {
 
         try {
             val inputFile = File(inputPath)
-            val mediaItem = MediaItem.fromUri(Uri.fromFile(inputFile))
+            val mediaItemBuilder = MediaItem.Builder().setUri(Uri.fromFile(inputFile))
+            if ((trimStartMs != null && trimStartMs > 0) || (trimEndMs != null && trimEndMs > 0)) {
+                val clippingBuilder = MediaItem.ClippingConfiguration.Builder()
+                if (trimStartMs != null && trimStartMs > 0) clippingBuilder.setStartPositionMs(trimStartMs)
+                if (trimEndMs != null && trimEndMs > 0) clippingBuilder.setEndPositionMs(trimEndMs)
+                mediaItemBuilder.setClippingConfiguration(clippingBuilder.build())
+            }
+            val mediaItem = mediaItemBuilder.build()
 
             // Bypass Presentation effect if dimensions match to skip GPU shader overhead
             val isScalingNeeded = (targetWidth > 0 && targetHeight > 0) &&
@@ -410,6 +512,8 @@ class MainActivity : FlutterActivity() {
         val outputPath = call.argument<String>("outputPath")
         val format = call.argument<String>("format") ?: "m4a"
         val bitrateKbps = call.argument<Int>("bitrateKbps") ?: 192
+        val trimStartMs = (call.argument<Number>("trimStartMs"))?.toLong()
+        val trimEndMs = (call.argument<Number>("trimEndMs"))?.toLong()
 
         if (inputPath.isNullOrEmpty() || outputPath.isNullOrEmpty()) {
             result.error("INVALID_ARGS", "inputPath and outputPath are required", null)
@@ -425,7 +529,7 @@ class MainActivity : FlutterActivity() {
             Executors.newSingleThreadExecutor().execute {
                 try {
                     sendLog("Extracting uncompressed audio to WAV...")
-                    extractAudioToWav(inputPath, outputPath)
+                    extractAudioToWav(inputPath, outputPath, trimStartMs, trimEndMs)
                     mainHandler.post {
                         sendProgress(1.0, File(outputPath).length())
                         sendLog("WAV extraction completed successfully!")
@@ -450,7 +554,7 @@ class MainActivity : FlutterActivity() {
             Executors.newSingleThreadExecutor().execute {
                 try {
                     sendLog("Checking source audio track for MP3 stream...")
-                    val success = extractAudioDirectStream(inputPath, outputPath, "audio/mpeg")
+                    val success = extractAudioDirectStream(inputPath, outputPath, "audio/mpeg", trimStartMs, trimEndMs)
                     if (success) {
                         mainHandler.post {
                             sendProgress(1.0, File(outputPath).length())
@@ -483,7 +587,15 @@ class MainActivity : FlutterActivity() {
 
         // For M4A/AAC: Use AndroidX Media3 Transformer
         try {
-            val mediaItem = MediaItem.fromUri(Uri.fromFile(File(inputPath)))
+            val inputFile = File(inputPath)
+            val mediaItemBuilder = MediaItem.Builder().setUri(Uri.fromFile(inputFile))
+            if ((trimStartMs != null && trimStartMs > 0) || (trimEndMs != null && trimEndMs > 0)) {
+                val clippingBuilder = MediaItem.ClippingConfiguration.Builder()
+                if (trimStartMs != null && trimStartMs > 0) clippingBuilder.setStartPositionMs(trimStartMs)
+                if (trimEndMs != null && trimEndMs > 0) clippingBuilder.setEndPositionMs(trimEndMs)
+                mediaItemBuilder.setClippingConfiguration(clippingBuilder.build())
+            }
+            val mediaItem = mediaItemBuilder.build()
             val editedMediaItem = EditedMediaItem.Builder(mediaItem)
                 .setRemoveVideo(true)
                 .build()
@@ -629,7 +741,13 @@ class MainActivity : FlutterActivity() {
     /**
      * Direct bitstream extraction using MediaExtractor without re-encoding.
      */
-    private fun extractAudioDirectStream(inputPath: String, outputPath: String, targetMime: String): Boolean {
+    private fun extractAudioDirectStream(
+        inputPath: String,
+        outputPath: String,
+        targetMime: String,
+        trimStartMs: Long? = null,
+        trimEndMs: Long? = null
+    ): Boolean {
         val extractor = MediaExtractor()
         try {
             extractor.setDataSource(inputPath)
@@ -651,6 +769,9 @@ class MainActivity : FlutterActivity() {
             }
 
             extractor.selectTrack(audioTrackIndex)
+            if (trimStartMs != null && trimStartMs > 0) {
+                extractor.seekTo(trimStartMs * 1000L, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+            }
             val durationUs = if (trackFormat.containsKey(MediaFormat.KEY_DURATION)) {
                 trackFormat.getLong(MediaFormat.KEY_DURATION)
             } else 0L
@@ -664,6 +785,9 @@ class MainActivity : FlutterActivity() {
 
             try {
                 while (!isCancelled) {
+                    if (trimEndMs != null && trimEndMs > 0 && extractor.sampleTime > trimEndMs * 1000L) {
+                        break
+                    }
                     buffer.clear()
                     val sampleSize = extractor.readSampleData(buffer, 0)
                     if (sampleSize < 0) break
@@ -699,7 +823,12 @@ class MainActivity : FlutterActivity() {
     /**
      * Extracts audio track to standard uncompressed 16-bit PCM WAV.
      */
-    private fun extractAudioToWav(inputPath: String, outputPath: String) {
+    private fun extractAudioToWav(
+        inputPath: String,
+        outputPath: String,
+        trimStartMs: Long? = null,
+        trimEndMs: Long? = null
+    ) {
         val extractor = MediaExtractor()
         var decoder: android.media.MediaCodec? = null
         var raf: RandomAccessFile? = null
@@ -725,6 +854,9 @@ class MainActivity : FlutterActivity() {
             }
 
             extractor.selectTrack(audioTrackIndex)
+            if (trimStartMs != null && trimStartMs > 0) {
+                extractor.seekTo(trimStartMs * 1000L, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+            }
             val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
             var sampleRate = if (format.containsKey(MediaFormat.KEY_SAMPLE_RATE)) {
                 format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
@@ -762,11 +894,11 @@ class MainActivity : FlutterActivity() {
                         val inputBuf = dec.getInputBuffer(inputBufIndex)
                         if (inputBuf != null) {
                             val sampleSize = extractor.readSampleData(inputBuf, 0)
-                            if (sampleSize < 0) {
+                            val pts = extractor.sampleTime
+                            if (sampleSize < 0 || (trimEndMs != null && trimEndMs > 0 && pts > trimEndMs * 1000L)) {
                                 dec.queueInputBuffer(inputBufIndex, 0, 0, 0L, android.media.MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                                 isExtractorDone = true
                             } else {
-                                val pts = extractor.sampleTime
                                 dec.queueInputBuffer(inputBufIndex, 0, sampleSize, pts, 0)
                                 extractor.advance()
                             }

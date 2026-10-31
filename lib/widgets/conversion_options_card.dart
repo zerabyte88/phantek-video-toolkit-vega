@@ -34,12 +34,16 @@ class ConversionOptionsCard extends StatefulWidget {
   State<ConversionOptionsCard> createState() => _ConversionOptionsCardState();
 }
 
-class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
+class _ConversionOptionsCardState extends State<ConversionOptionsCard>
+    with AutomaticKeepAliveClientMixin {
   int _crfValue = 22;
   int _customBitrateMbps = 4;
   bool _isCustomFps = false;
   late int _customFps;
   bool _isAdvancedExpanded = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -110,6 +114,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final theme = Theme.of(context);
     final l10n = widget.l10n;
     final appSettings = SettingsService().settings;

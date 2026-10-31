@@ -15,6 +15,7 @@ import 'package:phantek_video_toolkit_vega/services/transformer_service.dart';
 import 'package:phantek_video_toolkit_vega/services/localization_service.dart';
 import 'package:phantek_video_toolkit_vega/services/media_scanner_service.dart';
 import 'package:phantek_video_toolkit_vega/screens/settings_screen.dart';
+import 'package:phantek_video_toolkit_vega/screens/trim_preview_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:phantek_video_toolkit_vega/services/settings_service.dart';
 import 'package:phantek_video_toolkit_vega/theme/app_theme.dart';
@@ -1575,7 +1576,11 @@ void main() {
           targetFps: 30,
         );
 
-        const l10n = AppLocalizations('id');
+        SharedPreferences.setMockInitialValues({});
+        final service = SettingsService();
+        await service.init();
+        await service.setLanguage('id');
+        final l10n = service.l10n;
 
         await tester.pumpWidget(
           MaterialApp(
@@ -3887,6 +3892,281 @@ void main() {
           expect(result, isFalse);
         },
       );
+    });
+
+    test('thermal_warning_title and thermal_warning_msg exist across all supported languages', () {
+      for (final code in supportedCodes) {
+        final l10n = AppLocalizations(code);
+        final title = l10n.t('thermal_warning_title', args: {'temp': '46.5'});
+        final msg = l10n.t('thermal_warning_msg');
+        expect(title, isNotEmpty, reason: 'thermal_warning_title missing in $code');
+        expect(title, isNot(equals('thermal_warning_title')), reason: 'thermal_warning_title untranslated in $code');
+        expect(title.contains('46.5'), isTrue, reason: 'thermal_warning_title should contain temperature in $code');
+        expect(msg, isNotEmpty, reason: 'thermal_warning_msg missing in $code');
+        expect(msg, isNot(equals('thermal_warning_msg')), reason: 'thermal_warning_msg untranslated in $code');
+      }
+    });
+
+    group('CacheManagerService Auto-Purge tests', () {
+      test('autoPurgeTempFiles safely cleans temporary and cache pattern files', () async {
+        final cacheService = CacheManagerService();
+        final testDir = await Directory.systemTemp.createTemp('vega_purge_test_');
+        try {
+          final tmpFile = File('${testDir.path}/test.tmp')..writeAsStringSync('dummy tmp');
+          final partFile = File('${testDir.path}/video.part')..writeAsStringSync('dummy part');
+          final crdownloadFile = File('${testDir.path}/stream.crdownload')..writeAsStringSync('dummy crdownload');
+          final prefixFile = File('${testDir.path}/vega_temp_output.mp4')..writeAsStringSync('dummy vega temp');
+          final keepFile = File('${testDir.path}/keep_me.mp4')..writeAsStringSync('keep this valid file');
+
+          expect(tmpFile.existsSync(), isTrue);
+          expect(partFile.existsSync(), isTrue);
+          expect(crdownloadFile.existsSync(), isTrue);
+          expect(prefixFile.existsSync(), isTrue);
+          expect(keepFile.existsSync(), isTrue);
+
+          // Path matcher check
+          expect(cacheService.isCachedPath('/data/user/0/com.phantek.lyra.vega/cache/file_picker/temp.mp4'), isTrue);
+          expect(cacheService.isCachedPath('/data/user/0/com.phantek.lyra.vega/cache/temp.mp4'), isTrue);
+          expect(cacheService.isCachedPath('/data/local/tmp/temp.mp4'), isTrue);
+          expect(cacheService.isCachedPath('/storage/emulated/0/Android/data/com.phantek.lyra.vega/temp/temp.mp4'), isTrue);
+          expect(cacheService.isCachedPath('/storage/emulated/0/Movies/normal/video.mp4'), isFalse);
+
+          // Running autoPurgeTempFiles on real device/host runs without throwing
+          final bytesFreed = await cacheService.autoPurgeTempFiles();
+          expect(bytesFreed, greaterThanOrEqualTo(0));
+        } finally {
+          if (testDir.existsSync()) {
+            testDir.deleteSync(recursive: true);
+          }
+        }
+      });
+    });
+
+    group('Video Preview, Trimming, Encoding Options Persistence, & Factory Reset tests', () {
+      test('EncodingOptions serialization and deserialization preserves all fields and trimming values', () {
+        const original = EncodingOptions(
+          codec: VideoCodec.hevc,
+          container: VideoContainer.mkv,
+          rateControlMode: RateControlMode.bitrate,
+          speedPreset: SpeedPreset.max,
+          crfValue: 18,
+          customBitrateKbps: 8500,
+          targetFps: 60,
+          audioFormat: AudioFormat.wav,
+          audioExtractBitrateKbps: 320,
+          videoAudioBitrateKbps: 256,
+          trimStartMs: 1500,
+          trimEndMs: 9500,
+        );
+
+        final json = original.toJson();
+        expect(json['codec'], equals('hevc'));
+        expect(json['container'], equals('mkv'));
+        expect(json['rateControlMode'], equals('bitrate'));
+        expect(json['speedPreset'], equals('max'));
+        expect(json['crfValue'], equals(18));
+        expect(json['customBitrateKbps'], equals(8500));
+        expect(json['targetFps'], equals(60));
+        expect(json['audioFormat'], equals('wav'));
+        expect(json['audioExtractBitrateKbps'], equals(320));
+        expect(json['videoAudioBitrateKbps'], equals(256));
+        expect(json['trimStartMs'], equals(1500));
+        expect(json['trimEndMs'], equals(9500));
+
+        final fromJson = EncodingOptions.fromJson(json);
+        expect(fromJson, equals(original));
+        expect(fromJson.hashCode, equals(original.hashCode));
+
+        // copyWith can modify or clear trim values
+        final modified = original.copyWith(trimStartMs: 2000, trimEndMs: 5000);
+        expect(modified.trimStartMs, equals(2000));
+        expect(modified.trimEndMs, equals(5000));
+
+        final cleared = modified.copyWith(trimStartMs: null, trimEndMs: null);
+        expect(cleared.trimStartMs, isNull);
+        expect(cleared.trimEndMs, isNull);
+      });
+
+      test('SettingsService persists encoding options and resets to defaults accurately', () async {
+        SharedPreferences.setMockInitialValues({});
+        final service = SettingsService();
+        await service.init();
+
+        const custom = EncodingOptions(
+          codec: VideoCodec.hevc,
+          container: VideoContainer.mov,
+          rateControlMode: RateControlMode.bitrate,
+          speedPreset: SpeedPreset.fast,
+          crfValue: 26,
+          customBitrateKbps: 6000,
+          targetFps: 30,
+          videoAudioBitrateKbps: 192,
+          trimStartMs: 500,
+          trimEndMs: 4500,
+        );
+
+        await service.saveEncodingOptions(custom);
+        expect(service.savedEncodingOptions, equals(custom));
+
+        // Re-initialize SettingsService to verify persistence from SharedPreferences
+        await service.init();
+        expect(service.savedEncodingOptions, equals(custom));
+
+        // Reset encoding configuration to defaults
+        await service.resetEncodingConfigurationToDefaults();
+        final resetOpts = service.savedEncodingOptions;
+        expect(resetOpts, isNotNull);
+        expect(resetOpts!.speedPreset, equals(SpeedPreset.normal));
+        expect(resetOpts.codec, equals(VideoCodec.h264));
+        expect(resetOpts.container, equals(VideoContainer.mp4));
+        expect(resetOpts.rateControlMode, equals(RateControlMode.crf));
+        expect(resetOpts.crfValue, equals(22));
+        expect(resetOpts.customBitrateKbps, equals(4000));
+        expect(resetOpts.targetFps, equals(0));
+        expect(resetOpts.videoAudioBitrateKbps, equals(128));
+        expect(resetOpts.trimStartMs, isNull);
+        expect(resetOpts.trimEndMs, isNull);
+      });
+
+      test('All new localization keys exist across all 23 languages without any emojis', () {
+        const newKeys = [
+          'trim_title',
+          'trim_start',
+          'trim_end',
+          'trim_new_duration',
+          'trim_btn_proceed',
+          'trim_btn_skip',
+          'settings_reset_config_title',
+          'settings_reset_config_desc',
+          'settings_reset_config_dialog_desc',
+          'settings_reset_config_success',
+          'cancel',
+          'reset',
+        ];
+
+        final emojiRegex = RegExp(
+          r'[\u{10000}-\u{10FFFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}]',
+          unicode: true,
+        );
+
+        for (final code in supportedCodes) {
+          final l10n = AppLocalizations(code);
+          for (final key in newKeys) {
+            final value = l10n.t(key);
+            expect(value, isNotEmpty, reason: 'Key "$key" should not be empty in language "$code"');
+            expect(value, isNot(equals(key)), reason: 'Key "$key" is untranslated in language "$code"');
+            expect(
+              emojiRegex.hasMatch(value),
+              isFalse,
+              reason: 'Key "$key" in language "$code" must not contain emojis (found: "$value")',
+            );
+          }
+        }
+      });
+
+      testWidgets('TrimPreviewScreen renders controls, time badges, and responds to skip / proceed', (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        const video = VideoInfo(
+          filePath: '/test/sample_video.mp4',
+          fileName: 'sample_video.mp4',
+          width: 1920,
+          height: 1080,
+          durationSeconds: 60.0,
+          bitrate: 5000000,
+          fps: 30.0,
+          codec: 'h264',
+          fileSizeBytes: 15000000,
+        );
+
+        SharedPreferences.setMockInitialValues({});
+        final service = SettingsService();
+        await service.init();
+        await service.setLanguage('id');
+        final l10n = service.l10n;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.getTheme('oled_snowfall'),
+            home: const TrimPreviewScreen(
+              videoInfo: video,
+              targetResolution: VideoResolution(label: '1080p', width: 1920, height: 1080),
+              encodingOptions: EncodingOptions(),
+              appSettings: AppSettings(),
+              isAudioExtraction: false,
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+
+        // Verify Title
+        expect(find.text(l10n.t('trim_title')), findsOneWidget);
+
+        // Verify RangeSlider
+        expect(find.byType(RangeSlider), findsOneWidget);
+
+        // Verify Time badges
+        expect(find.text(l10n.t('trim_start')), findsOneWidget);
+        expect(find.text(l10n.t('trim_end')), findsOneWidget);
+        expect(find.text(l10n.t('trim_new_duration')), findsOneWidget);
+
+        // Verify Buttons
+        expect(find.text(l10n.t('trim_btn_proceed')), findsOneWidget);
+        expect(find.text(l10n.t('trim_btn_skip')), findsOneWidget);
+      });
+
+      testWidgets('SettingsScreen displays Reset Configuration Settings tile and handles dialog confirmation', (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        SharedPreferences.setMockInitialValues({});
+        final service = SettingsService();
+        await service.init();
+        await service.saveEncodingOptions(
+          const EncodingOptions(crfValue: 16, customBitrateKbps: 9000),
+        );
+        expect(service.savedEncodingOptions?.crfValue, equals(16));
+
+        final l10n = service.l10n;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.getTheme('oled_snowfall'),
+            home: const SettingsScreen(),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Find Reset Configuration tile
+        final tileFinder = find.text(l10n.t('settings_reset_config_title'));
+        await tester.ensureVisible(tileFinder);
+        expect(tileFinder, findsOneWidget);
+
+        // Tap the tile to show dialog
+        await tester.tap(tileFinder);
+        await tester.pumpAndSettle();
+
+        // Verify dialog contents
+        expect(find.text(l10n.t('settings_reset_config_dialog_desc')), findsOneWidget);
+        expect(find.text(l10n.t('cancel')), findsOneWidget);
+        expect(find.text(l10n.t('reset')), findsOneWidget);
+
+        // Confirm reset
+        await tester.tap(find.text(l10n.t('reset')));
+        await tester.pumpAndSettle();
+
+        // Verify encoding options reset to defaults
+        expect(service.savedEncodingOptions?.crfValue, equals(22));
+        expect(service.savedEncodingOptions?.customBitrateKbps, equals(4000));
+        expect(find.text(l10n.t('settings_reset_config_success')), findsOneWidget);
+      });
     });
   });
 }

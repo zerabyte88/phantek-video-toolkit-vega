@@ -4,6 +4,7 @@
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/video_info.dart';
 
@@ -51,6 +52,8 @@ class SocDescription {
 
 class DeviceSpecHelper {
   static final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
+  @visibleForTesting
+  static double? mockBatteryTemperature;
 
   static String _capitalize(String s) {
     if (s.isEmpty) return s;
@@ -1920,6 +1923,7 @@ class DeviceSpecHelper {
   }
 
   static Future<double> getBatteryTemperature() async {
+    if (mockBatteryTemperature != null) return mockBatteryTemperature!;
     try {
       if (Platform.isAndroid) {
         for (int i = 0; i < 5; i++) {

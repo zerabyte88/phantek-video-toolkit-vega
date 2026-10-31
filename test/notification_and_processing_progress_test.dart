@@ -13,7 +13,10 @@ import 'package:phantek_video_toolkit_vega/models/app_settings.dart';
 import 'package:phantek_video_toolkit_vega/models/encoding_options.dart';
 import 'package:phantek_video_toolkit_vega/models/video_info.dart';
 import 'package:phantek_video_toolkit_vega/screens/processing_screen.dart';
+import 'package:phantek_video_toolkit_vega/services/device_spec_helper.dart';
 import 'package:phantek_video_toolkit_vega/services/foreground_service.dart';
+import 'package:phantek_video_toolkit_vega/services/localization_service.dart';
+import 'package:phantek_video_toolkit_vega/services/settings_service.dart';
 import 'package:phantek_video_toolkit_vega/services/transformer_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -586,5 +589,548 @@ void main() {
         await tester.pump(const Duration(seconds: 5));
       },
     );
+
+    testWidgets(
+      'ProcessingScreen displays Theme-Adaptive Thermal Warning banner when temp >= 45C and dismisses on OK',
+      (WidgetTester tester) async {
+        final completer = Completer<String?>();
+        DeviceSpecHelper.mockBatteryTemperature = 47.5;
+
+        TransformerService.mockProcessVideo =
+            ({
+              required sourceVideo,
+              required targetResolution,
+              encodingOptions = const EncodingOptions(),
+              appSettings = const AppSettings(),
+              required onProgress,
+              required onLog,
+            }) async {
+              return completer.future;
+            };
+
+        addTearDown(() {
+          DeviceSpecHelper.mockBatteryTemperature = null;
+          TransformerService.mockProcessVideo = null;
+          if (!completer.isCompleted) {
+            completer.complete(null);
+          }
+        });
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ProcessingScreen(
+              videoInfo: testVideo,
+              targetResolution: testResolution,
+              encodingOptions: EncodingOptions(),
+              appSettings: AppSettings(),
+            ),
+          ),
+        );
+
+        // Advance 1 second for periodic telemetry timer to tick and read temperature
+        await tester.pump(const Duration(seconds: 1));
+        await tester.pump();
+
+        // Banner elements should be present
+        expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+        expect(find.textContaining('47.5'), findsWidgets);
+        expect(find.text('OK'), findsOneWidget);
+
+        // Tap the OK button to dismiss the banner
+        await tester.tap(find.text('OK'));
+        await tester.pump();
+
+        // Banner should disappear
+        expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
+        expect(find.text('OK'), findsNothing);
+
+        completer.complete(null);
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
+  });
+
+  group('R6: Android Share Intent Filter & Shared Video Receiving', () {
+    const channel = MethodChannel('com.phantek.cygnus.albireo/transformer');
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+      TransformerService.setSharedVideoCallback(null);
+    });
+
+    test('AndroidManifest.xml contains SEND and VIEW intent-filters for video/*', () {
+      final manifestFile = File('android/app/src/main/AndroidManifest.xml');
+      expect(manifestFile.existsSync(), isTrue);
+
+      final content = manifestFile.readAsStringSync();
+      expect(content.contains('android.intent.action.SEND'), isTrue);
+      expect(content.contains('android.intent.action.VIEW'), isTrue);
+      expect(content.contains('android:mimeType="video/*"'), isTrue);
+      expect(content.contains('android.intent.category.DEFAULT'), isTrue);
+      expect(content.contains('android.intent.category.BROWSABLE'), isTrue);
+    });
+
+    test('TransformerService.getInitialSharedVideo returns path or null', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall call) async {
+        if (call.method == 'getInitialSharedVideo') {
+          return '/data/user/0/com.phantek.lyra.vega/cache/shared_video_123.mp4';
+        }
+        return null;
+      });
+
+      final path = await TransformerService.getInitialSharedVideo();
+      expect(
+        path,
+        equals('/data/user/0/com.phantek.lyra.vega/cache/shared_video_123.mp4'),
+      );
+
+      // Test null case
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall call) async {
+        if (call.method == 'getInitialSharedVideo') {
+          return null;
+        }
+        return null;
+      });
+
+      final nullPath = await TransformerService.getInitialSharedVideo();
+      expect(nullPath, isNull);
+
+      // Test error handling
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall call) async {
+        throw PlatformException(code: 'ERROR', message: 'Failed to get shared video');
+      });
+
+      final errorPath = await TransformerService.getInitialSharedVideo();
+      expect(errorPath, isNull);
+    });
+
+    test(
+      'TransformerService.setSharedVideoCallback handles onSharedVideoReceived with map argument',
+      () async {
+        String? receivedPath;
+        TransformerService.setSharedVideoCallback((path) {
+          receivedPath = path;
+        });
+
+        final call = const MethodCall('onSharedVideoReceived', {
+          'path': '/storage/emulated/0/Movies/shared_clip.mp4',
+        });
+        final byteData = channel.codec.encodeMethodCall(call);
+
+        await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .handlePlatformMessage(
+          'com.phantek.cygnus.albireo/transformer',
+          byteData,
+          (ByteData? reply) {},
+        );
+
+        expect(
+          receivedPath,
+          equals('/storage/emulated/0/Movies/shared_clip.mp4'),
+        );
+      },
+    );
+
+    test(
+      'TransformerService.setSharedVideoCallback handles onSharedVideoReceived with string argument',
+      () async {
+        String? receivedPath;
+        TransformerService.setSharedVideoCallback((path) {
+          receivedPath = path;
+        });
+
+        final call = const MethodCall(
+          'onSharedVideoReceived',
+          '/storage/emulated/0/DCIM/Camera/direct_clip.mp4',
+        );
+        final byteData = channel.codec.encodeMethodCall(call);
+
+        await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .handlePlatformMessage(
+          'com.phantek.cygnus.albireo/transformer',
+          byteData,
+          (ByteData? reply) {},
+        );
+
+        expect(
+          receivedPath,
+          equals('/storage/emulated/0/DCIM/Camera/direct_clip.mp4'),
+        );
+      },
+    );
+
+    test('TransformerService.setSharedVideoCallback(null) clears callback', () async {
+      int invokeCount = 0;
+      TransformerService.setSharedVideoCallback((path) {
+        invokeCount++;
+      });
+
+      TransformerService.setSharedVideoCallback(null);
+
+      final call = const MethodCall('onSharedVideoReceived', {
+        'path': '/storage/emulated/0/Movies/ignored.mp4',
+      });
+      final byteData = channel.codec.encodeMethodCall(call);
+
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .handlePlatformMessage(
+        'com.phantek.cygnus.albireo/transformer',
+        byteData,
+        (ByteData? reply) {},
+      );
+
+      expect(invokeCount, equals(0));
+    });
+  });
+
+  group('R4: Notification Actions, Completion Notifications & Localization', () {
+    const testVideo = VideoInfo(
+      filePath: '/storage/test_video.mp4',
+      fileName: 'test_video.mp4',
+      width: 1920,
+      height: 1080,
+      durationSeconds: 60,
+      bitrate: 5000000,
+      fps: 30,
+      codec: 'h264',
+      fileSizeBytes: 20000000,
+    );
+
+    const testResolution = VideoResolution(
+      label: '720p',
+      width: 1280,
+      height: 720,
+    );
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      FlutterForegroundTask.skipServiceResponseCheck = true;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('flutter_foreground_task/methods'),
+            (MethodCall call) async {
+              switch (call.method) {
+                case 'checkNotificationPermission':
+                  return 0;
+                case 'requestNotificationPermission':
+                  return 0;
+                case 'isRunningService':
+                  return true;
+                case 'startService':
+                  return 'started';
+                case 'updateService':
+                  return 'updated';
+                case 'stopService':
+                  return 'stopped';
+                default:
+                  return null;
+              }
+            },
+          );
+      final testCacheDir = Directory.systemTemp.createTempSync(
+        'vega_test_cache_r4_',
+      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall call) async {
+              if (call.method == 'getTemporaryDirectory') {
+                return testCacheDir.path;
+              }
+              if (call.method == 'getExternalCacheDirectories') {
+                return <String>[testCacheDir.path];
+              }
+              return testCacheDir.path;
+            },
+          );
+    });
+
+    tearDown(() {
+      FlutterForegroundTask.skipServiceResponseCheck = false;
+      ForegroundServiceManager().onNotificationAction = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('flutter_foreground_task/methods'),
+            null,
+          );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            null,
+          );
+    });
+
+    test('ForegroundServiceManager starts and updates service with buttons', () async {
+      final calls = <MethodCall>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('flutter_foreground_task/methods'),
+            (MethodCall call) async {
+              calls.add(call);
+              switch (call.method) {
+                case 'checkNotificationPermission':
+                  return 0;
+                case 'isRunningService':
+                  return calls.any((c) => c.method == 'startService');
+                case 'startService':
+                  return 'started';
+                case 'updateService':
+                  return 'updated';
+                case 'stopService':
+                  return 'stopped';
+                default:
+                  return null;
+              }
+            },
+          );
+
+      final manager = ForegroundServiceManager();
+      await manager.startService(
+        title: 'Converting',
+        text: 'Progress 10%',
+        buttons: const [
+          NotificationButton(id: 'btn_cancel', text: 'Batalkan'),
+        ],
+      );
+
+      final startCall = calls.firstWhere((c) => c.method == 'startService');
+      final startArgs = Map<String, dynamic>.from(startCall.arguments as Map);
+      expect(startArgs['notificationContentTitle'], equals('Converting'));
+      expect(startArgs['notificationContentText'], equals('Progress 10%'));
+      final startButtons = (startArgs['buttons'] as List).cast<Map>();
+      expect(startButtons.first['id'], equals('btn_cancel'));
+      expect(startButtons.first['text'], equals('Batalkan'));
+
+      // Update service with progress and buttons
+      await manager.updateService(
+        title: 'Converting',
+        text: 'Progress 50%',
+        buttons: const [
+          NotificationButton(id: 'btn_cancel', text: 'Batalkan'),
+        ],
+        force: true,
+      );
+
+      final updateCall = calls.lastWhere((c) => c.method == 'updateService');
+      final updateArgs = Map<String, dynamic>.from(updateCall.arguments as Map);
+      expect(updateArgs['notificationContentText'], equals('Progress 50%'));
+      final updateButtons = (updateArgs['buttons'] as List).cast<Map>();
+      expect(updateButtons.first['id'], equals('btn_cancel'));
+
+      // Show completed notification with btn_play
+      await manager.showCompletedNotification(
+        title: 'Selesai',
+        text: 'Hemat 40%',
+        playButtonText: 'Putar',
+      );
+
+      final completeCall = calls.lastWhere((c) => c.method == 'updateService');
+      final completeArgs = Map<String, dynamic>.from(completeCall.arguments as Map);
+      expect(completeArgs['notificationContentTitle'], equals('Selesai'));
+      expect(completeArgs['notificationContentText'], equals('Hemat 40%'));
+      final completeButtons = (completeArgs['buttons'] as List).cast<Map>();
+      expect(completeButtons.first['id'], equals('btn_play'));
+      expect(completeButtons.first['text'], equals('Putar'));
+    });
+
+    test('ForegroundServiceManager onNotificationAction callback receives events', () {
+      final manager = ForegroundServiceManager();
+      String? receivedAction;
+      manager.onNotificationAction = (action) {
+        receivedAction = action;
+      };
+
+      manager.onNotificationAction?.call('btn_cancel');
+      expect(receivedAction, equals('btn_cancel'));
+
+      manager.onNotificationAction?.call('btn_play');
+      expect(receivedAction, equals('btn_play'));
+
+      manager.onNotificationAction = null;
+      expect(manager.onNotificationAction, isNull);
+    });
+
+    testWidgets('ProcessingScreen handles btn_cancel notification action and aborts processing', (WidgetTester tester) async {
+      await SettingsService().setLanguage('id');
+      final completer = Completer<String?>();
+      var cancelCalled = false;
+
+      TransformerService.mockProcessVideo = ({
+        required sourceVideo,
+        required targetResolution,
+        encodingOptions = const EncodingOptions(),
+        appSettings = const AppSettings(),
+        required onProgress,
+        required onLog,
+      }) async {
+        return completer.future;
+      };
+
+      TransformerService.mockCancelAll = () async {
+        cancelCalled = true;
+      };
+
+      addTearDown(() async {
+        await SettingsService().setLanguage('en');
+        TransformerService.mockProcessVideo = null;
+        TransformerService.mockCancelAll = null;
+        if (!completer.isCompleted) completer.complete(null);
+      });
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ProcessingScreen(
+            videoInfo: testVideo,
+            targetResolution: testResolution,
+            encodingOptions: EncodingOptions(),
+            appSettings: AppSettings(languageCode: 'id'),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(ForegroundServiceManager().onNotificationAction, isNotNull);
+
+      // Trigger notification cancel action
+      ForegroundServiceManager().onNotificationAction!('btn_cancel');
+      await tester.pump();
+
+      expect(cancelCalled, isTrue);
+      expect(find.text('Konversi Dibatalkan'), findsOneWidget);
+    });
+
+    testWidgets('ProcessingScreen handles btn_play notification action and opens output file', (WidgetTester tester) async {
+      final tempFile = File('${Directory.systemTemp.path}/notif_test_output.mp4')
+        ..writeAsBytesSync([0, 1, 2, 3]);
+      addTearDown(() {
+        if (tempFile.existsSync()) tempFile.deleteSync();
+      });
+
+      final completer = Completer<String?>();
+      TransformerService.mockProcessVideo = ({
+        required sourceVideo,
+        required targetResolution,
+        encodingOptions = const EncodingOptions(),
+        appSettings = const AppSettings(),
+        required onProgress,
+        required onLog,
+      }) async {
+        return completer.future;
+      };
+
+      String? openedPath;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('open_file'),
+            (MethodCall call) async {
+              if (call.method == 'open_file') {
+                final args = Map<String, dynamic>.from(call.arguments as Map);
+                openedPath = args['file_path'] as String?;
+                return '{"type": -1, "message": "done"}';
+              }
+              return null;
+            },
+          );
+
+      addTearDown(() {
+        TransformerService.mockProcessVideo = null;
+        if (!completer.isCompleted) completer.complete(null);
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(const MethodChannel('open_file'), null);
+      });
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ProcessingScreen(
+            videoInfo: testVideo,
+            targetResolution: testResolution,
+            encodingOptions: EncodingOptions(),
+            appSettings: AppSettings(),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Complete processing successfully
+      completer.complete(tempFile.path);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      // Trigger notification play action
+      ForegroundServiceManager().onNotificationAction!('btn_play');
+      await tester.pump();
+
+      expect(openedPath, equals(tempFile.path));
+    });
+
+    test('All 23 supported languages define notification action keys without emojis', () {
+      final languages = [
+        'id', 'en', 'zh', 'zh_CN', 'zh_TW', 'es', 'pt', 'ja', 'ko', 'hi',
+        'ar', 'fr', 'ru', 'de', 'it', 'nl', 'da', 'fi', 'no', 'sv',
+        'ms', 'vi', 'th'
+      ];
+      expect(languages.length, equals(23));
+
+      final emojiRegex = RegExp(
+        r'[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]',
+        unicode: true,
+      );
+
+      final requiredKeys = [
+        'notif_btn_cancel',
+        'notif_btn_play',
+        'notif_completed_title',
+        'notif_completed_audio_title',
+        'proc_cancelled',
+      ];
+
+      for (final lang in languages) {
+        final l10n = AppLocalizations(lang);
+        for (final key in requiredKeys) {
+          final value = l10n.t(key);
+          expect(
+            value,
+            isNot(equals(key)),
+            reason: 'Language "$lang" must have a translation for "$key"',
+          );
+          expect(
+            value.trim().isNotEmpty,
+            isTrue,
+            reason: 'Language "$lang" translation for "$key" must not be empty',
+          );
+          expect(
+            emojiRegex.hasMatch(value),
+            isFalse,
+            reason: 'Language "$lang" string "$key" ("$value") must not contain emojis',
+          );
+        }
+      }
+
+      // Verify specific Indonesian canonical strings
+      final idL10n = AppLocalizations('id');
+      expect(idL10n.t('notif_btn_cancel'), equals('Batalkan'));
+      expect(idL10n.t('notif_btn_play'), equals('Putar'));
+      expect(idL10n.t('notif_completed_title'), equals('Konversi Video Selesai'));
+      expect(idL10n.t('notif_completed_audio_title'), equals('Ekstraksi Audio Selesai'));
+      expect(idL10n.t('proc_cancelled'), equals('Konversi Dibatalkan'));
+
+      // Verify specific English canonical strings
+      final enL10n = AppLocalizations('en');
+      expect(enL10n.t('notif_btn_cancel'), equals('Cancel'));
+      expect(enL10n.t('notif_btn_play'), equals('Play'));
+      expect(enL10n.t('notif_completed_title'), equals('Video Conversion Completed'));
+      expect(enL10n.t('notif_completed_audio_title'), equals('Audio Extraction Completed'));
+      expect(enL10n.t('proc_cancelled'), equals('Conversion Cancelled'));
+    });
   });
 }

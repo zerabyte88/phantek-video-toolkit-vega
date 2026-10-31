@@ -72,6 +72,9 @@ class VideoInfo {
   /// Shorter edge dimension used for resolution classification.
   int get shortDimension => width < height ? width : height;
 
+  /// Aspect ratio of the video (width / height).
+  double get aspectRatio => height > 0 ? width / height : 16 / 9;
+
   String get resolution {
     final dim = shortDimension;
     if (dim >= 2160) return '4K';

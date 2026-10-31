@@ -18,8 +18,8 @@ import '../widgets/audio_extractor_card.dart';
 import '../widgets/conversion_options_card.dart';
 import '../widgets/theme_animated_background.dart';
 import '../widgets/video_info_card.dart';
-import 'processing_screen.dart';
 import 'settings_screen.dart';
+import 'trim_preview_screen.dart';
 
 // App operation modes
 enum _AppMode { convert, downscale, extractor }
@@ -45,33 +45,54 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    final defaultPreset = SpeedPreset.fromEncodingPreset(
-      _settingsService.settings.encodingPreset,
-    );
-    final defaultCodec = _settingsService.settings.defaultVideoCodec == 'hevc'
-        ? VideoCodec.hevc
-        : VideoCodec.h264;
-    _encodingOptions = EncodingOptions(
-      speedPreset: defaultPreset,
-      crfValue: defaultPreset.defaultCrf,
-      codec: defaultCodec,
-      videoAudioBitrateKbps: _settingsService.settings.audioBitrateKbps,
-    );
+    final saved = _settingsService.savedEncodingOptions;
+    if (saved != null) {
+      _encodingOptions = saved;
+    } else {
+      final defaultPreset = SpeedPreset.fromEncodingPreset(
+        _settingsService.settings.encodingPreset,
+      );
+      final defaultCodec = _settingsService.settings.defaultVideoCodec == 'hevc'
+          ? VideoCodec.hevc
+          : VideoCodec.h264;
+      _encodingOptions = EncodingOptions(
+        speedPreset: defaultPreset,
+        crfValue: defaultPreset.defaultCrf,
+        codec: defaultCodec,
+        videoAudioBitrateKbps: _settingsService.settings.audioBitrateKbps,
+      );
+    }
     _settingsService.addListener(_onSettingsChanged);
     CacheManagerService().clearAllCache();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    CacheManagerService().autoPurgeTempFiles();
+    TransformerService.setSharedVideoCallback((path) {
+      if (mounted) _loadVideoFromPath(path);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _checkCrashedJob();
+      final sharedPath = await TransformerService.getInitialSharedVideo();
+      if (sharedPath != null && mounted) {
+        _loadVideoFromPath(sharedPath);
+      }
     });
   }
 
   @override
   void dispose() {
+    TransformerService.setSharedVideoCallback(null);
     _settingsService.removeListener(_onSettingsChanged);
     super.dispose();
   }
 
   void _onSettingsChanged() {
     if (!mounted) return;
+    final saved = _settingsService.savedEncodingOptions;
+    if (saved != null && _encodingOptions != saved) {
+      setState(() {
+        _encodingOptions = saved;
+      });
+      return;
+    }
     final preset = SpeedPreset.fromEncodingPreset(
       _settingsService.settings.encodingPreset,
     );
@@ -296,6 +317,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     });
+    _settingsService.saveEncodingOptions(_encodingOptions);
 
     final l10n = _settingsService.l10n;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -496,7 +518,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => ProcessingScreen(
+        builder: (context) => TrimPreviewScreen(
           videoInfo: _videoInfo!,
           targetResolution: fallbackRes,
           encodingOptions: options,
@@ -798,8 +820,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 AudioExtractorCard(
                   sourceVideo: _videoInfo!,
                   encodingOptions: _encodingOptions,
-                  onOptionsChanged: (opts) =>
-                      setState(() => _encodingOptions = opts),
+                  onOptionsChanged: (opts) {
+                    setState(() => _encodingOptions = opts);
+                    _settingsService.saveEncodingOptions(opts);
+                  },
                   l10n: l10n,
                 )
               else
@@ -810,8 +834,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   encodingOptions: _encodingOptions,
                   onResolutionChanged: (res) =>
                       setState(() => _selectedResolution = res),
-                  onOptionsChanged: (opts) =>
-                      setState(() => _encodingOptions = opts),
+                  onOptionsChanged: (opts) {
+                    setState(() => _encodingOptions = opts);
+                    _settingsService.saveEncodingOptions(opts);
+                  },
                   l10n: l10n,
                 ),
 

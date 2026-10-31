@@ -94,6 +94,8 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   int _prevSizeBytes = 0;
   int _latestOutputBytes = 0;
   int _marketedRamGb = 4;
+  bool _showThermalWarning = false;
+  bool _thermalWarningDismissed = false;
 
   @override
   void initState() {
@@ -111,11 +113,32 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     )..repeat();
     // Respect user wakelock preference during processing
     WakelockPlus.toggle(enable: _settingsService.settings.keepScreenAwake);
+
+    ForegroundServiceManager().onNotificationAction = (action) {
+      if (!mounted) return;
+      final l10n = _settingsService.l10n;
+      if (action == 'btn_cancel' || action == 'cancel_conversion') {
+        if (_isProcessing) {
+          TransformerService.cancelAll();
+          setState(() {
+            _isProcessing = false;
+            _isSuccess = false;
+            _statusText = l10n.t('proc_cancelled');
+          });
+        }
+      } else if (action == 'btn_play' || action == 'play_output') {
+        if (_outputPath != null && File(_outputPath!).existsSync()) {
+          OpenFile.open(_outputPath!);
+        }
+      }
+    };
+
     _startProcessing();
   }
 
   @override
   void dispose() {
+    ForegroundServiceManager().onNotificationAction = null;
     _timer?.cancel();
     _pulseController.dispose();
     ForegroundServiceManager().stopService();
@@ -127,6 +150,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         specificInputPath: widget.videoInfo.filePath,
       );
     }
+    CacheManagerService().autoPurgeTempFiles();
     super.dispose();
   }
 
@@ -185,6 +209,12 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     await ForegroundServiceManager().startService(
       title: l10n.t('app_title'),
       text: '$actionText 0.0%',
+      buttons: [
+        NotificationButton(
+          id: 'btn_cancel',
+          text: l10n.t('notif_btn_cancel'),
+        ),
+      ],
     );
 
     // Periodic telemetry update timer
@@ -208,19 +238,13 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           _thermalHistory.removeAt(0);
         }
 
-        if (currentTemp >= 45.0 && mounted && timer.tick % 10 == 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n.t(
-                  'device_temp_warning',
-                  args: {'temp': currentTemp.toStringAsFixed(1)},
-                ),
-              ),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+        if (currentTemp >= 45.0 &&
+            !_thermalWarningDismissed &&
+            !_showThermalWarning &&
+            mounted) {
+          setState(() {
+            _showThermalWarning = true;
+          });
         }
 
         // Memory (RSS)
@@ -324,6 +348,12 @@ class _ProcessingScreenState extends State<ProcessingScreen>
       ForegroundServiceManager().updateService(
         title: l10n.t('app_title'),
         text: '$actionText ${_formatPercentage(progress)}$etaStr',
+        buttons: [
+          NotificationButton(
+            id: 'btn_cancel',
+            text: l10n.t('notif_btn_cancel'),
+          ),
+        ],
       );
 
       if (mounted) {
@@ -377,13 +407,42 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     }
 
     if (result != null) {
-      ForegroundServiceManager().updateService(
-        title: l10n.t('app_title'),
-        text: widget.isAudioExtraction
-            ? l10n.t('proc_audio_completed')
-            : l10n.t('proc_notif_completed'),
-        force: true,
+      final notifTitle = widget.isAudioExtraction
+          ? l10n.t('notif_completed_audio_title')
+          : l10n.t('notif_completed_title');
+
+      int outSize = 0;
+      try {
+        final f = File(result);
+        if (f.existsSync()) {
+          outSize = f.lengthSync();
+        }
+      } catch (_) {}
+
+      final String notifText;
+      if (widget.isAudioExtraction) {
+        notifText = outSize > 0
+            ? _formatBytes(outSize)
+            : l10n.t('proc_audio_completed');
+      } else {
+        final orig = widget.videoInfo.fileSizeBytes;
+        final savedPct = (orig > 0 && outSize > 0 && orig > outSize)
+            ? ((orig - outSize) / orig * 100).round()
+            : 0;
+        notifText = savedPct > 0
+            ? 'Hemat $savedPct% • ${_formatBytes(orig)} ➔ ${_formatBytes(outSize)}'
+            : (outSize > 0 ? _formatBytes(outSize) : l10n.t('proc_notif_completed'));
+      }
+
+      await ForegroundServiceManager().showCompletedNotification(
+        title: notifTitle,
+        text: notifText,
+        playButtonText: l10n.t('notif_btn_play'),
       );
+    } else {
+      Future.delayed(const Duration(seconds: 4), () {
+        ForegroundServiceManager().stopService();
+      });
     }
     // Restore user wakelock preference
     try {
@@ -391,20 +450,20 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     } catch (e) {
       debugPrint('Error toggling wakelock: $e');
     }
-    Future.delayed(const Duration(seconds: 4), () {
-      ForegroundServiceManager().stopService();
-    });
 
     _timer?.cancel();
     if (_startTime != null) {
       _totalDuration = DateTime.now().difference(_startTime!);
     }
 
-    if (result != null && Platform.isAndroid) {
+    if (Platform.isAndroid) {
       try {
-        await CacheManagerService().clearAllCache(
-          specificInputPath: widget.videoInfo.filePath,
-        );
+        if (result != null) {
+          await CacheManagerService().clearAllCache(
+            specificInputPath: widget.videoInfo.filePath,
+          );
+        }
+        await CacheManagerService().autoPurgeTempFiles();
       } catch (e) {
         debugPrint('Error clearing cache: $e');
       }
@@ -566,6 +625,10 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                 child: Column(
                   children: [
                     const SizedBox(height: 4),
+                    if (_showThermalWarning) ...[
+                      _buildThermalWarningBanner(theme, l10n),
+                      const SizedBox(height: 12),
+                    ],
                     _buildProgressSection(theme, l10n),
                     const SizedBox(height: 12),
                     _buildLiveSystemTelemetry(theme, l10n),
@@ -602,6 +665,106 @@ class _ProcessingScreenState extends State<ProcessingScreen>
       default:
         return (const Color(0xFF9333EA), const Color(0xFF60A5FA), Colors.white);
     }
+  }
+
+  Widget _buildThermalWarningBanner(ThemeData theme, AppLocalizations l10n) {
+    final isDark = theme.brightness == Brightness.dark;
+    final amberColor =
+        isDark ? const Color(0xFFF59E0B) : const Color(0xFFD97706);
+    final bgColor = Color.alphaBlend(
+      amberColor.withAlpha(isDark ? 22 : 28),
+      theme.colorScheme.surface,
+    );
+    final borderColor = amberColor.withAlpha(isDark ? 95 : 150);
+    final titleColor = theme.colorScheme.onSurface;
+    final msgColor = theme.colorScheme.onSurface.withAlpha(isDark ? 200 : 220);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: amberColor.withAlpha(isDark ? 20 : 15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: amberColor.withAlpha(isDark ? 36 : 40),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.warning_amber_rounded,
+              color: amberColor,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.t(
+              'thermal_warning_title',
+              args: {'temp': _temperature.toStringAsFixed(1)},
+            ),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: titleColor,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.t('thermal_warning_msg'),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11.5,
+              color: msgColor,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 32,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: borderColor),
+                backgroundColor: amberColor.withAlpha(isDark ? 28 : 24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+              ),
+              onPressed: () {
+                setState(() {
+                  _showThermalWarning = false;
+                  _thermalWarningDismissed = true;
+                });
+              },
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: amberColor,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildProgressSection(ThemeData theme, l10n) {

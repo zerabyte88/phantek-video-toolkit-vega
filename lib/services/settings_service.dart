@@ -9,17 +9,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../models/app_settings.dart';
+import '../models/encoding_options.dart';
 import 'localization_service.dart';
 import 'device_spec_helper.dart';
 
 class SettingsService extends ChangeNotifier {
   static const _storageKey = 'phantek_video_toolkit_app_settings';
   static const _legacyStorageKey = 'video_downscaler_app_settings';
+  static const _encodingOptionsKey = 'phantek_vega_saved_encoding_options';
 
   AppSettings _settings = const AppSettings();
+  EncodingOptions? _savedEncodingOptions;
   bool _isLoaded = false;
 
   AppSettings get settings => _settings;
+  EncodingOptions? get savedEncodingOptions => _savedEncodingOptions;
   bool get isLoaded => _isLoaded;
 
   AppLocalizations get l10n => AppLocalizations(_settings.languageCode);
@@ -47,6 +51,16 @@ class SettingsService extends ChangeNotifier {
 
       if (_settings.isFirstLaunch) {
         await _applyFirstLaunchDefaults();
+      }
+
+      final encStr = prefs.getString(_encodingOptionsKey);
+      if (encStr != null) {
+        try {
+          final Map<String, dynamic> encData = jsonDecode(encStr);
+          _savedEncodingOptions = EncodingOptions.fromJson(encData);
+        } catch (e) {
+          debugPrint('Error loading saved encoding options: $e');
+        }
       }
 
       await _applyWakelock(_settings.keepScreenAwake);
@@ -218,6 +232,31 @@ class SettingsService extends ChangeNotifier {
     }
   }
 
+  Future<void> saveEncodingOptions(EncodingOptions options) async {
+    _savedEncodingOptions = options;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_encodingOptionsKey, jsonEncode(options.toJson()));
+    } catch (e) {
+      debugPrint('Error saving encoding options: $e');
+    }
+  }
+
+  Future<void> resetEncodingConfigurationToDefaults() async {
+    const defaultOptions = EncodingOptions(
+      speedPreset: SpeedPreset.normal,
+      codec: VideoCodec.h264,
+      container: VideoContainer.mp4,
+      rateControlMode: RateControlMode.crf,
+      crfValue: 22,
+      customBitrateKbps: 4000,
+      targetFps: 0,
+      videoAudioBitrateKbps: 128,
+    );
+    await saveEncodingOptions(defaultOptions);
+  }
+
   Future<void> resetToDefaults() async {
     final currentLang = _settings.languageCode;
     final initialTheme = resolveInitialTheme();
@@ -225,6 +264,7 @@ class SettingsService extends ChangeNotifier {
     notifyListeners();
     await _saveSettings();
     await _applyWakelock(_settings.keepScreenAwake);
+    await resetEncodingConfigurationToDefaults();
   }
 
   // Active job marker for crash recovery

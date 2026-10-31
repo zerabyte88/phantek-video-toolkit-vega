@@ -161,6 +161,8 @@ enum SpeedPreset {
 }
 
 class EncodingOptions {
+  static const Object _sentinel = Object();
+
   final VideoCodec codec;
   final VideoContainer container;
 
@@ -178,6 +180,10 @@ class EncodingOptions {
   final int audioExtractBitrateKbps; // 0 for stream copy, or target kbps
   final int videoAudioBitrateKbps; // 0 for mute, or 128, 192, 256, 320
 
+  // Trimming (in milliseconds, null means untrimmed)
+  final int? trimStartMs;
+  final int? trimEndMs;
+
   /// Convenience alias for [crfValue].
   int get crf => crfValue;
 
@@ -192,6 +198,8 @@ class EncodingOptions {
     this.audioFormat = AudioFormat.m4a,
     this.audioExtractBitrateKbps = 192,
     this.videoAudioBitrateKbps = 128,
+    this.trimStartMs,
+    this.trimEndMs,
   });
 
   EncodingOptions copyWith({
@@ -205,6 +213,8 @@ class EncodingOptions {
     AudioFormat? audioFormat,
     int? audioExtractBitrateKbps,
     int? videoAudioBitrateKbps,
+    Object? trimStartMs = _sentinel,
+    Object? trimEndMs = _sentinel,
   }) {
     return EncodingOptions(
       codec: codec ?? this.codec,
@@ -219,8 +229,95 @@ class EncodingOptions {
           audioExtractBitrateKbps ?? this.audioExtractBitrateKbps,
       videoAudioBitrateKbps:
           videoAudioBitrateKbps ?? this.videoAudioBitrateKbps,
+      trimStartMs: trimStartMs == _sentinel ? this.trimStartMs : trimStartMs as int?,
+      trimEndMs: trimEndMs == _sentinel ? this.trimEndMs : trimEndMs as int?,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'codec': codec.name,
+      'container': container.name,
+      'rateControlMode': rateControlMode.name,
+      'speedPreset': speedPreset.name,
+      'crfValue': crfValue,
+      'customBitrateKbps': customBitrateKbps,
+      'targetFps': targetFps,
+      'audioFormat': audioFormat.name,
+      'audioExtractBitrateKbps': audioExtractBitrateKbps,
+      'videoAudioBitrateKbps': videoAudioBitrateKbps,
+      'trimStartMs': trimStartMs,
+      'trimEndMs': trimEndMs,
+    };
+  }
+
+  factory EncodingOptions.fromJson(Map<String, dynamic> json) {
+    return EncodingOptions(
+      codec: VideoCodec.values.firstWhere(
+        (e) => e.name == json['codec'],
+        orElse: () => VideoCodec.h264,
+      ),
+      container: VideoContainer.values.firstWhere(
+        (e) => e.name == json['container'],
+        orElse: () => VideoContainer.mp4,
+      ),
+      rateControlMode: RateControlMode.values.firstWhere(
+        (e) => e.name == json['rateControlMode'],
+        orElse: () => RateControlMode.crf,
+      ),
+      speedPreset: SpeedPreset.values.firstWhere(
+        (e) => e.name == json['speedPreset'],
+        orElse: () => SpeedPreset.normal,
+      ),
+      crfValue: (json['crfValue'] as num?)?.toInt() ?? 22,
+      customBitrateKbps: (json['customBitrateKbps'] as num?)?.toInt() ?? 10000,
+      targetFps: (json['targetFps'] as num?)?.toInt() ?? 0,
+      audioFormat: AudioFormat.values.firstWhere(
+        (e) => e.name == json['audioFormat'],
+        orElse: () => AudioFormat.m4a,
+      ),
+      audioExtractBitrateKbps:
+          (json['audioExtractBitrateKbps'] as num?)?.toInt() ?? 192,
+      videoAudioBitrateKbps:
+          (json['videoAudioBitrateKbps'] as num?)?.toInt() ?? 128,
+      trimStartMs: (json['trimStartMs'] as num?)?.toInt(),
+      trimEndMs: (json['trimEndMs'] as num?)?.toInt(),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EncodingOptions &&
+          runtimeType == other.runtimeType &&
+          codec == other.codec &&
+          container == other.container &&
+          rateControlMode == other.rateControlMode &&
+          speedPreset == other.speedPreset &&
+          crfValue == other.crfValue &&
+          customBitrateKbps == other.customBitrateKbps &&
+          targetFps == other.targetFps &&
+          audioFormat == other.audioFormat &&
+          audioExtractBitrateKbps == other.audioExtractBitrateKbps &&
+          videoAudioBitrateKbps == other.videoAudioBitrateKbps &&
+          trimStartMs == other.trimStartMs &&
+          trimEndMs == other.trimEndMs;
+
+  @override
+  int get hashCode => Object.hash(
+        codec,
+        container,
+        rateControlMode,
+        speedPreset,
+        crfValue,
+        customBitrateKbps,
+        targetFps,
+        audioFormat,
+        audioExtractBitrateKbps,
+        videoAudioBitrateKbps,
+        trimStartMs,
+        trimEndMs,
+      );
 
   /// Estimates target video bitrate in kbps based on resolution and rate control mode.
   int calculateTargetBitrateKbps({

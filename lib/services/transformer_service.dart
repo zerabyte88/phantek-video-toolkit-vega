@@ -23,7 +23,22 @@ class TransformerService {
   static void Function(double progress, String stats, [int? sizeBytes])?
   _activeProgressCallback;
   static void Function(String log)? _activeLogCallback;
+  static void Function(String path)? _onSharedVideoCallback;
   static bool _handlerInitialized = false;
+
+  static void setSharedVideoCallback(void Function(String path)? callback) {
+    _ensureMethodCallHandler();
+    _onSharedVideoCallback = callback;
+  }
+
+  static Future<String?> getInitialSharedVideo() async {
+    try {
+      return await _channel.invokeMethod<String>('getInitialSharedVideo');
+    } catch (e) {
+      debugPrint('Error getting initial shared video: $e');
+      return null;
+    }
+  }
 
   static void _ensureMethodCallHandler() {
     if (_handlerInitialized) return;
@@ -49,6 +64,18 @@ class TransformerService {
           final msg = args?['message'] as String?;
           if (msg != null) {
             _activeLogCallback?.call(msg);
+          }
+          break;
+        case 'onSharedVideoReceived':
+          String? path;
+          if (call.arguments is String) {
+            path = call.arguments as String;
+          } else if (call.arguments is Map) {
+            final map = call.arguments as Map;
+            path = map['path'] as String?;
+          }
+          if (path != null && path.isNotEmpty) {
+            _onSharedVideoCallback?.call(path);
           }
           break;
       }
@@ -306,6 +333,7 @@ class TransformerService {
     required AudioFormat audioFormat,
     int audioBitrateKbps,
     AppSettings appSettings,
+    EncodingOptions encodingOptions,
     required void Function(double progress, String stats, [int? sizeBytes])
     onProgress,
     required void Function(String log) onLog,
@@ -412,6 +440,8 @@ class TransformerService {
         'rateControlMode': encodingOptions.rateControlMode.name,
         'removeAudio':
             !sourceVideo.hasAudio || encodingOptions.videoAudioBitrateKbps <= 0,
+        'trimStartMs': encodingOptions.trimStartMs,
+        'trimEndMs': encodingOptions.trimEndMs,
       });
 
       await SettingsService().clearJobMarker();
@@ -461,6 +491,7 @@ class TransformerService {
     required AudioFormat audioFormat,
     int audioBitrateKbps = 192,
     AppSettings appSettings = const AppSettings(),
+    EncodingOptions encodingOptions = const EncodingOptions(),
     required void Function(double progress, String stats, [int? sizeBytes])
     onProgress,
     required void Function(String log) onLog,
@@ -471,6 +502,7 @@ class TransformerService {
         audioFormat: audioFormat,
         audioBitrateKbps: audioBitrateKbps,
         appSettings: appSettings,
+        encodingOptions: encodingOptions,
         onProgress: onProgress,
         onLog: onLog,
       );
@@ -515,6 +547,8 @@ class TransformerService {
         'outputPath': outputPath,
         'format': audioFormat.extension,
         'bitrateKbps': audioBitrateKbps,
+        'trimStartMs': encodingOptions.trimStartMs,
+        'trimEndMs': encodingOptions.trimEndMs,
       });
 
       await SettingsService().clearJobMarker();
@@ -543,8 +577,15 @@ class TransformerService {
     }
   }
 
+  @visibleForTesting
+  static Future<void> Function()? mockCancelAll;
+
   /// Cancels active transformation execution.
   static Future<void> cancelAll() async {
+    if (mockCancelAll != null) {
+      await mockCancelAll!();
+      return;
+    }
     if (!Platform.isAndroid) return;
     try {
       await _channel.invokeMethod<bool>('cancelTransformation');
