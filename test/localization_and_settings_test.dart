@@ -1612,8 +1612,8 @@ void main() {
         await tester.tap(find.byKey(const Key('advanced_options_toggle')));
         await tester.pumpAndSettle();
 
-        // Ensure active preset indicator and key explanations are present and rendered fully without truncation
-        expect(find.byIcon(Icons.speed_rounded), findsOneWidget);
+        // Ensure active preset indicator box is removed and other key explanations render without truncation
+        expect(find.byIcon(Icons.speed_rounded), findsNothing);
         expect(find.text(l10n.t('desc_crf')), findsOneWidget);
         expect(find.text(l10n.t('desc_mp4')), findsOneWidget);
         expect(find.text(l10n.t('fps_desc_30')), findsOneWidget);

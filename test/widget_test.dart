@@ -71,9 +71,9 @@ void main() {
         ),
       );
 
-      // Verify Active Speed Preset indicator is rendered
-      expect(find.byIcon(Icons.speed_rounded), findsOneWidget);
-      expect(find.textContaining('Normal'), findsWidgets);
+      // Verify Active Speed Preset indicator box is removed and preset choice chip is rendered
+      expect(find.byIcon(Icons.speed_rounded), findsNothing);
+      expect(find.byKey(const Key('preset_chip_normal')), findsOneWidget);
 
       // Expand advanced options to inspect CRF controls
       await tester.ensureVisible(

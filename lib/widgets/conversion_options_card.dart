@@ -306,8 +306,6 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             ],
           ),
         ),
-        const SizedBox(height: 10),
-        _buildActivePresetIndicator(theme, l10n),
       ],
     );
   }
@@ -1301,83 +1299,6 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
           fontWeight: FontWeight.w600,
           color: theme.colorScheme.onSurface.withAlpha(180),
         ),
-      ),
-    );
-  }
-
-  Widget _buildActivePresetIndicator(ThemeData theme, AppLocalizations l10n) {
-    final preset = widget.encodingOptions.speedPreset;
-    final presetLabel = preset == SpeedPreset.fast
-        ? l10n.t('preset_fast_title')
-        : (preset == SpeedPreset.max
-              ? l10n.t('preset_slow_title')
-              : l10n.t('preset_normal_title'));
-
-    final presetDesc = preset == SpeedPreset.fast
-        ? l10n.t('preset_fast_desc')
-        : (preset == SpeedPreset.max
-              ? l10n.t('preset_slow_desc')
-              : l10n.t('preset_normal_desc'));
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withAlpha(15),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: theme.colorScheme.primary.withAlpha(50),
-          width: 0.8,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Icon(
-              Icons.speed_rounded,
-              size: 16,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text.rich(
-                  TextSpan(
-                    text: '${l10n.t('settings_encoding_preset')}: ',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: theme.colorScheme.onSurface.withAlpha(160),
-                    ),
-                    children: [
-                      TextSpan(
-                        text: presetLabel,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  presetDesc,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    height: 1.3,
-                    color: theme.colorScheme.onSurface.withAlpha(140),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

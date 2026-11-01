@@ -28,7 +28,6 @@ import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.Effects
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
-import androidx.media3.transformer.InAppMuxer
 import androidx.media3.transformer.ProgressHolder
 import androidx.media3.transformer.Transformer
 import androidx.media3.transformer.VideoEncoderSettings
@@ -450,13 +449,11 @@ class MainActivity : FlutterActivity() {
             encoderFactoryBuilder.setRequestedVideoEncoderSettings(videoSettingsBuilder.build())
             val encoderFactory = encoderFactoryBuilder.build()
 
-            // InAppMuxer prevents sample timeouts and timestamp gaps on long/TS media
-            val muxerFactory = InAppMuxer.Factory.Builder().build()
+            // C.TIME_UNSET prevents sample timeouts and timestamp gaps on long/TS media
             val transformerBuilder = Transformer.Builder(applicationContext)
                 .setVideoMimeType(targetVideoMime)
                 .setAudioMimeType(MimeTypes.AUDIO_AAC)
                 .setEncoderFactory(encoderFactory)
-                .setMuxerFactory(muxerFactory)
                 .setMaxDelayBetweenMuxerSamplesMs(C.TIME_UNSET)
 
             transformerBuilder.addListener(object : Transformer.Listener {
@@ -616,10 +613,8 @@ class MainActivity : FlutterActivity() {
                 .setRemoveVideo(true)
                 .build()
 
-            val muxerFactory = InAppMuxer.Factory.Builder().build()
             val transformer = Transformer.Builder(applicationContext)
                 .setAudioMimeType(MimeTypes.AUDIO_AAC)
-                .setMuxerFactory(muxerFactory)
                 .setMaxDelayBetweenMuxerSamplesMs(C.TIME_UNSET)
                 .addListener(object : Transformer.Listener {
                     override fun onCompleted(composition: Composition, exportResult: ExportResult) {
