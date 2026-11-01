@@ -407,7 +407,7 @@ class DeviceSpecHelper {
   }
 
   static double? getMaxCpuClockGhz() {
-    if (!Platform.isAndroid && !Platform.isLinux) return null;
+    if (!Platform.isAndroid) return null;
     try {
       int maxKhz = 0;
       for (int i = 0; i < 16; i++) {

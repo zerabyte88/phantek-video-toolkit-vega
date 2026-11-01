@@ -876,6 +876,10 @@ void main() {
       expect(DeviceSpecHelper.getMarketedRamGb(23800), equals(24));
     });
 
+    test('DeviceSpecHelper getMaxCpuClockGhz safely returns null on non-Android test runner', () {
+      expect(DeviceSpecHelper.getMaxCpuClockGhz(), isNull);
+    });
+
     test('DeviceSpecHelper SoC and GPU detection correctly maps Snapdragon, Dimensity, and Exynos', () {
       final snapdragonCpu = DeviceSpecHelper.detectSocName(
         hardware: 'qcom',
