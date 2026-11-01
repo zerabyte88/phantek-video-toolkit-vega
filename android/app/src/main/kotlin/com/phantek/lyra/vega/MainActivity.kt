@@ -38,7 +38,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
@@ -178,7 +177,7 @@ class MainActivity : FlutterActivity() {
                 if (displayName.isNullOrBlank()) {
                     displayName = uri.lastPathSegment ?: "shared_video.mp4"
                 }
-                val sanitized = displayName!!.replace(Regex("[^a-zA-Z0-9._-]"), "_")
+                val sanitized = displayName.replace(Regex("[^a-zA-Z0-9._-]"), "_")
                 val targetFile = File(cacheDir, "shared_video_${System.currentTimeMillis()}_$sanitized")
                 contentResolver.openInputStream(uri)?.use { input ->
                     FileOutputStream(targetFile).use { output ->
