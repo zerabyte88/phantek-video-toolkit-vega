@@ -18,6 +18,7 @@ import '../widgets/audio_extractor_card.dart';
 import '../widgets/conversion_options_card.dart';
 import '../widgets/theme_animated_background.dart';
 import '../widgets/video_info_card.dart';
+import 'processing_screen.dart';
 import 'settings_screen.dart';
 import 'trim_preview_screen.dart';
 
@@ -87,10 +88,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onSettingsChanged() {
     if (!mounted) return;
     final saved = _settingsService.savedEncodingOptions;
-    if (saved != null && _encodingOptions != saved) {
-      setState(() {
-        _encodingOptions = saved;
-      });
+    if (saved != null) {
+      if (_encodingOptions != saved) {
+        setState(() {
+          _encodingOptions = saved;
+        });
+      }
       return;
     }
     final preset = SpeedPreset.fromEncodingPreset(
@@ -516,12 +519,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (!mounted) return;
 
-    final result = await Navigator.of(context).push<bool>(
+    final configuredOptions = await Navigator.of(context).push<EncodingOptions>(
       MaterialPageRoute(
         builder: (context) => TrimPreviewScreen(
           videoInfo: _videoInfo!,
           targetResolution: fallbackRes,
           encodingOptions: options,
+          appSettings: _settingsService.settings,
+          isAudioExtraction: _selectedMode == _AppMode.extractor,
+        ),
+      ),
+    );
+
+    if (configuredOptions == null || !mounted) return;
+
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => ProcessingScreen(
+          videoInfo: _videoInfo!,
+          targetResolution: fallbackRes,
+          encodingOptions: configuredOptions,
           appSettings: _settingsService.settings,
           isAudioExtraction: _selectedMode == _AppMode.extractor,
         ),

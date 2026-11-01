@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import '../models/encoding_options.dart';
 import '../models/video_info.dart';
-import '../services/device_spec_helper.dart';
 import '../services/localization_service.dart';
 import '../services/settings_service.dart';
 import 'app_glass_card.dart';
@@ -83,6 +82,10 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
   @override
   void didUpdateWidget(ConversionOptionsCard oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.encodingOptions.speedPreset !=
+        widget.encodingOptions.speedPreset) {
+      _crfValue = widget.encodingOptions.crfValue;
+    }
     if (oldWidget.encodingOptions.crfValue != widget.encodingOptions.crfValue) {
       _crfValue = widget.encodingOptions.crfValue;
     }
@@ -117,11 +120,6 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
     super.build(context);
     final theme = Theme.of(context);
     final l10n = widget.l10n;
-    final appSettings = SettingsService().settings;
-    final resolvedThreads = DeviceSpecHelper.resolveThreadCount(
-      video: widget.sourceVideo,
-      requestedThreads: appSettings.cpuThreads,
-    );
     final is4K = widget.sourceVideo.is4K;
     final isLongDuration = widget.sourceVideo.isLongDuration;
 
@@ -149,56 +147,8 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                   ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(20),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.memory_rounded,
-                      size: 13,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      appSettings.cpuThreads == 0
-                          ? l10n.t(
-                              'auto_runtime_normal',
-                              args: {'count': resolvedThreads.toString()},
-                            )
-                          : '$resolvedThreads ${l10n.t('unit_core')}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
-          if (appSettings.cpuThreads == 0 && is4K) ...[
-            const SizedBox(height: 6),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                l10n.t(
-                  'auto_runtime_4k',
-                  args: {'count': resolvedThreads.toString()},
-                ),
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontStyle: FontStyle.italic,
-                  color: theme.colorScheme.primary.withAlpha(190),
-                ),
-              ),
-            ),
-          ],
           if (is4K || isLongDuration) ...[
             const SizedBox(height: 12),
             Container(
@@ -306,6 +256,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             runSpacing: 6,
             children: [
               _buildChoiceChip(
+                chipKey: const Key('preset_chip_fast'),
                 label: l10n.t('preset_fast_title'),
                 isSelected:
                     widget.encodingOptions.speedPreset == SpeedPreset.fast,
@@ -321,6 +272,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                 },
               ),
               _buildChoiceChip(
+                chipKey: const Key('preset_chip_normal'),
                 label: l10n.t('preset_normal_title'),
                 isSelected:
                     widget.encodingOptions.speedPreset == SpeedPreset.normal,
@@ -336,6 +288,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                 },
               ),
               _buildChoiceChip(
+                chipKey: const Key('preset_chip_slow'),
                 label: l10n.t('preset_slow_title'),
                 isSelected:
                     widget.encodingOptions.speedPreset == SpeedPreset.max,
@@ -987,6 +940,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
   }
 
   Widget _buildChoiceChip({
+    Key? chipKey,
     required String label,
     required bool isSelected,
     required ValueChanged<bool>? onSelected,
@@ -996,6 +950,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
   }) {
     final theme = Theme.of(context);
     final chip = ChoiceChip(
+      key: chipKey,
       label: Text(
         label,
         textAlign: TextAlign.center,

@@ -2,7 +2,7 @@ name: phantek_video_toolkit_vega
 description: "Offline video transcoding, video downscaling, and audio extraction powered by AndroidX Media3 Transformer."
 publish_to: 'none'
 
-version: 2.2.0+22001
+version: 2.2.1+22002
 
 environment:
   sdk: ^3.13.0

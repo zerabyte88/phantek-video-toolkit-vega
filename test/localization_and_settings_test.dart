@@ -2007,7 +2007,7 @@ void main() {
     });
 
     testWidgets(
-      'ConversionOptionsCard displays 4K stability note when video is 4K in Auto mode',
+      'ConversionOptionsCard does not display 4K CPU note when video is 4K in Auto mode',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 1.0;
@@ -2019,10 +2019,6 @@ void main() {
         await service.setCpuThreads(0); // Auto mode
 
         final l10n = service.l10n;
-        final resolved = DeviceSpecHelper.resolveThreadCount(
-          video: video4K,
-          requestedThreads: 0,
-        );
 
         await tester.pumpWidget(
           MaterialApp(
@@ -2045,13 +2041,8 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
 
-        // Verify 4K stability note is rendered
-        expect(
-          find.text(
-            l10n.t('auto_runtime_4k', args: {'count': resolved.toString()}),
-          ),
-          findsOneWidget,
-        );
+        // Verify 4K stability note and CPU memory icon are not rendered
+        expect(find.byIcon(Icons.memory_rounded), findsNothing);
       },
     );
   });
@@ -4036,10 +4027,6 @@ void main() {
           'trim_new_duration',
           'trim_btn_proceed',
           'trim_btn_skip',
-          'settings_reset_config_title',
-          'settings_reset_config_desc',
-          'settings_reset_config_dialog_desc',
-          'settings_reset_config_success',
           'cancel',
           'reset',
         ];
@@ -4119,7 +4106,85 @@ void main() {
         expect(find.text(l10n.t('trim_btn_skip')), findsOneWidget);
       });
 
-      testWidgets('SettingsScreen displays Reset Configuration Settings tile and handles dialog confirmation', (tester) async {
+      testWidgets('TrimPreviewScreen returns trimmed and untrimmed EncodingOptions on pop', (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        const video = VideoInfo(
+          filePath: '/test/sample_video.mp4',
+          fileName: 'sample_video.mp4',
+          width: 1920,
+          height: 1080,
+          durationSeconds: 60.0,
+          bitrate: 5000000,
+          fps: 30.0,
+          codec: 'h264',
+          fileSizeBytes: 15000000,
+        );
+
+        final service = SettingsService();
+        await service.init();
+        final l10n = service.l10n;
+
+        EncodingOptions? returnedOptions;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.getTheme('oled_snowfall'),
+            home: Builder(
+              builder: (ctx) => Scaffold(
+                body: ElevatedButton(
+                  onPressed: () async {
+                    returnedOptions = await Navigator.of(ctx).push<EncodingOptions>(
+                      MaterialPageRoute(
+                        builder: (_) => const TrimPreviewScreen(
+                          videoInfo: video,
+                          targetResolution: VideoResolution(label: '1080p', width: 1920, height: 1080),
+                          encodingOptions: EncodingOptions(),
+                          appSettings: AppSettings(),
+                          isAudioExtraction: false,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('Open Trim'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Open Trim
+        await tester.tap(find.text('Open Trim'));
+        await tester.pumpAndSettle();
+
+        // Tap Proceed
+        await tester.tap(find.text(l10n.t('trim_btn_proceed')));
+        await tester.pumpAndSettle();
+
+        expect(returnedOptions, isNotNull);
+        expect(returnedOptions!.isTrimmed, isTrue);
+        expect(returnedOptions!.trimStartMs, 0);
+        expect(returnedOptions!.trimEndMs, 60000);
+
+        // Open Trim again and test skip
+        returnedOptions = null;
+        await tester.tap(find.text('Open Trim'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text(l10n.t('trim_btn_skip')));
+        await tester.pumpAndSettle();
+
+        expect(returnedOptions, isNotNull);
+        expect(returnedOptions!.isTrimmed, isFalse);
+        expect(returnedOptions!.trimStartMs, isNull);
+        expect(returnedOptions!.trimEndMs, isNull);
+      });
+
+      testWidgets('SettingsScreen has single Reset to Default Settings button and resets all configurations', (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
@@ -4129,9 +4194,15 @@ void main() {
         final service = SettingsService();
         await service.init();
         await service.saveEncodingOptions(
-          const EncodingOptions(crfValue: 16, customBitrateKbps: 9000),
+          const EncodingOptions(
+            crfValue: 16,
+            customBitrateKbps: 9000,
+            speedPreset: SpeedPreset.fast,
+          ),
         );
         expect(service.savedEncodingOptions?.crfValue, equals(16));
+        expect(service.savedEncodingOptions?.customBitrateKbps, equals(9000));
+        expect(service.savedEncodingOptions?.speedPreset, equals(SpeedPreset.fast));
 
         final l10n = service.l10n;
 
@@ -4144,29 +4215,183 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
 
-        // Find Reset Configuration tile
-        final tileFinder = find.text(l10n.t('settings_reset_config_title'));
-        await tester.ensureVisible(tileFinder);
-        expect(tileFinder, findsOneWidget);
+        // Verify Reset Configuration tile is NOT displayed
+        expect(find.text(l10n.t('settings_reset_config_title')), findsNothing);
 
-        // Tap the tile to show dialog
-        await tester.tap(tileFinder);
+        // Verify single Reset to Default Settings button is present
+        final resetBtnFinder = find.widgetWithText(
+          OutlinedButton,
+          l10n.t('settings_reset_default'),
+        );
+        await tester.ensureVisible(resetBtnFinder);
+        expect(resetBtnFinder, findsOneWidget);
+
+        // Tap the reset button to show confirmation dialog
+        await tester.tap(resetBtnFinder);
         await tester.pumpAndSettle();
 
-        // Verify dialog contents
-        expect(find.text(l10n.t('settings_reset_config_dialog_desc')), findsOneWidget);
-        expect(find.text(l10n.t('cancel')), findsOneWidget);
-        expect(find.text(l10n.t('reset')), findsOneWidget);
+        // Verify confirmation dialog contents
+        expect(find.text(l10n.t('settings_reset_confirm_title')), findsOneWidget);
+        expect(find.text(l10n.t('settings_reset_confirm_desc')), findsOneWidget);
+        expect(find.text(l10n.t('proc_no')), findsOneWidget);
 
-        // Confirm reset
-        await tester.tap(find.text(l10n.t('reset')));
+        // Confirm reset in dialog
+        final dialogConfirmBtn = find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text(l10n.t('settings_reset_default')),
+        );
+        expect(dialogConfirmBtn, findsOneWidget);
+        await tester.tap(dialogConfirmBtn);
         await tester.pumpAndSettle();
 
-        // Verify encoding options reset to defaults
+        // Verify both AppSettings and encoding configuration options are reset to defaults
         expect(service.savedEncodingOptions?.crfValue, equals(22));
         expect(service.savedEncodingOptions?.customBitrateKbps, equals(4000));
-        expect(find.text(l10n.t('settings_reset_config_success')), findsOneWidget);
+        expect(service.savedEncodingOptions?.speedPreset, equals(SpeedPreset.normal));
+        expect(find.text(l10n.t('settings_reset_success')), findsOneWidget);
       });
+
+      testWidgets(
+        'ConversionOptionsCard speed preset selection updates speedPreset and crfValue, persists to SettingsService, and listener does not revert',
+        (tester) async {
+          SharedPreferences.setMockInitialValues({});
+          final service = SettingsService();
+          await service.init();
+          await service.resetToDefaults();
+          final l10n = AppLocalizations('id');
+
+          const sampleVideo = VideoInfo(
+            filePath: '/dummy/sample.mp4',
+            fileName: 'sample.mp4',
+            width: 1920,
+            height: 1080,
+            durationSeconds: 60.0,
+            bitrate: 4000000,
+            fps: 30.0,
+            codec: 'h264',
+            fileSizeBytes: 30000000,
+          );
+
+          EncodingOptions currentOpts = const EncodingOptions(
+            speedPreset: SpeedPreset.normal,
+            crfValue: 22,
+          );
+          VideoResolution currentRes = VideoResolution.standardResolutions.first;
+
+          // Wire HomeScreen's _onSettingsChanged logic
+          void onSettingsChanged() {
+            final saved = service.savedEncodingOptions;
+            if (saved != null) {
+              if (currentOpts != saved) {
+                currentOpts = saved;
+              }
+              return;
+            }
+            final preset = SpeedPreset.fromEncodingPreset(
+              service.settings.encodingPreset,
+            );
+            if (currentOpts.speedPreset != preset) {
+              currentOpts = currentOpts.copyWith(
+                speedPreset: preset,
+                crfValue: preset.defaultCrf,
+              );
+            }
+          }
+
+          service.addListener(onSettingsChanged);
+          addTearDown(() => service.removeListener(onSettingsChanged));
+
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppTheme.getTheme('oled_pure'),
+              home: Scaffold(
+                body: StatefulBuilder(
+                  builder: (context, setState) {
+                    return SingleChildScrollView(
+                      child: ConversionOptionsCard(
+                        sourceVideo: sampleVideo,
+                        resolutions: VideoResolution.standardResolutions,
+                        selectedResolution: currentRes,
+                        onResolutionChanged: (res) =>
+                            setState(() => currentRes = res),
+                        encodingOptions: currentOpts,
+                        onOptionsChanged: (opts) {
+                          setState(() => currentOpts = opts);
+                          service.saveEncodingOptions(opts);
+                        },
+                        l10n: l10n,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 200));
+
+          final fastChipFinder = find.byKey(const Key('preset_chip_fast'));
+          final normalChipFinder = find.byKey(const Key('preset_chip_normal'));
+          final slowChipFinder = find.byKey(const Key('preset_chip_slow'));
+
+          expect(fastChipFinder, findsOneWidget);
+          expect(normalChipFinder, findsOneWidget);
+          expect(slowChipFinder, findsOneWidget);
+
+          // Initial default: Normal
+          expect(tester.widget<ChoiceChip>(normalChipFinder).selected, isTrue);
+          expect(tester.widget<ChoiceChip>(fastChipFinder).selected, isFalse);
+          expect(tester.widget<ChoiceChip>(slowChipFinder).selected, isFalse);
+
+          // 1. Tap Cepat (fast)
+          await tester.ensureVisible(fastChipFinder);
+          await tester.tap(fastChipFinder);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 200));
+
+          // Verify Cepat stays selected, updated CRF to 24, and was NOT reverted by listener
+          expect(tester.widget<ChoiceChip>(fastChipFinder).selected, isTrue);
+          expect(tester.widget<ChoiceChip>(normalChipFinder).selected, isFalse);
+          expect(tester.widget<ChoiceChip>(slowChipFinder).selected, isFalse);
+          expect(currentOpts.speedPreset, equals(SpeedPreset.fast));
+          expect(currentOpts.crfValue, equals(24));
+          expect(service.savedEncodingOptions?.speedPreset, equals(SpeedPreset.fast));
+          expect(service.savedEncodingOptions?.crfValue, equals(24));
+          expect(service.settings.encodingPreset, equals('fast'));
+
+          // 2. Tap Maksimal (slow)
+          await tester.ensureVisible(slowChipFinder);
+          await tester.tap(slowChipFinder);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 200));
+
+          // Verify Maksimal stays selected, updated CRF to 20, and was NOT reverted
+          expect(tester.widget<ChoiceChip>(slowChipFinder).selected, isTrue);
+          expect(tester.widget<ChoiceChip>(fastChipFinder).selected, isFalse);
+          expect(tester.widget<ChoiceChip>(normalChipFinder).selected, isFalse);
+          expect(currentOpts.speedPreset, equals(SpeedPreset.max));
+          expect(currentOpts.crfValue, equals(20));
+          expect(service.savedEncodingOptions?.speedPreset, equals(SpeedPreset.max));
+          expect(service.savedEncodingOptions?.crfValue, equals(20));
+          expect(service.settings.encodingPreset, equals('slow'));
+
+          // 3. Tap Normal
+          await tester.ensureVisible(normalChipFinder);
+          await tester.tap(normalChipFinder);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 200));
+
+          // Verify Normal stays selected, updated CRF to 22, and was NOT reverted
+          expect(tester.widget<ChoiceChip>(normalChipFinder).selected, isTrue);
+          expect(tester.widget<ChoiceChip>(fastChipFinder).selected, isFalse);
+          expect(tester.widget<ChoiceChip>(slowChipFinder).selected, isFalse);
+          expect(currentOpts.speedPreset, equals(SpeedPreset.normal));
+          expect(currentOpts.crfValue, equals(22));
+          expect(service.savedEncodingOptions?.speedPreset, equals(SpeedPreset.normal));
+          expect(service.savedEncodingOptions?.crfValue, equals(22));
+          expect(service.settings.encodingPreset, equals('medium'));
+        },
+      );
     });
   });
 }

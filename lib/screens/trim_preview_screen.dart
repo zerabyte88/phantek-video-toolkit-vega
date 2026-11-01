@@ -14,7 +14,6 @@ import '../services/localization_service.dart';
 import '../services/settings_service.dart';
 import '../widgets/app_glass_card.dart';
 import '../widgets/theme_animated_background.dart';
-import 'processing_screen.dart';
 
 class TrimPreviewScreen extends StatefulWidget {
   final VideoInfo videoInfo;
@@ -98,7 +97,8 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
       return;
     }
 
-    if ((_currentPositionSeconds - pos).abs() > 0.1 || _isPlaying != isPlaying) {
+    if ((_currentPositionSeconds - pos).abs() > 0.1 ||
+        _isPlaying != isPlaying) {
       setState(() {
         _currentPositionSeconds = pos;
         _isPlaying = isPlaying;
@@ -140,33 +140,24 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
   }
 
   Future<void> _proceed({required bool isTrimmed}) async {
-    _controller?.pause();
-
     final opts = isTrimmed
         ? widget.encodingOptions.copyWith(
             trimStartMs: (_startSeconds * 1000).round(),
             trimEndMs: (_endSeconds * 1000).round(),
           )
-        : widget.encodingOptions.copyWith(
-            trimStartMs: null,
-            trimEndMs: null,
-          );
+        : widget.encodingOptions.copyWith(trimStartMs: null, trimEndMs: null);
 
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (ctx) => ProcessingScreen(
-          videoInfo: widget.videoInfo,
-          targetResolution: widget.targetResolution,
-          encodingOptions: opts,
-          appSettings: widget.appSettings,
-          isAudioExtraction: widget.isAudioExtraction,
-        ),
-      ),
-    );
-
-    if (result == true && mounted) {
-      Navigator.of(context).pop(true);
+    if (_controller != null) {
+      _controller!.removeListener(_onVideoPlayerUpdate);
+      try {
+        await _controller!.pause();
+        await _controller!.dispose();
+      } catch (_) {}
+      _controller = null;
     }
+
+    if (!mounted) return;
+    Navigator.of(context).pop(opts);
   }
 
   @override
@@ -227,9 +218,14 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: AspectRatio(
-          aspectRatio: _isControllerInitialized && _controller != null && _controller!.value.aspectRatio > 0
+          aspectRatio:
+              _isControllerInitialized &&
+                  _controller != null &&
+                  _controller!.value.aspectRatio > 0
               ? _controller!.value.aspectRatio
-              : (widget.videoInfo.aspectRatio > 0 ? widget.videoInfo.aspectRatio : 16 / 9),
+              : (widget.videoInfo.aspectRatio > 0
+                    ? widget.videoInfo.aspectRatio
+                    : 16 / 9),
           child: Container(
             color: isDark ? Colors.black : const Color(0xFF0F172A),
             child: _isControllerInitialized && _controller != null
@@ -417,10 +413,14 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(
-        color: isHighlighted ? primary.withAlpha(25) : theme.colorScheme.surface.withAlpha(120),
+        color: isHighlighted
+            ? primary.withAlpha(25)
+            : theme.colorScheme.surface.withAlpha(120),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isHighlighted ? primary.withAlpha(90) : theme.dividerColor.withAlpha(80),
+          color: isHighlighted
+              ? primary.withAlpha(90)
+              : theme.dividerColor.withAlpha(80),
           width: 1,
         ),
       ),
@@ -432,7 +432,9 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
               Icon(
                 icon,
                 size: 13,
-                color: isHighlighted ? primary : theme.colorScheme.onSurface.withAlpha(160),
+                color: isHighlighted
+                    ? primary
+                    : theme.colorScheme.onSurface.withAlpha(160),
               ),
               const SizedBox(width: 4),
               Flexible(
@@ -441,7 +443,9 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w500,
-                    color: isHighlighted ? primary : theme.colorScheme.onSurface.withAlpha(160),
+                    color: isHighlighted
+                        ? primary
+                        : theme.colorScheme.onSurface.withAlpha(160),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

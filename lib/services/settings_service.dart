@@ -170,9 +170,6 @@ class SettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(encodingPreset: preset));
   }
 
-  /// Backward-compatible alias for [setEncodingPreset].
-  Future<void> setCpuPreset(String preset) => setEncodingPreset(preset);
-
   Future<void> setAudioBitrate(int kbps) async {
     await updateSettings(_settings.copyWith(audioBitrateKbps: kbps));
   }
@@ -234,10 +231,14 @@ class SettingsService extends ChangeNotifier {
 
   Future<void> saveEncodingOptions(EncodingOptions options) async {
     _savedEncodingOptions = options;
+    _settings = _settings.copyWith(
+      encodingPreset: options.speedPreset.encodingPresetName,
+    );
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_encodingOptionsKey, jsonEncode(options.toJson()));
+      await _saveSettings();
     } catch (e) {
       debugPrint('Error saving encoding options: $e');
     }

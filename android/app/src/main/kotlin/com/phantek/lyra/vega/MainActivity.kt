@@ -396,10 +396,18 @@ class MainActivity : FlutterActivity() {
         try {
             val inputFile = File(inputPath)
             val mediaItemBuilder = MediaItem.Builder().setUri(Uri.fromFile(inputFile))
-            if ((trimStartMs != null && trimStartMs > 0) || (trimEndMs != null && trimEndMs > 0)) {
+            val startMs = trimStartMs ?: 0L
+            val endMs = trimEndMs ?: 0L
+            val isTrimmed = (startMs > 0L) || (endMs > 0L && endMs > startMs)
+            if (isTrimmed) {
                 val clippingBuilder = MediaItem.ClippingConfiguration.Builder()
-                if (trimStartMs != null && trimStartMs > 0) clippingBuilder.setStartPositionMs(trimStartMs)
-                if (trimEndMs != null && trimEndMs > 0) clippingBuilder.setEndPositionMs(trimEndMs)
+                if (startMs > 0L) {
+                    clippingBuilder.setStartPositionMs(startMs)
+                }
+                if (endMs > startMs) {
+                    clippingBuilder.setEndPositionMs(endMs)
+                }
+                clippingBuilder.setStartsAtKeyFrame(false)
                 mediaItemBuilder.setClippingConfiguration(clippingBuilder.build())
             }
             val mediaItem = mediaItemBuilder.build()
@@ -497,13 +505,13 @@ class MainActivity : FlutterActivity() {
             // Start progress polling safely on Main Looper (applicationLooper)
             startProgressPolling(transformer, outputPath)
 
-        } catch (e: Exception) {
+        } catch (t: Throwable) {
             cleanupOutput(outputPath)
             activeTransformer = null
             stopProgressPolling()
             val res = activeTranscodeResult
             activeTranscodeResult = null
-            res?.error("TRANSCODE_INIT_FAILED", e.localizedMessage ?: "Failed to start transcoding", null)
+            res?.error("TRANSCODE_INIT_FAILED", t.localizedMessage ?: "Failed to start transcoding", null)
         }
     }
 
@@ -537,12 +545,12 @@ class MainActivity : FlutterActivity() {
                         activeAudioExtractResult = null
                         res?.success(outputPath)
                     }
-                } catch (e: Exception) {
+                } catch (t: Throwable) {
                     cleanupOutput(outputPath)
                     mainHandler.post {
                         val res = activeAudioExtractResult
                         activeAudioExtractResult = null
-                        res?.error("WAV_EXTRACTION_FAILED", e.localizedMessage ?: "WAV extraction failed", null)
+                        res?.error("WAV_EXTRACTION_FAILED", t.localizedMessage ?: "WAV extraction failed", null)
                     }
                 }
             }
@@ -573,12 +581,12 @@ class MainActivity : FlutterActivity() {
                             res?.error("UNSUPPORTED_MP3_ENCODE", errMsg, null)
                         }
                     }
-                } catch (e: Exception) {
+                } catch (t: Throwable) {
                     cleanupOutput(outputPath)
                     mainHandler.post {
                         val res = activeAudioExtractResult
                         activeAudioExtractResult = null
-                        res?.error("MP3_EXTRACTION_FAILED", e.localizedMessage ?: "MP3 extraction failed", null)
+                        res?.error("MP3_EXTRACTION_FAILED", t.localizedMessage ?: "MP3 extraction failed", null)
                     }
                 }
             }
@@ -589,10 +597,18 @@ class MainActivity : FlutterActivity() {
         try {
             val inputFile = File(inputPath)
             val mediaItemBuilder = MediaItem.Builder().setUri(Uri.fromFile(inputFile))
-            if ((trimStartMs != null && trimStartMs > 0) || (trimEndMs != null && trimEndMs > 0)) {
+            val startMs = trimStartMs ?: 0L
+            val endMs = trimEndMs ?: 0L
+            val isTrimmed = (startMs > 0L) || (endMs > 0L && endMs > startMs)
+            if (isTrimmed) {
                 val clippingBuilder = MediaItem.ClippingConfiguration.Builder()
-                if (trimStartMs != null && trimStartMs > 0) clippingBuilder.setStartPositionMs(trimStartMs)
-                if (trimEndMs != null && trimEndMs > 0) clippingBuilder.setEndPositionMs(trimEndMs)
+                if (startMs > 0L) {
+                    clippingBuilder.setStartPositionMs(startMs)
+                }
+                if (endMs > startMs) {
+                    clippingBuilder.setEndPositionMs(endMs)
+                }
+                clippingBuilder.setStartsAtKeyFrame(false)
                 mediaItemBuilder.setClippingConfiguration(clippingBuilder.build())
             }
             val mediaItem = mediaItemBuilder.build()
@@ -644,13 +660,13 @@ class MainActivity : FlutterActivity() {
             transformer.start(editedMediaItem, outputPath)
             startProgressPolling(transformer, outputPath)
 
-        } catch (e: Exception) {
+        } catch (t: Throwable) {
             cleanupOutput(outputPath)
             activeTransformer = null
             stopProgressPolling()
             val res = activeAudioExtractResult
             activeAudioExtractResult = null
-            res?.error("AUDIO_EXTRACTION_INIT_FAILED", e.localizedMessage ?: "Failed to start audio extraction", null)
+            res?.error("AUDIO_EXTRACTION_INIT_FAILED", t.localizedMessage ?: "Failed to start audio extraction", null)
         }
     }
 
@@ -748,6 +764,8 @@ class MainActivity : FlutterActivity() {
         trimStartMs: Long? = null,
         trimEndMs: Long? = null
     ): Boolean {
+        val startMs = trimStartMs ?: 0L
+        val endMs = trimEndMs ?: 0L
         val extractor = MediaExtractor()
         try {
             extractor.setDataSource(inputPath)
@@ -769,8 +787,8 @@ class MainActivity : FlutterActivity() {
             }
 
             extractor.selectTrack(audioTrackIndex)
-            if (trimStartMs != null && trimStartMs > 0) {
-                extractor.seekTo(trimStartMs * 1000L, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+            if (startMs > 0L) {
+                extractor.seekTo(startMs * 1000L, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
             }
             val durationUs = if (trackFormat.containsKey(MediaFormat.KEY_DURATION)) {
                 trackFormat.getLong(MediaFormat.KEY_DURATION)
@@ -785,7 +803,7 @@ class MainActivity : FlutterActivity() {
 
             try {
                 while (!isCancelled) {
-                    if (trimEndMs != null && trimEndMs > 0 && extractor.sampleTime > trimEndMs * 1000L) {
+                    if (endMs > startMs && extractor.sampleTime > endMs * 1000L) {
                         break
                     }
                     buffer.clear()
@@ -829,6 +847,8 @@ class MainActivity : FlutterActivity() {
         trimStartMs: Long? = null,
         trimEndMs: Long? = null
     ) {
+        val startMs = trimStartMs ?: 0L
+        val endMs = trimEndMs ?: 0L
         val extractor = MediaExtractor()
         var decoder: android.media.MediaCodec? = null
         var raf: RandomAccessFile? = null
@@ -854,8 +874,8 @@ class MainActivity : FlutterActivity() {
             }
 
             extractor.selectTrack(audioTrackIndex)
-            if (trimStartMs != null && trimStartMs > 0) {
-                extractor.seekTo(trimStartMs * 1000L, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+            if (startMs > 0L) {
+                extractor.seekTo(startMs * 1000L, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
             }
             val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
             var sampleRate = if (format.containsKey(MediaFormat.KEY_SAMPLE_RATE)) {
@@ -895,7 +915,7 @@ class MainActivity : FlutterActivity() {
                         if (inputBuf != null) {
                             val sampleSize = extractor.readSampleData(inputBuf, 0)
                             val pts = extractor.sampleTime
-                            if (sampleSize < 0 || (trimEndMs != null && trimEndMs > 0 && pts > trimEndMs * 1000L)) {
+                            if (sampleSize < 0 || (endMs > startMs && pts > endMs * 1000L)) {
                                 dec.queueInputBuffer(inputBufIndex, 0, 0, 0L, android.media.MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                                 isExtractorDone = true
                             } else {

@@ -143,6 +143,17 @@ enum SpeedPreset {
     }
   }
 
+  String get encodingPresetName {
+    switch (this) {
+      case SpeedPreset.fast:
+        return 'fast';
+      case SpeedPreset.normal:
+        return 'medium';
+      case SpeedPreset.max:
+        return 'slow';
+    }
+  }
+
   static SpeedPreset fromEncodingPreset(String? preset) {
     switch (preset) {
       case 'fast':
@@ -154,10 +165,6 @@ enum SpeedPreset {
         return SpeedPreset.normal;
     }
   }
-
-  /// Backward-compatible alias for [fromEncodingPreset].
-  static SpeedPreset fromCpuPreset(String? preset) =>
-      fromEncodingPreset(preset);
 }
 
 class EncodingOptions {
@@ -202,6 +209,8 @@ class EncodingOptions {
     this.trimEndMs,
   });
 
+  bool get isTrimmed => trimStartMs != null || trimEndMs != null;
+
   EncodingOptions copyWith({
     VideoCodec? codec,
     VideoContainer? container,
@@ -229,7 +238,9 @@ class EncodingOptions {
           audioExtractBitrateKbps ?? this.audioExtractBitrateKbps,
       videoAudioBitrateKbps:
           videoAudioBitrateKbps ?? this.videoAudioBitrateKbps,
-      trimStartMs: trimStartMs == _sentinel ? this.trimStartMs : trimStartMs as int?,
+      trimStartMs: trimStartMs == _sentinel
+          ? this.trimStartMs
+          : trimStartMs as int?,
       trimEndMs: trimEndMs == _sentinel ? this.trimEndMs : trimEndMs as int?,
     );
   }
@@ -305,19 +316,19 @@ class EncodingOptions {
 
   @override
   int get hashCode => Object.hash(
-        codec,
-        container,
-        rateControlMode,
-        speedPreset,
-        crfValue,
-        customBitrateKbps,
-        targetFps,
-        audioFormat,
-        audioExtractBitrateKbps,
-        videoAudioBitrateKbps,
-        trimStartMs,
-        trimEndMs,
-      );
+    codec,
+    container,
+    rateControlMode,
+    speedPreset,
+    crfValue,
+    customBitrateKbps,
+    targetFps,
+    audioFormat,
+    audioExtractBitrateKbps,
+    videoAudioBitrateKbps,
+    trimStartMs,
+    trimEndMs,
+  );
 
   /// Estimates target video bitrate in kbps based on resolution and rate control mode.
   int calculateTargetBitrateKbps({
