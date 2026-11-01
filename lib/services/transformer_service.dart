@@ -17,7 +17,7 @@ import 'settings_service.dart';
 /// Service interfacing with native AndroidX Media3 Transformer Hardware Encoder.
 class TransformerService {
   static const MethodChannel _channel = MethodChannel(
-    'com.phantek.cygnus.albireo/transformer',
+    'com.phantek.lyra.vega/transformer',
   );
 
   static void Function(double progress, String stats, [int? sizeBytes])?
@@ -83,20 +83,42 @@ class TransformerService {
     _handlerInitialized = true;
   }
 
+  /// Extracts a video thumbnail frame using native MediaMetadataRetriever.
+  static Future<Uint8List?> getVideoThumbnail(String filePath) async {
+    if (!Platform.isAndroid) return null;
+    try {
+      final result = await _channel.invokeMethod<Uint8List>(
+        'getVideoThumbnail',
+        {'filePath': filePath},
+      );
+      return result;
+    } catch (e) {
+      debugPrint('TransformerService.getVideoThumbnail error: $e');
+      return null;
+    }
+  }
+
   /// Probe a video file using Android MediaMetadataRetriever and MediaExtractor.
-  static Future<VideoInfo?> getVideoInfo(String filePath) async {
+  static Future<VideoInfo?> getVideoInfo(
+    String filePath, {
+    String? customName,
+  }) async {
     try {
       final file = File(filePath);
       if (!await file.exists()) return null;
+
+      final resolvedFileName =
+          customName ??
+          (file.uri.pathSegments.isNotEmpty
+              ? file.uri.pathSegments.last
+              : filePath);
 
       if (!Platform.isAndroid) {
         // Fallback for non-Android environments (tests, desktop)
         final fileSize = await file.length();
         return VideoInfo(
           filePath: filePath,
-          fileName: file.uri.pathSegments.isNotEmpty
-              ? file.uri.pathSegments.last
-              : filePath,
+          fileName: resolvedFileName,
           width: 1920,
           height: 1080,
           durationSeconds: 60.0,
@@ -131,9 +153,7 @@ class TransformerService {
 
       return VideoInfo(
         filePath: filePath,
-        fileName: file.uri.pathSegments.isNotEmpty
-            ? file.uri.pathSegments.last
-            : filePath,
+        fileName: resolvedFileName,
         width: width,
         height: height,
         durationSeconds: duration,
@@ -325,7 +345,8 @@ class TransformerService {
     required void Function(double progress, String stats, [int? sizeBytes])
     onProgress,
     required void Function(String log) onLog,
-  })? mockProcessVideo;
+  })?
+  mockProcessVideo;
 
   @visibleForTesting
   static Future<String?> Function({
@@ -337,7 +358,8 @@ class TransformerService {
     required void Function(double progress, String stats, [int? sizeBytes])
     onProgress,
     required void Function(String log) onLog,
-  })? mockExtractAudio;
+  })?
+  mockExtractAudio;
 
   /// Transcodes and downscales video using AndroidX Media3 Hardware Transformer.
   static Future<String?> processVideo({

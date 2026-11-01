@@ -2,6 +2,7 @@
 // Copyright (C) 2026 zerabyte88
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -38,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // State
   _AppMode _selectedMode = _AppMode.convert;
   VideoInfo? _videoInfo;
+  Uint8List? _videoThumbnail;
   VideoResolution? _selectedResolution;
   EncodingOptions _encodingOptions = const EncodingOptions();
   bool _isLoading = false;
@@ -53,9 +55,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final defaultPreset = SpeedPreset.fromEncodingPreset(
         _settingsService.settings.encodingPreset,
       );
-      final defaultCodec = _settingsService.settings.defaultVideoCodec == 'hevc'
-          ? VideoCodec.hevc
-          : VideoCodec.h264;
+      final defaultCodec = VideoCodec.fromName(
+        _settingsService.settings.defaultVideoCodec,
+      );
       _encodingOptions = EncodingOptions(
         speedPreset: defaultPreset,
         crfValue: defaultPreset.defaultCrf,
@@ -115,21 +117,25 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _loadVideoFromPath(String path) async {
+  Future<void> _loadVideoFromPath(String path, {String? customName}) async {
     final l10n = _settingsService.l10n;
     setState(() {
       _isLoading = true;
       _loadingMessage = l10n.t('loading_analyzing');
       _videoInfo = null;
       _selectedResolution = null;
+      _videoThumbnail = null;
     });
 
     try {
-      final info = await TransformerService.getVideoInfo(path);
+      final info = await TransformerService.getVideoInfo(
+        path,
+        customName: customName,
+      );
       if (!mounted) return;
-      final defaultCodec = _settingsService.settings.defaultVideoCodec == 'hevc'
-          ? VideoCodec.hevc
-          : VideoCodec.h264;
+      final defaultCodec = VideoCodec.fromName(
+        _settingsService.settings.defaultVideoCodec,
+      );
       setState(() {
         _isLoading = false;
         _videoInfo = info;
@@ -141,6 +147,13 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         }
       });
+      if (info != null) {
+        TransformerService.getVideoThumbnail(path).then((thumb) {
+          if (mounted && _videoInfo?.filePath == path) {
+            setState(() => _videoThumbnail = thumb);
+          }
+        });
+      }
       if (info == null && mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(l10n.t('error_read_video'))));
@@ -266,6 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _loadingMessage = l10n.t('loading_pick');
       _videoInfo = null;
       _selectedResolution = null;
+      _videoThumbnail = null;
     });
 
     try {
@@ -274,7 +288,11 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
 
       if (file != null && file.path != null) {
-        await _loadVideoFromPath(file.path!);
+        final customName =
+            (file.name.isNotEmpty && !file.name.startsWith('cache_'))
+            ? file.name
+            : null;
+        await _loadVideoFromPath(file.path!, customName: customName);
       } else {
         setState(() => _isLoading = false);
       }
@@ -295,7 +313,64 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _videoInfo = null;
       _selectedResolution = null;
+      _videoThumbnail = null;
     });
+  }
+
+  void _showRenameDialog() {
+    if (_videoInfo == null) return;
+    final l10n = _settingsService.l10n;
+    final currentFileName = _videoInfo!.fileName;
+    final lastDotIndex = currentFileName.lastIndexOf('.');
+    final baseName = lastDotIndex != -1
+        ? currentFileName.substring(0, lastDotIndex)
+        : currentFileName;
+    final ext = lastDotIndex != -1
+        ? currentFileName.substring(lastDotIndex + 1)
+        : '';
+
+    final controller = TextEditingController(text: baseName);
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(l10n.t('rename_dialog_title')),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(hintText: l10n.t('rename_dialog_hint')),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(
+                l10n.t('cancel'),
+                style: const TextStyle(color: Color(0xFFEF4444)),
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                final trimmedBase = controller.text.trim();
+                if (trimmedBase.isNotEmpty) {
+                  final newFileName = ext.isNotEmpty
+                      ? '$trimmedBase.$ext'
+                      : trimmedBase;
+                  setState(() {
+                    _videoInfo = _videoInfo!.copyWith(fileName: newFileName);
+                  });
+                }
+                Navigator.of(ctx).pop();
+              },
+              child: Text(l10n.t('dialog_save')),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _resetOptions() {
@@ -303,9 +378,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final defaultPreset = SpeedPreset.fromEncodingPreset(
         _settingsService.settings.encodingPreset,
       );
-      final defaultCodec = _settingsService.settings.defaultVideoCodec == 'hevc'
-          ? VideoCodec.hevc
-          : VideoCodec.h264;
+      final defaultCodec = VideoCodec.fromName(
+        _settingsService.settings.defaultVideoCodec,
+      );
       _encodingOptions = EncodingOptions(
         speedPreset: defaultPreset,
         crfValue: defaultPreset.defaultCrf,
@@ -549,6 +624,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _videoInfo = null;
         _selectedResolution = null;
+        _videoThumbnail = null;
       });
       CacheManagerService().clearAllCache();
     }
@@ -829,7 +905,11 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 14),
 
               // Video info card
-              VideoInfoCard(videoInfo: _videoInfo!),
+              VideoInfoCard(
+                videoInfo: _videoInfo!,
+                thumbnailBytes: _videoThumbnail,
+                onRename: _showRenameDialog,
+              ),
               const SizedBox(height: 14),
 
               // Options card

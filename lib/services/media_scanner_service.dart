@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 
 class MediaScannerService {
   static const MethodChannel _channel = MethodChannel(
-    'com.phantek.cygnus.albireo/media_scanner',
+    'com.phantek.lyra.vega/media_scanner',
   );
 
   /// Scans [filePath] using Android's MediaScannerConnection so it

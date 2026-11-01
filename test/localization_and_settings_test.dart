@@ -22,6 +22,7 @@ import 'package:phantek_video_toolkit_vega/theme/app_theme.dart';
 import 'package:phantek_video_toolkit_vega/widgets/animated_flame_title.dart';
 import 'package:phantek_video_toolkit_vega/widgets/conversion_options_card.dart';
 import 'package:phantek_video_toolkit_vega/widgets/theme_animated_background.dart';
+import 'package:phantek_video_toolkit_vega/widgets/video_info_card.dart';
 
 const supportedUiCodes = [
   'id',
@@ -312,7 +313,7 @@ void main() {
       const settings = AppSettings();
       expect(settings.cpuThreads, equals(0)); // Auto
       expect(settings.ramBufferMb, equals(512));
-      expect(settings.cpuPreset, equals('medium'));
+      expect(settings.encodingPreset, equals('medium'));
       expect(settings.audioBitrateKbps, equals(128));
       expect(settings.languageCode, equals('en'));
       expect(settings.themeMode, equals('oled_pure'));
@@ -328,7 +329,7 @@ void main() {
       const original = AppSettings(
         cpuThreads: 4,
         ramBufferMb: 1024,
-        cpuPreset: 'fast',
+        encodingPreset: 'fast',
         audioBitrateKbps: 192,
         languageCode: 'ja',
         themeMode: 'oled_midnight',
@@ -345,7 +346,7 @@ void main() {
 
       expect(restored.cpuThreads, equals(4));
       expect(restored.ramBufferMb, equals(1024));
-      expect(restored.cpuPreset, equals('fast'));
+      expect(restored.encodingPreset, equals('fast'));
       expect(restored.audioBitrateKbps, equals(192));
       expect(restored.languageCode, equals('ja'));
       expect(restored.themeMode, equals('oled_midnight'));
@@ -1373,7 +1374,7 @@ void main() {
     });
 
     testWidgets(
-      'Target FPS slider clamps to 30 for 30 FPS video and hides 60 FPS chip',
+      'Target FPS only renders Original and Custom chips, custom slider clamps to 30 for 30 FPS video',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 1.0;
@@ -1425,34 +1426,16 @@ void main() {
         );
         await tester.tap(find.byKey(const Key('advanced_options_toggle')));
         await tester.pumpAndSettle();
+        if (find.byKey(const Key('advanced_warning_yes_button')).evaluate().isNotEmpty) {
+          await tester.tap(find.byKey(const Key('advanced_warning_yes_button')));
+          await tester.pumpAndSettle();
+        }
 
-        // 60, 50, 48 FPS chips should be disabled for 30 FPS video with tooltip
-        final chip60 = tester.widget<ChoiceChip>(
-          find.widgetWithText(ChoiceChip, '60 FPS'),
-        );
-        expect(chip60.onSelected, isNull);
-        final chip50 = tester.widget<ChoiceChip>(
-          find.widgetWithText(ChoiceChip, '50 FPS'),
-        );
-        expect(chip50.onSelected, isNull);
-        final chip48 = tester.widget<ChoiceChip>(
-          find.widgetWithText(ChoiceChip, '48 FPS'),
-        );
-        expect(chip48.onSelected, isNull);
+        // Standard fixed FPS chips should not exist
+        expect(find.widgetWithText(ChoiceChip, '60 FPS'), findsNothing);
+        expect(find.widgetWithText(ChoiceChip, '30 FPS'), findsNothing);
 
-        // 30, 25, 24 FPS, Asli, and Kustom chips should be present and enabled
-        final chip30 = tester.widget<ChoiceChip>(
-          find.widgetWithText(ChoiceChip, '30 FPS'),
-        );
-        expect(chip30.onSelected, isNotNull);
-        final chip25 = tester.widget<ChoiceChip>(
-          find.widgetWithText(ChoiceChip, '25 FPS'),
-        );
-        expect(chip25.onSelected, isNotNull);
-        final chip24 = tester.widget<ChoiceChip>(
-          find.widgetWithText(ChoiceChip, '24 FPS'),
-        );
-        expect(chip24.onSelected, isNotNull);
+        // Only Asli and Kustom chips should be present and enabled
         expect(find.widgetWithText(ChoiceChip, 'Asli'), findsOneWidget);
         expect(find.widgetWithText(ChoiceChip, 'Kustom'), findsOneWidget);
 
@@ -1469,88 +1452,90 @@ void main() {
         expect(sliderWidget.max, 30.0);
         expect(sliderWidget.min, 10.0);
 
-        // Dynamic FPS explanation is visible without emojis
+        // Dynamic FPS explanation is removed
         expect(
           find.text(const AppLocalizations('id').t('fps_desc_custom')),
-          findsOneWidget,
+          findsNothing,
         );
       },
     );
 
-    testWidgets(
-      'Target FPS slider clamps to 60 for 60 FPS video and shows 60 FPS chip',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets('Target FPS custom slider clamps to 60 for 60 FPS video', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-        const video60 = VideoInfo(
-          filePath: '/test/video60.mp4',
-          fileName: 'video60.mp4',
-          width: 1920,
-          height: 1080,
-          durationSeconds: 10.0,
-          bitrate: 8000000,
-          fps: 60.0,
-          codec: 'h264',
-          fileSizeBytes: 2000000,
-        );
+      const video60 = VideoInfo(
+        filePath: '/test/video60.mp4',
+        fileName: 'video60.mp4',
+        width: 1920,
+        height: 1080,
+        durationSeconds: 10.0,
+        bitrate: 8000000,
+        fps: 60.0,
+        codec: 'h264',
+        fileSizeBytes: 2000000,
+      );
 
-        EncodingOptions options = const EncodingOptions();
+      EncodingOptions options = const EncodingOptions();
 
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.getTheme('oled_snowfall'),
-            home: Scaffold(
-              body: StatefulBuilder(
-                builder: (context, setState) {
-                  return ConversionOptionsCard(
-                    sourceVideo: video60,
-                    resolutions: VideoResolution.standardResolutions,
-                    selectedResolution: VideoResolution.standardResolutions[2],
-                    encodingOptions: options,
-                    onResolutionChanged: (_) {},
-                    onOptionsChanged: (newOpts) {
-                      setState(() {
-                        options = newOpts;
-                      });
-                    },
-                    l10n: const AppLocalizations('id'),
-                  );
-                },
-              ),
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.getTheme('oled_snowfall'),
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return ConversionOptionsCard(
+                  sourceVideo: video60,
+                  resolutions: VideoResolution.standardResolutions,
+                  selectedResolution: VideoResolution.standardResolutions[2],
+                  encodingOptions: options,
+                  onResolutionChanged: (_) {},
+                  onOptionsChanged: (newOpts) {
+                    setState(() {
+                      options = newOpts;
+                    });
+                  },
+                  l10n: const AppLocalizations('id'),
+                );
+              },
             ),
           ),
-        );
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(
+        find.byKey(const Key('advanced_options_toggle')),
+      );
+      await tester.tap(find.byKey(const Key('advanced_options_toggle')));
+      await tester.pumpAndSettle();
+      if (find.byKey(const Key('advanced_warning_yes_button')).evaluate().isNotEmpty) {
+        await tester.tap(find.byKey(const Key('advanced_warning_yes_button')));
         await tester.pumpAndSettle();
+      }
 
-        await tester.ensureVisible(
-          find.byKey(const Key('advanced_options_toggle')),
-        );
-        await tester.tap(find.byKey(const Key('advanced_options_toggle')));
-        await tester.pumpAndSettle();
+      // 60 FPS chip should not exist, only Asli and Kustom
+      expect(find.widgetWithText(ChoiceChip, '60 FPS'), findsNothing);
+      expect(find.widgetWithText(ChoiceChip, 'Asli'), findsOneWidget);
+      expect(find.widgetWithText(ChoiceChip, 'Kustom'), findsOneWidget);
 
-        // 60 FPS chip SHOULD be present and enabled for 60 FPS video
-        final chip60 = tester.widget<ChoiceChip>(
-          find.widgetWithText(ChoiceChip, '60 FPS'),
-        );
-        expect(chip60.onSelected, isNotNull);
+      // Tap Kustom chip
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Kustom'));
+      await tester.pumpAndSettle();
 
-        // Tap Kustom chip
-        await tester.tap(find.widgetWithText(ChoiceChip, 'Kustom'));
-        await tester.pumpAndSettle();
-
-        // Slider should appear and its max must be exactly 60.0
-        final sliderFinder = find.byWidgetPredicate(
-          (w) => w is Slider && (w.label?.contains('FPS') ?? false),
-        );
-        expect(sliderFinder, findsOneWidget);
-        final sliderWidget = tester.widget<Slider>(sliderFinder);
-        expect(sliderWidget.max, 60.0);
-        expect(sliderWidget.min, 10.0);
-      },
-    );
+      // Slider should appear and its max must be exactly 60.0
+      final sliderFinder = find.byWidgetPredicate(
+        (w) => w is Slider && (w.label?.contains('FPS') ?? false),
+      );
+      expect(sliderFinder, findsOneWidget);
+      final sliderWidget = tester.widget<Slider>(sliderFinder);
+      expect(sliderWidget.max, 60.0);
+      expect(sliderWidget.min, 10.0);
+    });
 
     testWidgets(
       'Explanation texts in ConversionOptionsCard render fully on compact screens without overflow or truncation',
@@ -1611,12 +1596,16 @@ void main() {
         );
         await tester.tap(find.byKey(const Key('advanced_options_toggle')));
         await tester.pumpAndSettle();
+        if (find.byKey(const Key('advanced_warning_yes_button')).evaluate().isNotEmpty) {
+          await tester.tap(find.byKey(const Key('advanced_warning_yes_button')));
+          await tester.pumpAndSettle();
+        }
 
-        // Ensure active preset indicator box is removed and other key explanations render without truncation
+        // Ensure active preset indicator box, container format, and FPS descriptions are removed
         expect(find.byIcon(Icons.speed_rounded), findsNothing);
         expect(find.text(l10n.t('desc_crf')), findsOneWidget);
-        expect(find.text(l10n.t('desc_mp4')), findsOneWidget);
-        expect(find.text(l10n.t('fps_desc_30')), findsOneWidget);
+        expect(find.text(l10n.t('desc_mp4')), findsNothing);
+        expect(find.text(l10n.t('fps_desc_30')), findsNothing);
         expect(find.text(l10n.t('crf_label')), findsNothing);
 
         // Verify no RenderParagraph in the tree has TextOverflow.ellipsis for descriptions
@@ -3222,106 +3211,33 @@ void main() {
   });
 
   group('Advanced Settings tests', () {
-    test('AppSettings defaults, copyWith, and json serialization for advanced fields', () {
-      final defaultSettings = AppSettings();
-      expect(defaultSettings.isAdvancedSettingsEnabled, isFalse);
-      expect(defaultSettings.customPreset, equals('default'));
-      expect(defaultSettings.customScaler, equals('default'));
-
-      final modified = defaultSettings.copyWith(
-        isAdvancedSettingsEnabled: true,
-        customPreset: 'ultrafast',
-        customScaler: 'fast_bilinear',
-      );
-      expect(modified.isAdvancedSettingsEnabled, isTrue);
-      expect(modified.customPreset, equals('ultrafast'));
-      expect(modified.customScaler, equals('fast_bilinear'));
-
-      final json = modified.toJson();
-      final restored = AppSettings.fromJson(json);
-      expect(restored.isAdvancedSettingsEnabled, isTrue);
-      expect(restored.customPreset, equals('ultrafast'));
-      expect(restored.customScaler, equals('fast_bilinear'));
-    });
-
     test(
-      'SettingsService persists and modifies advanced settings correctly',
-      () async {
-        SharedPreferences.setMockInitialValues({});
-        final service = SettingsService();
-        await service.init();
+      'Cancellation dialog keys resolve properly in all supported languages',
+      () {
+        const requiredKeys = [
+          'proc_dialog_no',
+          'proc_dialog_yes',
+          'proc_dialog_cancel',
+          'proc_dialog_continue',
+          'proc_cancel_confirm',
+          'proc_cancel_desc',
+        ];
 
-        expect(service.settings.isAdvancedSettingsEnabled, isFalse);
-
-        await service.setAdvancedSettingsEnabled(true);
-        expect(service.settings.isAdvancedSettingsEnabled, isTrue);
-
-        await service.setCustomPreset('veryfast');
-        expect(service.settings.customPreset, equals('veryfast'));
-
-        await service.setCustomScaler('lanczos');
-        expect(service.settings.customScaler, equals('lanczos'));
-
-        // Toggling off advanced settings must reset all overrides back to defaults
-        await service.setAdvancedSettingsEnabled(false);
-        expect(service.settings.isAdvancedSettingsEnabled, isFalse);
-        expect(service.settings.customPreset, equals('default'));
-        expect(service.settings.customScaler, equals('default'));
+        for (final lang in AppLocalizations.supportedLanguages) {
+          final code = lang['code']!;
+          final l10n = AppLocalizations(code);
+          for (final key in requiredKeys) {
+            final val = l10n.t(key);
+            expect(val.isNotEmpty, isTrue, reason: 'Key $key empty in $code');
+            expect(
+              val,
+              isNot(equals(key)),
+              reason: 'Key $key unlocalized in $code',
+            );
+          }
+        }
       },
     );
-
-    test('Cancellation dialog and Advanced Settings keys resolve properly in all 22 supported languages', () {
-      const requiredKeys = [
-        'proc_dialog_no',
-        'proc_dialog_yes',
-        'proc_dialog_cancel',
-        'proc_dialog_continue',
-        'proc_cancel_confirm',
-        'proc_cancel_desc',
-        'settings_advanced_title',
-        'settings_advanced_enable',
-        'settings_advanced_enable_desc',
-        'settings_custom_preset',
-        'settings_custom_preset_desc',
-        'settings_custom_scaler',
-        'settings_custom_scaler_desc',
-        'preset_default',
-        'scaler_default',
-        'preset_default_desc',
-        'preset_ultrafast_desc',
-        'preset_superfast_desc',
-        'preset_veryfast_desc',
-        'preset_faster_desc',
-        'preset_fast_custom_desc',
-        'preset_medium_desc',
-        'preset_slow_custom_desc',
-        'preset_slower_desc',
-        'preset_veryslow_desc',
-        'scaler_default_desc',
-        'scaler_fast_bilinear_desc',
-        'scaler_bilinear_desc',
-        'scaler_bicubic_desc',
-        'scaler_area_desc',
-        'scaler_lanczos_desc',
-        'scaler_spline_desc',
-        'scaler_gauss_desc',
-        'preset_custom_title',
-      ];
-
-      for (final lang in AppLocalizations.supportedLanguages) {
-        final code = lang['code']!;
-        final l10n = AppLocalizations(code);
-        for (final key in requiredKeys) {
-          final val = l10n.t(key);
-          expect(val.isNotEmpty, isTrue, reason: 'Key $key empty in $code');
-          expect(
-            val,
-            isNot(equals(key)),
-            reason: 'Key $key unlocalized in $code',
-          );
-        }
-      }
-    });
 
     testWidgets(
       'ConversionOptionsCard displays standard speed preset regardless of legacy advanced options',
@@ -3373,14 +3289,6 @@ void main() {
         await tester.pumpWidget(buildCard());
         expect(find.textContaining('Normal'), findsWidgets);
         expect(find.textContaining('Custom Preset'), findsNothing);
-
-        await service.setAdvancedSettingsEnabled(true);
-        await service.setCustomPreset('ultrafast');
-        await service.setCustomScaler('lanczos');
-        await tester.pumpWidget(buildCard());
-
-        expect(find.textContaining('Normal'), findsWidgets);
-        expect(find.textContaining('Custom Preset'), findsNothing);
       },
     );
 
@@ -3406,8 +3314,6 @@ void main() {
 
         expect(find.byKey(const Key('advanced_settings_switch')), findsNothing);
         expect(find.text(l10n.t('settings_advanced_title')), findsNothing);
-        expect(find.text(l10n.t('settings_custom_preset')), findsNothing);
-        expect(find.text(l10n.t('settings_custom_scaler')), findsNothing);
         expect(find.text(l10n.t('settings_ram_buffer')), findsNothing);
         expect(find.text(l10n.t('settings_default_codec')), findsNothing);
         expect(find.text(l10n.t('settings_file_naming')), findsOneWidget);
@@ -3831,46 +3737,6 @@ void main() {
       }
     });
 
-    test('Preset and scaler descriptions resolve across all 22 supported languages and zh fallback', () {
-      const presetKeys = [
-        'preset_default_desc',
-        'preset_ultrafast_desc',
-        'preset_superfast_desc',
-        'preset_veryfast_desc',
-        'preset_faster_desc',
-        'preset_fast_custom_desc',
-        'preset_medium_desc',
-        'preset_slow_custom_desc',
-        'preset_slower_desc',
-        'preset_veryslow_desc',
-      ];
-
-      const scalerKeys = [
-        'scaler_default_desc',
-        'scaler_fast_bilinear_desc',
-        'scaler_bilinear_desc',
-        'scaler_gauss_desc',
-        'scaler_area_desc',
-        'scaler_bicubic_desc',
-        'scaler_spline_desc',
-        'scaler_lanczos_desc',
-      ];
-
-      for (final code in supportedCodes) {
-        final l10n = AppLocalizations(code);
-        for (final k in presetKeys) {
-          final text = l10n.t(k);
-          expect(text, isNotEmpty, reason: '$k missing in $code');
-          expect(text, isNot(equals(k)), reason: '$k untranslated in $code');
-        }
-        for (final k in scalerKeys) {
-          final text = l10n.t(k);
-          expect(text, isNotEmpty, reason: '$k missing in $code');
-          expect(text, isNot(equals(k)), reason: '$k untranslated in $code');
-        }
-      }
-    });
-
     group('MediaScannerService tests', () {
       test('scanFile returns false for null or empty paths', () async {
         expect(await MediaScannerService.scanFile(null), isFalse);
@@ -3894,47 +3760,96 @@ void main() {
         final l10n = AppLocalizations(code);
         final title = l10n.t('thermal_warning_title', args: {'temp': '46.5'});
         final msg = l10n.t('thermal_warning_msg');
-        expect(title, isNotEmpty, reason: 'thermal_warning_title missing in $code');
-        expect(title, isNot(equals('thermal_warning_title')), reason: 'thermal_warning_title untranslated in $code');
-        expect(title.contains('46.5'), isTrue, reason: 'thermal_warning_title should contain temperature in $code');
+        expect(
+          title,
+          isNotEmpty,
+          reason: 'thermal_warning_title missing in $code',
+        );
+        expect(
+          title,
+          isNot(equals('thermal_warning_title')),
+          reason: 'thermal_warning_title untranslated in $code',
+        );
+        expect(
+          title.contains('46.5'),
+          isTrue,
+          reason: 'thermal_warning_title should contain temperature in $code',
+        );
         expect(msg, isNotEmpty, reason: 'thermal_warning_msg missing in $code');
-        expect(msg, isNot(equals('thermal_warning_msg')), reason: 'thermal_warning_msg untranslated in $code');
+        expect(
+          msg,
+          isNot(equals('thermal_warning_msg')),
+          reason: 'thermal_warning_msg untranslated in $code',
+        );
       }
     });
 
     group('CacheManagerService Auto-Purge tests', () {
-      test('autoPurgeTempFiles safely cleans temporary and cache pattern files', () async {
-        final cacheService = CacheManagerService();
-        final testDir = await Directory.systemTemp.createTemp('vega_purge_test_');
-        try {
-          final tmpFile = File('${testDir.path}/test.tmp')..writeAsStringSync('dummy tmp');
-          final partFile = File('${testDir.path}/video.part')..writeAsStringSync('dummy part');
-          final crdownloadFile = File('${testDir.path}/stream.crdownload')..writeAsStringSync('dummy crdownload');
-          final prefixFile = File('${testDir.path}/vega_temp_output.mp4')..writeAsStringSync('dummy vega temp');
-          final keepFile = File('${testDir.path}/keep_me.mp4')..writeAsStringSync('keep this valid file');
+      test(
+        'autoPurgeTempFiles safely cleans temporary and cache pattern files',
+        () async {
+          final cacheService = CacheManagerService();
+          final testDir = await Directory.systemTemp.createTemp(
+            'vega_purge_test_',
+          );
+          try {
+            final tmpFile = File('${testDir.path}/test.tmp')
+              ..writeAsStringSync('dummy tmp');
+            final partFile = File('${testDir.path}/video.part')
+              ..writeAsStringSync('dummy part');
+            final crdownloadFile = File('${testDir.path}/stream.crdownload')
+              ..writeAsStringSync('dummy crdownload');
+            final prefixFile = File('${testDir.path}/vega_temp_output.mp4')
+              ..writeAsStringSync('dummy vega temp');
+            final keepFile = File('${testDir.path}/keep_me.mp4')
+              ..writeAsStringSync('keep this valid file');
 
-          expect(tmpFile.existsSync(), isTrue);
-          expect(partFile.existsSync(), isTrue);
-          expect(crdownloadFile.existsSync(), isTrue);
-          expect(prefixFile.existsSync(), isTrue);
-          expect(keepFile.existsSync(), isTrue);
+            expect(tmpFile.existsSync(), isTrue);
+            expect(partFile.existsSync(), isTrue);
+            expect(crdownloadFile.existsSync(), isTrue);
+            expect(prefixFile.existsSync(), isTrue);
+            expect(keepFile.existsSync(), isTrue);
 
-          // Path matcher check
-          expect(cacheService.isCachedPath('/data/user/0/com.phantek.lyra.vega/cache/file_picker/temp.mp4'), isTrue);
-          expect(cacheService.isCachedPath('/data/user/0/com.phantek.lyra.vega/cache/temp.mp4'), isTrue);
-          expect(cacheService.isCachedPath('/data/local/tmp/temp.mp4'), isTrue);
-          expect(cacheService.isCachedPath('/storage/emulated/0/Android/data/com.phantek.lyra.vega/temp/temp.mp4'), isTrue);
-          expect(cacheService.isCachedPath('/storage/emulated/0/Movies/normal/video.mp4'), isFalse);
+            // Path matcher check
+            expect(
+              cacheService.isCachedPath(
+                '/data/user/0/com.phantek.lyra.vega/cache/file_picker/temp.mp4',
+              ),
+              isTrue,
+            );
+            expect(
+              cacheService.isCachedPath(
+                '/data/user/0/com.phantek.lyra.vega/cache/temp.mp4',
+              ),
+              isTrue,
+            );
+            expect(
+              cacheService.isCachedPath('/data/local/tmp/temp.mp4'),
+              isTrue,
+            );
+            expect(
+              cacheService.isCachedPath(
+                '/storage/emulated/0/Android/data/com.phantek.lyra.vega/temp/temp.mp4',
+              ),
+              isTrue,
+            );
+            expect(
+              cacheService.isCachedPath(
+                '/storage/emulated/0/Movies/normal/video.mp4',
+              ),
+              isFalse,
+            );
 
-          // Running autoPurgeTempFiles on real device/host runs without throwing
-          final bytesFreed = await cacheService.autoPurgeTempFiles();
-          expect(bytesFreed, greaterThanOrEqualTo(0));
-        } finally {
-          if (testDir.existsSync()) {
-            testDir.deleteSync(recursive: true);
+            // Running autoPurgeTempFiles on real device/host runs without throwing
+            final bytesFreed = await cacheService.autoPurgeTempFiles();
+            expect(bytesFreed, greaterThanOrEqualTo(0));
+          } finally {
+            if (testDir.existsSync()) {
+              testDir.deleteSync(recursive: true);
+            }
           }
-        }
-      });
+        },
+      );
     });
 
     group('Video Preview, Trimming, Encoding Options Persistence, & Factory Reset tests', () {
@@ -4044,216 +3959,245 @@ void main() {
           final l10n = AppLocalizations(code);
           for (final key in newKeys) {
             final value = l10n.t(key);
-            expect(value, isNotEmpty, reason: 'Key "$key" should not be empty in language "$code"');
-            expect(value, isNot(equals(key)), reason: 'Key "$key" is untranslated in language "$code"');
+            expect(
+              value,
+              isNotEmpty,
+              reason: 'Key "$key" should not be empty in language "$code"',
+            );
+            expect(
+              value,
+              isNot(equals(key)),
+              reason: 'Key "$key" is untranslated in language "$code"',
+            );
             expect(
               emojiRegex.hasMatch(value),
               isFalse,
-              reason: 'Key "$key" in language "$code" must not contain emojis (found: "$value")',
+              reason:
+                  'Key "$key" in language "$code" must not contain emojis (found: "$value")',
             );
           }
         }
       });
 
-      testWidgets('TrimPreviewScreen renders controls, time badges, and responds to skip / proceed', (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
+      testWidgets(
+        'TrimPreviewScreen renders timeline controls, time badges, and single proceed button',
+        (tester) async {
+          tester.view.physicalSize = const Size(1080, 2400);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
 
-        const video = VideoInfo(
-          filePath: '/test/sample_video.mp4',
-          fileName: 'sample_video.mp4',
-          width: 1920,
-          height: 1080,
-          durationSeconds: 60.0,
-          bitrate: 5000000,
-          fps: 30.0,
-          codec: 'h264',
-          fileSizeBytes: 15000000,
-        );
+          const video = VideoInfo(
+            filePath: '/test/sample_video.mp4',
+            fileName: 'sample_video.mp4',
+            width: 1920,
+            height: 1080,
+            durationSeconds: 60.0,
+            bitrate: 5000000,
+            fps: 30.0,
+            codec: 'h264',
+            fileSizeBytes: 15000000,
+          );
 
-        SharedPreferences.setMockInitialValues({});
-        final service = SettingsService();
-        await service.init();
-        await service.setLanguage('id');
-        final l10n = service.l10n;
+          SharedPreferences.setMockInitialValues({});
+          final service = SettingsService();
+          await service.init();
+          await service.setLanguage('id');
+          final l10n = service.l10n;
 
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.getTheme('oled_snowfall'),
-            home: const TrimPreviewScreen(
-              videoInfo: video,
-              targetResolution: VideoResolution(label: '1080p', width: 1920, height: 1080),
-              encodingOptions: EncodingOptions(),
-              appSettings: AppSettings(),
-              isAudioExtraction: false,
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppTheme.getTheme('oled_snowfall'),
+              home: const TrimPreviewScreen(
+                videoInfo: video,
+                targetResolution: VideoResolution(
+                  label: '1080p',
+                  width: 1920,
+                  height: 1080,
+                ),
+                encodingOptions: EncodingOptions(),
+                appSettings: AppSettings(),
+                isAudioExtraction: false,
+              ),
             ),
-          ),
-        );
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 200));
+          );
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 200));
 
-        // Verify Title
-        expect(find.text(l10n.t('trim_title')), findsOneWidget);
+          // Verify Title
+          expect(find.text(l10n.t('trim_title')), findsOneWidget);
 
-        // Verify RangeSlider
-        expect(find.byType(RangeSlider), findsOneWidget);
+          // Verify Timeline CustomPaint
+          expect(find.byType(CustomPaint), findsWidgets);
 
-        // Verify Time badges
-        expect(find.text(l10n.t('trim_start')), findsOneWidget);
-        expect(find.text(l10n.t('trim_end')), findsOneWidget);
-        expect(find.text(l10n.t('trim_new_duration')), findsOneWidget);
+          // Verify Time badges
+          expect(find.text(l10n.t('trim_start')), findsOneWidget);
+          expect(find.text(l10n.t('trim_end')), findsOneWidget);
+          expect(find.text(l10n.t('trim_new_duration')), findsOneWidget);
 
-        // Verify Buttons
-        expect(find.text(l10n.t('trim_btn_proceed')), findsOneWidget);
-        expect(find.text(l10n.t('trim_btn_skip')), findsOneWidget);
-      });
+          // Verify Single Button
+          expect(find.text(l10n.t('trim_btn_proceed')), findsOneWidget);
+          expect(find.text(l10n.t('trim_btn_skip')), findsNothing);
+        },
+      );
 
-      testWidgets('TrimPreviewScreen returns trimmed and untrimmed EncodingOptions on pop', (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
+      testWidgets(
+        'TrimPreviewScreen returns trimmed and untrimmed EncodingOptions on pop',
+        (tester) async {
+          tester.view.physicalSize = const Size(1080, 2400);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
 
-        const video = VideoInfo(
-          filePath: '/test/sample_video.mp4',
-          fileName: 'sample_video.mp4',
-          width: 1920,
-          height: 1080,
-          durationSeconds: 60.0,
-          bitrate: 5000000,
-          fps: 30.0,
-          codec: 'h264',
-          fileSizeBytes: 15000000,
-        );
+          const video = VideoInfo(
+            filePath: '/test/sample_video.mp4',
+            fileName: 'sample_video.mp4',
+            width: 1920,
+            height: 1080,
+            durationSeconds: 60.0,
+            bitrate: 5000000,
+            fps: 30.0,
+            codec: 'h264',
+            fileSizeBytes: 15000000,
+          );
 
-        final service = SettingsService();
-        await service.init();
-        final l10n = service.l10n;
+          final service = SettingsService();
+          await service.init();
+          final l10n = service.l10n;
 
-        EncodingOptions? returnedOptions;
+          EncodingOptions? returnedOptions;
 
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.getTheme('oled_snowfall'),
-            home: Builder(
-              builder: (ctx) => Scaffold(
-                body: ElevatedButton(
-                  onPressed: () async {
-                    returnedOptions = await Navigator.of(ctx).push<EncodingOptions>(
-                      MaterialPageRoute(
-                        builder: (_) => const TrimPreviewScreen(
-                          videoInfo: video,
-                          targetResolution: VideoResolution(label: '1080p', width: 1920, height: 1080),
-                          encodingOptions: EncodingOptions(),
-                          appSettings: AppSettings(),
-                          isAudioExtraction: false,
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text('Open Trim'),
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppTheme.getTheme('oled_snowfall'),
+              home: Builder(
+                builder: (ctx) => Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () async {
+                      returnedOptions = await Navigator.of(ctx)
+                          .push<EncodingOptions>(
+                            MaterialPageRoute(
+                              builder: (_) => const TrimPreviewScreen(
+                                videoInfo: video,
+                                targetResolution: VideoResolution(
+                                  label: '1080p',
+                                  width: 1920,
+                                  height: 1080,
+                                ),
+                                encodingOptions: EncodingOptions(),
+                                appSettings: AppSettings(),
+                                isAudioExtraction: false,
+                              ),
+                            ),
+                          );
+                    },
+                    child: const Text('Open Trim'),
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-        await tester.pumpAndSettle();
+          );
+          await tester.pumpAndSettle();
 
-        // Open Trim
-        await tester.tap(find.text('Open Trim'));
-        await tester.pumpAndSettle();
+          // Open Trim
+          await tester.tap(find.text('Open Trim'));
+          await tester.pumpAndSettle();
 
-        // Tap Proceed
-        await tester.tap(find.text(l10n.t('trim_btn_proceed')));
-        await tester.pumpAndSettle();
+          // Tap Proceed
+          await tester.tap(find.text(l10n.t('trim_btn_proceed')));
+          await tester.pumpAndSettle();
 
-        expect(returnedOptions, isNotNull);
-        expect(returnedOptions!.isTrimmed, isTrue);
-        expect(returnedOptions!.trimStartMs, 0);
-        expect(returnedOptions!.trimEndMs, 60000);
+          expect(returnedOptions, isNotNull);
+          expect(returnedOptions!.isTrimmed, isTrue);
+          expect(returnedOptions!.trimStartMs, 0);
+          expect(returnedOptions!.trimEndMs, 60000);
+        },
+      );
 
-        // Open Trim again and test skip
-        returnedOptions = null;
-        await tester.tap(find.text('Open Trim'));
-        await tester.pumpAndSettle();
+      testWidgets(
+        'SettingsScreen has single Reset to Default Settings button and resets all configurations',
+        (tester) async {
+          tester.view.physicalSize = const Size(1080, 2400);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.tap(find.text(l10n.t('trim_btn_skip')));
-        await tester.pumpAndSettle();
+          SharedPreferences.setMockInitialValues({});
+          final service = SettingsService();
+          await service.init();
+          await service.saveEncodingOptions(
+            const EncodingOptions(
+              crfValue: 16,
+              customBitrateKbps: 9000,
+              speedPreset: SpeedPreset.fast,
+            ),
+          );
+          expect(service.savedEncodingOptions?.crfValue, equals(16));
+          expect(service.savedEncodingOptions?.customBitrateKbps, equals(9000));
+          expect(
+            service.savedEncodingOptions?.speedPreset,
+            equals(SpeedPreset.fast),
+          );
 
-        expect(returnedOptions, isNotNull);
-        expect(returnedOptions!.isTrimmed, isFalse);
-        expect(returnedOptions!.trimStartMs, isNull);
-        expect(returnedOptions!.trimEndMs, isNull);
-      });
+          final l10n = service.l10n;
 
-      testWidgets('SettingsScreen has single Reset to Default Settings button and resets all configurations', (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppTheme.getTheme('oled_snowfall'),
+              home: const SettingsScreen(),
+            ),
+          );
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 300));
 
-        SharedPreferences.setMockInitialValues({});
-        final service = SettingsService();
-        await service.init();
-        await service.saveEncodingOptions(
-          const EncodingOptions(
-            crfValue: 16,
-            customBitrateKbps: 9000,
-            speedPreset: SpeedPreset.fast,
-          ),
-        );
-        expect(service.savedEncodingOptions?.crfValue, equals(16));
-        expect(service.savedEncodingOptions?.customBitrateKbps, equals(9000));
-        expect(service.savedEncodingOptions?.speedPreset, equals(SpeedPreset.fast));
+          // Verify Reset Configuration tile is NOT displayed
+          expect(
+            find.text(l10n.t('settings_reset_config_title')),
+            findsNothing,
+          );
 
-        final l10n = service.l10n;
+          // Verify single Reset to Default Settings button is present
+          final resetBtnFinder = find.widgetWithText(
+            OutlinedButton,
+            l10n.t('settings_reset_default'),
+          );
+          await tester.ensureVisible(resetBtnFinder);
+          expect(resetBtnFinder, findsOneWidget);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.getTheme('oled_snowfall'),
-            home: const SettingsScreen(),
-          ),
-        );
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+          // Tap the reset button to show confirmation dialog
+          await tester.tap(resetBtnFinder);
+          await tester.pumpAndSettle();
 
-        // Verify Reset Configuration tile is NOT displayed
-        expect(find.text(l10n.t('settings_reset_config_title')), findsNothing);
+          // Verify confirmation dialog contents
+          expect(
+            find.text(l10n.t('settings_reset_confirm_title')),
+            findsOneWidget,
+          );
+          expect(
+            find.text(l10n.t('settings_reset_confirm_desc')),
+            findsOneWidget,
+          );
+          expect(find.text(l10n.t('proc_dialog_no')), findsOneWidget);
 
-        // Verify single Reset to Default Settings button is present
-        final resetBtnFinder = find.widgetWithText(
-          OutlinedButton,
-          l10n.t('settings_reset_default'),
-        );
-        await tester.ensureVisible(resetBtnFinder);
-        expect(resetBtnFinder, findsOneWidget);
+          // Confirm reset in dialog
+          final dialogConfirmBtn = find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.text(l10n.t('proc_dialog_yes')),
+          );
+          expect(dialogConfirmBtn, findsOneWidget);
+          await tester.tap(dialogConfirmBtn);
+          await tester.pumpAndSettle();
 
-        // Tap the reset button to show confirmation dialog
-        await tester.tap(resetBtnFinder);
-        await tester.pumpAndSettle();
-
-        // Verify confirmation dialog contents
-        expect(find.text(l10n.t('settings_reset_confirm_title')), findsOneWidget);
-        expect(find.text(l10n.t('settings_reset_confirm_desc')), findsOneWidget);
-        expect(find.text(l10n.t('proc_no')), findsOneWidget);
-
-        // Confirm reset in dialog
-        final dialogConfirmBtn = find.descendant(
-          of: find.byType(AlertDialog),
-          matching: find.text(l10n.t('settings_reset_default')),
-        );
-        expect(dialogConfirmBtn, findsOneWidget);
-        await tester.tap(dialogConfirmBtn);
-        await tester.pumpAndSettle();
-
-        // Verify both AppSettings and encoding configuration options are reset to defaults
-        expect(service.savedEncodingOptions?.crfValue, equals(22));
-        expect(service.savedEncodingOptions?.customBitrateKbps, equals(4000));
-        expect(service.savedEncodingOptions?.speedPreset, equals(SpeedPreset.normal));
-        expect(find.text(l10n.t('settings_reset_success')), findsOneWidget);
-      });
+          // Verify both AppSettings and encoding configuration options are reset to defaults
+          expect(service.savedEncodingOptions?.crfValue, equals(22));
+          expect(service.savedEncodingOptions?.customBitrateKbps, equals(4000));
+          expect(
+            service.savedEncodingOptions?.speedPreset,
+            equals(SpeedPreset.normal),
+          );
+          expect(find.text(l10n.t('settings_reset_success')), findsOneWidget);
+        },
+      );
 
       testWidgets(
         'ConversionOptionsCard speed preset selection updates speedPreset and crfValue, persists to SettingsService, and listener does not revert',
@@ -4280,7 +4224,8 @@ void main() {
             speedPreset: SpeedPreset.normal,
             crfValue: 22,
           );
-          VideoResolution currentRes = VideoResolution.standardResolutions.first;
+          VideoResolution currentRes =
+              VideoResolution.standardResolutions.first;
 
           // Wire HomeScreen's _onSettingsChanged logic
           void onSettingsChanged() {
@@ -4359,7 +4304,10 @@ void main() {
           expect(tester.widget<ChoiceChip>(slowChipFinder).selected, isFalse);
           expect(currentOpts.speedPreset, equals(SpeedPreset.fast));
           expect(currentOpts.crfValue, equals(24));
-          expect(service.savedEncodingOptions?.speedPreset, equals(SpeedPreset.fast));
+          expect(
+            service.savedEncodingOptions?.speedPreset,
+            equals(SpeedPreset.fast),
+          );
           expect(service.savedEncodingOptions?.crfValue, equals(24));
           expect(service.settings.encodingPreset, equals('fast'));
 
@@ -4375,7 +4323,10 @@ void main() {
           expect(tester.widget<ChoiceChip>(normalChipFinder).selected, isFalse);
           expect(currentOpts.speedPreset, equals(SpeedPreset.max));
           expect(currentOpts.crfValue, equals(20));
-          expect(service.savedEncodingOptions?.speedPreset, equals(SpeedPreset.max));
+          expect(
+            service.savedEncodingOptions?.speedPreset,
+            equals(SpeedPreset.max),
+          );
           expect(service.savedEncodingOptions?.crfValue, equals(20));
           expect(service.settings.encodingPreset, equals('slow'));
 
@@ -4391,9 +4342,393 @@ void main() {
           expect(tester.widget<ChoiceChip>(slowChipFinder).selected, isFalse);
           expect(currentOpts.speedPreset, equals(SpeedPreset.normal));
           expect(currentOpts.crfValue, equals(22));
-          expect(service.savedEncodingOptions?.speedPreset, equals(SpeedPreset.normal));
+          expect(
+            service.savedEncodingOptions?.speedPreset,
+            equals(SpeedPreset.normal),
+          );
           expect(service.savedEncodingOptions?.crfValue, equals(22));
           expect(service.settings.encodingPreset, equals('medium'));
+        },
+      );
+
+      test('VideoInfo.copyWith correctly updates fileName and properties', () {
+        const info = VideoInfo(
+          filePath: '/path/to/239500.ts',
+          fileName: '239500.ts',
+          width: 1920,
+          height: 1080,
+          durationSeconds: 120.0,
+          bitrate: 5000000,
+          fps: 30.0,
+          codec: 'h264',
+          fileSizeBytes: 75000000,
+        );
+
+        final updated = info.copyWith(fileName: 'MyCustomVideo.mp4');
+        expect(updated.fileName, equals('MyCustomVideo.mp4'));
+        expect(updated.filePath, equals('/path/to/239500.ts'));
+        expect(updated.width, equals(1920));
+        expect(updated.height, equals(1080));
+        expect(updated.durationSeconds, equals(120.0));
+      });
+
+      testWidgets(
+        'VideoInfoCard displays thumbnail when provided and invokes onRename',
+        (tester) async {
+          const info = VideoInfo(
+            filePath: '/path/to/239500.ts',
+            fileName: '239500.ts',
+            width: 1920,
+            height: 1080,
+            durationSeconds: 120.0,
+            bitrate: 5000000,
+            fps: 30.0,
+            codec: 'h264',
+            fileSizeBytes: 75000000,
+          );
+
+          bool renamed = false;
+
+          // 1. Without thumbnail
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: VideoInfoCard(
+                  videoInfo: info,
+                  onRename: () => renamed = true,
+                ),
+              ),
+            ),
+          );
+
+          expect(find.byIcon(Icons.movie_outlined), findsOneWidget);
+          expect(find.byType(Image), findsNothing);
+          expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+
+          await tester.tap(find.byIcon(Icons.edit_outlined));
+          expect(renamed, isTrue);
+
+          // 2. With thumbnail bytes (1x1 transparent PNG)
+          final dummyPng = Uint8List.fromList([
+            0x89,
+            0x50,
+            0x4E,
+            0x47,
+            0x0D,
+            0x0A,
+            0x1A,
+            0x0A,
+            0x00,
+            0x00,
+            0x00,
+            0x0D,
+            0x49,
+            0x48,
+            0x44,
+            0x52,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            0x08,
+            0x06,
+            0x00,
+            0x00,
+            0x00,
+            0x1F,
+            0x15,
+            0xC4,
+            0x89,
+            0x00,
+            0x00,
+            0x00,
+            0x0A,
+            0x49,
+            0x44,
+            0x41,
+            0x54,
+            0x78,
+            0x9C,
+            0x63,
+            0x00,
+            0x01,
+            0x00,
+            0x00,
+            0x05,
+            0x00,
+            0x01,
+            0x0D,
+            0x0A,
+            0x2D,
+            0xB4,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x49,
+            0x45,
+            0x4E,
+            0x44,
+            0xAE,
+            0x42,
+            0x60,
+            0x82,
+          ]);
+
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: VideoInfoCard(videoInfo: info, thumbnailBytes: dummyPng),
+              ),
+            ),
+          );
+
+          expect(find.byType(Image), findsOneWidget);
+          expect(find.byIcon(Icons.movie_outlined), findsNothing);
+        },
+      );
+
+      test('All 23 languages have rename and save localization keys', () {
+        const supported = [
+          'id',
+          'en',
+          'zh',
+          'zh_CN',
+          'zh_TW',
+          'es',
+          'pt',
+          'ja',
+          'ko',
+          'hi',
+          'ar',
+          'fr',
+          'ru',
+          'de',
+          'it',
+          'nl',
+          'da',
+          'fi',
+          'no',
+          'sv',
+          'ms',
+          'vi',
+          'th',
+        ];
+
+        for (final lang in supported) {
+          final l10n = AppLocalizations(lang);
+          expect(
+            l10n.t('rename_dialog_title').isNotEmpty,
+            isTrue,
+            reason: 'Missing rename_dialog_title in $lang',
+          );
+          expect(
+            l10n.t('rename_dialog_hint').isNotEmpty,
+            isTrue,
+            reason: 'Missing rename_dialog_hint in $lang',
+          );
+          expect(
+            l10n.t('rename_tooltip').isNotEmpty,
+            isTrue,
+            reason: 'Missing rename_tooltip in $lang',
+          );
+          expect(
+            l10n.t('dialog_save').isNotEmpty,
+            isTrue,
+            reason: 'Missing dialog_save in $lang',
+          );
+        }
+      });
+
+      test('AppSettings and SettingsService support suppressAdvancedModeWarning', () async {
+        const settings = AppSettings();
+        expect(settings.suppressAdvancedModeWarning, isFalse);
+
+        final updated = settings.copyWith(suppressAdvancedModeWarning: true);
+        expect(updated.suppressAdvancedModeWarning, isTrue);
+
+        final json = updated.toJson();
+        expect(json['suppressAdvancedModeWarning'], isTrue);
+
+        final fromJson = AppSettings.fromJson(json);
+        expect(fromJson.suppressAdvancedModeWarning, isTrue);
+        expect(fromJson, equals(updated));
+        expect(fromJson.hashCode, equals(updated.hashCode));
+
+        final service = SettingsService();
+        await service.setSuppressAdvancedModeWarning(true);
+        expect(service.settings.suppressAdvancedModeWarning, isTrue);
+        await service.setSuppressAdvancedModeWarning(false);
+        expect(service.settings.suppressAdvancedModeWarning, isFalse);
+      });
+
+      test('All 23 languages have advanced warning and greyout localization keys', () {
+        const supported = [
+          'id',
+          'en',
+          'zh',
+          'zh_CN',
+          'zh_TW',
+          'es',
+          'pt',
+          'ja',
+          'ko',
+          'hi',
+          'ar',
+          'fr',
+          'ru',
+          'de',
+          'it',
+          'nl',
+          'da',
+          'fi',
+          'no',
+          'sv',
+          'ms',
+          'vi',
+          'th',
+        ];
+
+        for (final lang in supported) {
+          final l10n = AppLocalizations(lang);
+          expect(
+            l10n.t('advanced_warning_title').isNotEmpty,
+            isTrue,
+            reason: 'Missing advanced_warning_title in $lang',
+          );
+          expect(
+            l10n.t('advanced_warning_desc').isNotEmpty,
+            isTrue,
+            reason: 'Missing advanced_warning_desc in $lang',
+          );
+          expect(
+            l10n.t('dont_show_again').isNotEmpty,
+            isTrue,
+            reason: 'Missing dont_show_again in $lang',
+          );
+          expect(
+            l10n.t('preset_disabled_by_advanced').isNotEmpty,
+            isTrue,
+            reason: 'Missing preset_disabled_by_advanced in $lang',
+          );
+        }
+      });
+
+      testWidgets(
+        'ConversionOptionsCard shows warning dialog on expand, greyouts speed presets, and respects doNotShowAgain',
+        (tester) async {
+          tester.view.physicalSize = const Size(1080, 2400);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+
+          final service = SettingsService();
+          await service.setLanguage('id');
+          await service.setSuppressAdvancedModeWarning(false);
+          final l10n = service.l10n;
+
+          const sampleVideo = VideoInfo(
+            filePath: '/storage/sample.mp4',
+            fileName: 'sample.mp4',
+            width: 1920,
+            height: 1080,
+            durationSeconds: 120,
+            bitrate: 10000000,
+            fps: 30,
+            codec: 'h264',
+            fileSizeBytes: 50000000,
+          );
+
+          EncodingOptions currentOpts = const EncodingOptions(
+            speedPreset: SpeedPreset.normal,
+            crfValue: 22,
+          );
+          VideoResolution currentRes = VideoResolution.standardResolutions.first;
+
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppTheme.getTheme('oled_pure'),
+              home: Scaffold(
+                body: StatefulBuilder(
+                  builder: (context, setState) {
+                    return SingleChildScrollView(
+                      child: ConversionOptionsCard(
+                        sourceVideo: sampleVideo,
+                        resolutions: VideoResolution.standardResolutions,
+                        selectedResolution: currentRes,
+                        onResolutionChanged: (res) =>
+                            setState(() => currentRes = res),
+                        encodingOptions: currentOpts,
+                        onOptionsChanged: (opts) =>
+                            setState(() => currentOpts = opts),
+                        l10n: l10n,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          // 1. Initial state: advanced mode is collapsed
+          // Speed chips must have full opacity (1.0) and ignorePointer is false
+          final opacityFinder = find.byWidgetPredicate(
+            (w) => w is Opacity && (w.opacity == 1.0 || w.opacity == 0.38),
+          );
+          expect(opacityFinder, findsOneWidget);
+          expect(tester.widget<Opacity>(opacityFinder).opacity, equals(1.0));
+
+          // 2. Tap advanced options toggle -> warning dialog appears
+          await tester.ensureVisible(find.byKey(const Key('advanced_options_toggle')));
+          await tester.tap(find.byKey(const Key('advanced_options_toggle')));
+          await tester.pumpAndSettle();
+
+          expect(find.byKey(const Key('advanced_warning_dialog')), findsOneWidget);
+          expect(find.byKey(const Key('advanced_warning_checkbox')), findsOneWidget);
+          expect(find.byKey(const Key('advanced_warning_no_button')), findsOneWidget);
+          expect(find.byKey(const Key('advanced_warning_yes_button')), findsOneWidget);
+
+          // 3. User taps No -> dialog dismisses, advanced options remain collapsed
+          await tester.tap(find.byKey(const Key('advanced_warning_no_button')));
+          await tester.pumpAndSettle();
+
+          expect(find.byKey(const Key('advanced_warning_dialog')), findsNothing);
+          expect(tester.widget<Opacity>(opacityFinder).opacity, equals(1.0));
+          expect(service.settings.suppressAdvancedModeWarning, isFalse);
+
+          // 4. Tap advanced options toggle again -> dialog appears
+          await tester.tap(find.byKey(const Key('advanced_options_toggle')));
+          await tester.pumpAndSettle();
+          expect(find.byKey(const Key('advanced_warning_dialog')), findsOneWidget);
+
+          // 5. Check 'Jangan tampilkan lagi' checkbox
+          await tester.tap(find.byKey(const Key('advanced_warning_checkbox')));
+          await tester.pumpAndSettle();
+
+          // 6. User taps Yes -> dialog dismisses, advanced mode expands, speed chips greyed out
+          await tester.tap(find.byKey(const Key('advanced_warning_yes_button')));
+          await tester.pumpAndSettle();
+
+          expect(find.byKey(const Key('advanced_warning_dialog')), findsNothing);
+          expect(tester.widget<Opacity>(opacityFinder).opacity, equals(0.38));
+          expect(find.text(l10n.t('preset_disabled_by_advanced')), findsOneWidget);
+          expect(service.settings.suppressAdvancedModeWarning, isTrue);
+
+          // 7. Collapse advanced mode
+          await tester.tap(find.byKey(const Key('advanced_options_toggle')));
+          await tester.pumpAndSettle();
+          expect(tester.widget<Opacity>(opacityFinder).opacity, equals(1.0));
+
+          // 8. Expand advanced mode again -> directly opens without showing warning dialog
+          await tester.tap(find.byKey(const Key('advanced_options_toggle')));
+          await tester.pumpAndSettle();
+          expect(find.byKey(const Key('advanced_warning_dialog')), findsNothing);
+          expect(tester.widget<Opacity>(opacityFinder).opacity, equals(0.38));
         },
       );
     });

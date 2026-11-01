@@ -13,7 +13,7 @@ import 'package:phantek_video_toolkit_vega/widgets/conversion_options_card.dart'
 
 void main() {
   testWidgets('App renders correctly', (WidgetTester tester) async {
-    await tester.pumpWidget(const VideoDownscalerApp());
+    await tester.pumpWidget(const PhantekVegaApp());
 
     expect(find.text('Phantek'), findsOneWidget);
     expect(find.text('Select Video'), findsWidgets);
@@ -81,6 +81,10 @@ void main() {
       );
       await tester.tap(find.byKey(const Key('advanced_options_toggle')));
       await tester.pumpAndSettle();
+      if (find.byKey(const Key('advanced_warning_yes_button')).evaluate().isNotEmpty) {
+        await tester.tap(find.byKey(const Key('advanced_warning_yes_button')));
+        await tester.pumpAndSettle();
+      }
 
       // Initial state: Normal preset -> default CRF 22, no custom indicator, no reset button
       expect(find.text('22'), findsOneWidget);
@@ -122,7 +126,7 @@ void main() {
 
       expect(find.byKey(const Key('crf_custom_badge')), findsOneWidget);
       expect(find.byKey(const Key('crf_reset_button')), findsOneWidget);
-      expect(find.textContaining('Pada CRF ≤ 17'), findsOneWidget);
+      expect(find.textContaining('Pada CRF ≤ 17'), findsNothing);
 
       // Scroll into view & tap "Reset" button -> resets CRF to Normal preset default (22)
       await tester.ensureVisible(find.byKey(const Key('crf_reset_button')));

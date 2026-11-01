@@ -15,7 +15,6 @@ import 'device_spec_helper.dart';
 
 class SettingsService extends ChangeNotifier {
   static const _storageKey = 'phantek_video_toolkit_app_settings';
-  static const _legacyStorageKey = 'video_downscaler_app_settings';
   static const _encodingOptionsKey = 'phantek_vega_saved_encoding_options';
 
   AppSettings _settings = const AppSettings();
@@ -35,16 +34,10 @@ class SettingsService extends ChangeNotifier {
   Future<void> init() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonStr =
-          prefs.getString(_storageKey) ?? prefs.getString(_legacyStorageKey);
+      final jsonStr = prefs.getString(_storageKey);
       if (jsonStr != null) {
         final Map<String, dynamic> data = jsonDecode(jsonStr);
-        final rawRamBuffer = data['ramBufferMb'] as int? ?? 512;
         _settings = AppSettings.fromJson(data);
-        if (rawRamBuffer > 2048) {
-          _settings = _settings.copyWith(ramBufferMb: 2048);
-          await _saveSettings();
-        }
       } else {
         _settings = const AppSettings();
       }
@@ -162,10 +155,6 @@ class SettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(cpuThreads: threads));
   }
 
-  Future<void> setRamBuffer(int ramBufferMb) async {
-    await updateSettings(_settings.copyWith(ramBufferMb: ramBufferMb));
-  }
-
   Future<void> setEncodingPreset(String preset) async {
     await updateSettings(_settings.copyWith(encodingPreset: preset));
   }
@@ -187,28 +176,6 @@ class SettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(cardOpacity: clamped));
   }
 
-  Future<void> setAdvancedSettingsEnabled(bool enabled) async {
-    if (!enabled) {
-      await updateSettings(
-        _settings.copyWith(
-          isAdvancedSettingsEnabled: false,
-          customPreset: 'default',
-          customScaler: 'default',
-        ),
-      );
-    } else {
-      await updateSettings(_settings.copyWith(isAdvancedSettingsEnabled: true));
-    }
-  }
-
-  Future<void> setCustomPreset(String preset) async {
-    await updateSettings(_settings.copyWith(customPreset: preset));
-  }
-
-  Future<void> setCustomScaler(String scaler) async {
-    await updateSettings(_settings.copyWith(customScaler: scaler));
-  }
-
   Future<void> setDefaultVideoCodec(String codec) async {
     await updateSettings(_settings.copyWith(defaultVideoCodec: codec));
   }
@@ -219,6 +186,10 @@ class SettingsService extends ChangeNotifier {
 
   Future<void> setPreserveMediaDate(bool preserve) async {
     await updateSettings(_settings.copyWith(preserveMediaDate: preserve));
+  }
+
+  Future<void> setSuppressAdvancedModeWarning(bool value) async {
+    await updateSettings(_settings.copyWith(suppressAdvancedModeWarning: value));
   }
 
   void setCardOpacityFast(double opacity) {

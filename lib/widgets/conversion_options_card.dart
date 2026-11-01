@@ -249,63 +249,84 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
           theme: theme,
         ),
         const SizedBox(height: 10),
-        Center(
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 6,
-            children: [
-              _buildChoiceChip(
-                chipKey: const Key('preset_chip_fast'),
-                label: l10n.t('preset_fast_title'),
-                isSelected:
-                    widget.encodingOptions.speedPreset == SpeedPreset.fast,
-                onSelected: (selected) {
-                  if (selected) {
-                    widget.onOptionsChanged(
-                      widget.encodingOptions.copyWith(
-                        speedPreset: SpeedPreset.fast,
-                        crfValue: SpeedPreset.fast.defaultCrf,
-                      ),
-                    );
-                  }
-                },
+        Opacity(
+          opacity: _isAdvancedExpanded ? 0.38 : 1.0,
+          child: IgnorePointer(
+            ignoring: _isAdvancedExpanded,
+            child: Center(
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  _buildChoiceChip(
+                    chipKey: const Key('preset_chip_fast'),
+                    label: l10n.t('preset_fast_title'),
+                    isSelected:
+                        widget.encodingOptions.speedPreset == SpeedPreset.fast,
+                    onSelected: (selected) {
+                      if (selected) {
+                        widget.onOptionsChanged(
+                          widget.encodingOptions.copyWith(
+                            speedPreset: SpeedPreset.fast,
+                            crfValue: SpeedPreset.fast.defaultCrf,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  _buildChoiceChip(
+                    chipKey: const Key('preset_chip_normal'),
+                    label: l10n.t('preset_normal_title'),
+                    isSelected:
+                        widget.encodingOptions.speedPreset ==
+                        SpeedPreset.normal,
+                    onSelected: (selected) {
+                      if (selected) {
+                        widget.onOptionsChanged(
+                          widget.encodingOptions.copyWith(
+                            speedPreset: SpeedPreset.normal,
+                            crfValue: SpeedPreset.normal.defaultCrf,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  _buildChoiceChip(
+                    chipKey: const Key('preset_chip_slow'),
+                    label: l10n.t('preset_slow_title'),
+                    isSelected:
+                        widget.encodingOptions.speedPreset == SpeedPreset.max,
+                    onSelected: (selected) {
+                      if (selected) {
+                        widget.onOptionsChanged(
+                          widget.encodingOptions.copyWith(
+                            speedPreset: SpeedPreset.max,
+                            crfValue: SpeedPreset.max.defaultCrf,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
               ),
-              _buildChoiceChip(
-                chipKey: const Key('preset_chip_normal'),
-                label: l10n.t('preset_normal_title'),
-                isSelected:
-                    widget.encodingOptions.speedPreset == SpeedPreset.normal,
-                onSelected: (selected) {
-                  if (selected) {
-                    widget.onOptionsChanged(
-                      widget.encodingOptions.copyWith(
-                        speedPreset: SpeedPreset.normal,
-                        crfValue: SpeedPreset.normal.defaultCrf,
-                      ),
-                    );
-                  }
-                },
-              ),
-              _buildChoiceChip(
-                chipKey: const Key('preset_chip_slow'),
-                label: l10n.t('preset_slow_title'),
-                isSelected:
-                    widget.encodingOptions.speedPreset == SpeedPreset.max,
-                onSelected: (selected) {
-                  if (selected) {
-                    widget.onOptionsChanged(
-                      widget.encodingOptions.copyWith(
-                        speedPreset: SpeedPreset.max,
-                        crfValue: SpeedPreset.max.defaultCrf,
-                      ),
-                    );
-                  }
-                },
-              ),
-            ],
+            ),
           ),
         ),
+        if (_isAdvancedExpanded) ...[
+          const SizedBox(height: 6),
+          Center(
+            child: Text(
+              l10n.t('preset_disabled_by_advanced'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                color: theme.colorScheme.onSurface.withAlpha(120),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -344,18 +365,6 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             }).toList(),
           ),
         ),
-        const SizedBox(height: 8),
-        Center(
-          child: Text(
-            l10n.t('desc_${widget.encodingOptions.container.name}'),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11.5,
-              height: 1.35,
-              color: theme.colorScheme.onSurface.withAlpha(140),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -366,10 +375,24 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
       children: [
         InkWell(
           key: const Key('advanced_options_toggle'),
-          onTap: () {
-            setState(() {
-              _isAdvancedExpanded = !_isAdvancedExpanded;
-            });
+          onTap: () async {
+            if (!_isAdvancedExpanded) {
+              final suppress =
+                  SettingsService().settings.suppressAdvancedModeWarning;
+              if (!suppress) {
+                final confirmed = await _showAdvancedModeWarningDialog(
+                  context,
+                  theme,
+                  l10n,
+                );
+                if (confirmed != true) return;
+              }
+            }
+            if (mounted) {
+              setState(() {
+                _isAdvancedExpanded = !_isAdvancedExpanded;
+              });
+            }
           },
           borderRadius: BorderRadius.circular(10),
           child: Container(
@@ -448,6 +471,158 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
           _buildFpsSelector(theme, l10n),
         ],
       ],
+    );
+  }
+
+  Future<bool?> _showAdvancedModeWarningDialog(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
+    final isDark = theme.brightness == Brightness.dark;
+    bool doNotShowAgain = false;
+
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          key: const Key('advanced_warning_dialog'),
+          backgroundColor: theme.colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.red.withAlpha(25),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.redAccent,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.t('advanced_warning_title'),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.t('advanced_warning_desc'),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  height: 1.4,
+                  color: theme.colorScheme.onSurface.withAlpha(190),
+                ),
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () {
+                  setDialogState(() {
+                    doNotShowAgain = !doNotShowAgain;
+                  });
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          key: const Key('advanced_warning_checkbox'),
+                          value: doNotShowAgain,
+                          onChanged: (val) {
+                            setDialogState(() {
+                              doNotShowAgain = val ?? false;
+                            });
+                          },
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.t('dont_show_again'),
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: theme.colorScheme.onSurface.withAlpha(180),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          actions: [
+            TextButton(
+              key: const Key('advanced_warning_no_button'),
+              onPressed: () => Navigator.of(ctx).pop(false),
+              style: TextButton.styleFrom(
+                foregroundColor: isDark ? Colors.white : Colors.black87,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
+              ),
+              child: Text(
+                l10n.t('proc_dialog_no'),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+            ),
+            FilledButton(
+              key: const Key('advanced_warning_yes_button'),
+              onPressed: () async {
+                if (doNotShowAgain) {
+                  await SettingsService().setSuppressAdvancedModeWarning(true);
+                }
+                if (ctx.mounted) {
+                  Navigator.of(ctx).pop(true);
+                }
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 10,
+                ),
+              ),
+              child: Text(
+                l10n.t('proc_dialog_yes'),
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -580,40 +755,8 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             ],
           ),
         ),
-        const SizedBox(height: 8),
-        Center(
-          child: Text(
-            _getVideoAudioDesc(currentAudio, l10n),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11.5,
-              height: 1.35,
-              color: theme.colorScheme.onSurface.withAlpha(140),
-            ),
-          ),
-        ),
       ],
     );
-  }
-
-  String _getVideoAudioDesc(int kbps, AppLocalizations l10n) {
-    switch (kbps) {
-      case 0:
-        return l10n.t('settings_audio_mute_desc');
-      case 128:
-        return l10n.t('settings_audio_bitrate_128_desc');
-      case 192:
-        return l10n.t('settings_audio_bitrate_192_desc');
-      case 256:
-        return l10n.t('settings_audio_bitrate_256_desc');
-      case 320:
-        return l10n.t('settings_audio_bitrate_320_desc');
-      default:
-        return l10n.t(
-          'settings_audio_bitrate_desc',
-          args: {'kbps': kbps.toString()},
-        );
-    }
   }
 
   Widget _buildRateControlSelector(ThemeData theme, AppLocalizations l10n) {
@@ -809,43 +952,6 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                       ),
                     ),
                   ],
-                ),
-              ],
-              if (widget.encodingOptions.crfValue <= 17) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withAlpha(25),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: Colors.amber.withAlpha(90),
-                      width: 0.8,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.warning_amber_rounded,
-                        size: 14,
-                        color: Colors.amber,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          l10n.t('crf_warning_low'),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Colors.amber,
-                            height: 1.25,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ],
@@ -1071,11 +1177,6 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
     final maxFps = sourceFps.clamp(15, 120);
     final minFps = (10 < maxFps) ? 10 : 1;
     final targetFps = widget.encodingOptions.targetFps;
-    final tooltipExceeds = l10n.t(
-      'fps_exceeds_source',
-      args: {'fps': '$sourceFps'},
-    );
-    const standardFpsOptions = [60, 50, 48, 30, 25, 24];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1106,25 +1207,6 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                   }
                 },
               ),
-              ...standardFpsOptions.map((fps) {
-                final isAllowed = fps <= maxFps;
-                return _buildChoiceChip(
-                  label: '$fps FPS',
-                  isSelected: targetFps == fps && !_isCustomFps,
-                  isEnabled: isAllowed,
-                  tooltip: isAllowed ? null : tooltipExceeds,
-                  onSelected: (selected) {
-                    if (selected && isAllowed) {
-                      setState(() {
-                        _isCustomFps = false;
-                      });
-                      widget.onOptionsChanged(
-                        widget.encodingOptions.copyWith(targetFps: fps),
-                      );
-                    }
-                  },
-                );
-              }),
               _buildChoiceChip(
                 label: l10n.t('fps_custom'),
                 isSelected: _isCustomFps,
@@ -1228,47 +1310,8 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             ),
           ),
         ],
-
-        const SizedBox(height: 8),
-        Center(
-          child: Text(
-            _getFpsDescription(targetFps, _isCustomFps, l10n),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11.5,
-              height: 1.35,
-              color: theme.colorScheme.onSurface.withAlpha(140),
-            ),
-          ),
-        ),
       ],
     );
-  }
-
-  String _getFpsDescription(
-    int targetFps,
-    bool isCustomFps,
-    AppLocalizations l10n,
-  ) {
-    if (isCustomFps) return l10n.t('fps_desc_custom');
-    switch (targetFps) {
-      case 0:
-        return l10n.t('fps_desc_original');
-      case 60:
-        return l10n.t('fps_desc_60');
-      case 50:
-        return l10n.t('fps_desc_50');
-      case 48:
-        return l10n.t('fps_desc_48');
-      case 30:
-        return l10n.t('fps_desc_30');
-      case 25:
-        return l10n.t('fps_desc_25');
-      case 24:
-        return l10n.t('fps_desc_24');
-      default:
-        return l10n.t('fps_desc_custom');
-    }
   }
 
   Widget _buildQualityBadge(VideoResolution res, ThemeData theme) {

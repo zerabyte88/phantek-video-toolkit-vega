@@ -7,7 +7,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:open_file/open_file.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -47,6 +47,10 @@ class ProcessingScreen extends StatefulWidget {
     final percent = (progress * 100).clamp(0.0, 100.0);
     return '${percent.toStringAsFixed(1)}%';
   }
+
+  /// Hook to open files, configurable in tests.
+  static Future<OpenResult> Function(String path, {String? type}) openFileRunner =
+      (path, {type}) => OpenFilex.open(path, type: type);
 
   @override
   State<ProcessingScreen> createState() => _ProcessingScreenState();
@@ -128,7 +132,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         }
       } else if (action == 'btn_play' || action == 'play_output') {
         if (_outputPath != null && File(_outputPath!).existsSync()) {
-          OpenFile.open(_outputPath!);
+          ProcessingScreen.openFileRunner(_outputPath!);
         }
       }
     };
@@ -526,9 +530,9 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     if (_outputPath == null) return;
     try {
       final mimeType = getMimeType(_outputPath!);
-      var result = await OpenFile.open(_outputPath!, type: mimeType);
+      var result = await ProcessingScreen.openFileRunner(_outputPath!, type: mimeType);
       if (result.type != ResultType.done && mimeType != null) {
-        result = await OpenFile.open(_outputPath!);
+        result = await ProcessingScreen.openFileRunner(_outputPath!);
       }
       if (result.type != ResultType.done && mounted) {
         final l10n = _settingsService.l10n;
@@ -2019,9 +2023,9 @@ class _SuccessBottomSheet extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: () async {
                   final mime = _ProcessingScreenState.getMimeType(outputPath);
-                  var res = await OpenFile.open(outputPath, type: mime);
+                  var res = await ProcessingScreen.openFileRunner(outputPath, type: mime);
                   if (res.type != ResultType.done && mime != null) {
-                    await OpenFile.open(outputPath);
+                    await ProcessingScreen.openFileRunner(outputPath);
                   }
                 },
                 icon: Icon(

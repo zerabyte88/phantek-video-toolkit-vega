@@ -13,9 +13,6 @@ class AppSettings {
   /// Encoding speed preset.
   final String encodingPreset;
 
-  /// Backward-compatible alias for [encodingPreset].
-  String get cpuPreset => encodingPreset;
-
   /// Audio bitrate in kbps. 0 mutes audio.
   final int audioBitrateKbps;
 
@@ -40,15 +37,6 @@ class AppSettings {
   /// Card surface opacity (0.50 to 1.00).
   final double cardOpacity;
 
-  /// True if advanced experimental settings are enabled.
-  final bool isAdvancedSettingsEnabled;
-
-  /// Custom x264 preset ('default', 'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow').
-  final String customPreset;
-
-  /// Custom scaler algorithm ('default', 'fast_bilinear', 'bilinear', 'bicubic', 'area', 'lanczos', 'spline', 'gauss').
-  final String customScaler;
-
   /// Default video codec ('h264' or 'hevc').
   final String defaultVideoCodec;
 
@@ -58,11 +46,13 @@ class AppSettings {
   /// Preserve original media file modification date.
   final bool preserveMediaDate;
 
+  /// Whether to suppress the warning dialog when opening advanced settings.
+  final bool suppressAdvancedModeWarning;
+
   const AppSettings({
     this.cpuThreads = 0,
     this.ramBufferMb = 512,
-    String? encodingPreset,
-    String? cpuPreset,
+    this.encodingPreset = 'medium',
     this.audioBitrateKbps = 128,
     this.languageCode = 'en',
     this.themeMode = 'oled_pure',
@@ -71,13 +61,11 @@ class AppSettings {
     this.outputDirectory = '',
     this.audioOutputDirectory = '',
     this.cardOpacity = 1.0,
-    this.isAdvancedSettingsEnabled = false,
-    this.customPreset = 'default',
-    this.customScaler = 'default',
     this.defaultVideoCodec = 'h264',
     this.fileNamingFormat = 'suffix',
     this.preserveMediaDate = true,
-  }) : encodingPreset = encodingPreset ?? cpuPreset ?? 'medium';
+    this.suppressAdvancedModeWarning = false,
+  });
 
   /// Physical CPU core count.
   static int get deviceCoreCount => Platform.numberOfProcessors;
@@ -86,7 +74,6 @@ class AppSettings {
     int? cpuThreads,
     int? ramBufferMb,
     String? encodingPreset,
-    String? cpuPreset,
     int? audioBitrateKbps,
     String? languageCode,
     String? themeMode,
@@ -95,19 +82,17 @@ class AppSettings {
     String? outputDirectory,
     String? audioOutputDirectory,
     double? cardOpacity,
-    bool? isAdvancedSettingsEnabled,
-    String? customPreset,
-    String? customScaler,
     String? defaultVideoCodec,
     String? fileNamingFormat,
     bool? preserveMediaDate,
+    bool? suppressAdvancedModeWarning,
   }) {
     return AppSettings(
       cpuThreads: cpuThreads ?? this.cpuThreads,
       ramBufferMb: ramBufferMb != null
-          ? (ramBufferMb > 2048 ? 2048 : ramBufferMb)
+          ? ramBufferMb.clamp(0, 2048)
           : this.ramBufferMb,
-      encodingPreset: encodingPreset ?? cpuPreset ?? this.encodingPreset,
+      encodingPreset: encodingPreset ?? this.encodingPreset,
       audioBitrateKbps: audioBitrateKbps ?? this.audioBitrateKbps,
       languageCode: languageCode ?? this.languageCode,
       themeMode: themeMode ?? this.themeMode,
@@ -118,13 +103,11 @@ class AppSettings {
       cardOpacity: cardOpacity != null
           ? cardOpacity.clamp(0.5, 1.0)
           : this.cardOpacity,
-      isAdvancedSettingsEnabled:
-          isAdvancedSettingsEnabled ?? this.isAdvancedSettingsEnabled,
-      customPreset: customPreset ?? this.customPreset,
-      customScaler: customScaler ?? this.customScaler,
       defaultVideoCodec: defaultVideoCodec ?? this.defaultVideoCodec,
       fileNamingFormat: fileNamingFormat ?? this.fileNamingFormat,
       preserveMediaDate: preserveMediaDate ?? this.preserveMediaDate,
+      suppressAdvancedModeWarning:
+          suppressAdvancedModeWarning ?? this.suppressAdvancedModeWarning,
     );
   }
 
@@ -133,7 +116,6 @@ class AppSettings {
       'cpuThreads': cpuThreads,
       'ramBufferMb': ramBufferMb,
       'encodingPreset': encodingPreset,
-      'cpuPreset': encodingPreset,
       'audioBitrateKbps': audioBitrateKbps,
       'languageCode': languageCode,
       'themeMode': themeMode,
@@ -142,12 +124,10 @@ class AppSettings {
       'outputDirectory': outputDirectory,
       'audioOutputDirectory': audioOutputDirectory,
       'cardOpacity': cardOpacity,
-      'isAdvancedSettingsEnabled': isAdvancedSettingsEnabled,
-      'customPreset': customPreset,
-      'customScaler': customScaler,
       'defaultVideoCodec': defaultVideoCodec,
       'fileNamingFormat': fileNamingFormat,
       'preserveMediaDate': preserveMediaDate,
+      'suppressAdvancedModeWarning': suppressAdvancedModeWarning,
     };
   }
 
@@ -166,9 +146,7 @@ class AppSettings {
   factory AppSettings.fromJson(Map<String, dynamic> json) {
     return AppSettings(
       cpuThreads: json['cpuThreads'] as int? ?? 0,
-      ramBufferMb: ((json['ramBufferMb'] as int? ?? 512) > 2048)
-          ? 2048
-          : (json['ramBufferMb'] as int? ?? 512),
+      ramBufferMb: (json['ramBufferMb'] as int? ?? 512).clamp(0, 2048),
       encodingPreset: sanitizePreset(
         (json['encodingPreset'] ?? json['cpuPreset']) as String?,
       ),
@@ -181,10 +159,6 @@ class AppSettings {
       audioOutputDirectory: json['audioOutputDirectory'] as String? ?? '',
       cardOpacity:
           (json['cardOpacity'] as num?)?.toDouble().clamp(0.5, 1.0) ?? 1.0,
-      isAdvancedSettingsEnabled:
-          json['isAdvancedSettingsEnabled'] as bool? ?? false,
-      customPreset: json['customPreset'] as String? ?? 'default',
-      customScaler: json['customScaler'] as String? ?? 'default',
       defaultVideoCodec: (json['defaultVideoCodec'] == 'hevc')
           ? 'hevc'
           : 'h264',
@@ -194,6 +168,48 @@ class AppSettings {
           ? json['fileNamingFormat'] as String
           : 'suffix',
       preserveMediaDate: json['preserveMediaDate'] as bool? ?? true,
+      suppressAdvancedModeWarning:
+          json['suppressAdvancedModeWarning'] as bool? ?? false,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AppSettings &&
+          runtimeType == other.runtimeType &&
+          cpuThreads == other.cpuThreads &&
+          ramBufferMb == other.ramBufferMb &&
+          encodingPreset == other.encodingPreset &&
+          audioBitrateKbps == other.audioBitrateKbps &&
+          languageCode == other.languageCode &&
+          themeMode == other.themeMode &&
+          keepScreenAwake == other.keepScreenAwake &&
+          isFirstLaunch == other.isFirstLaunch &&
+          outputDirectory == other.outputDirectory &&
+          audioOutputDirectory == other.audioOutputDirectory &&
+          cardOpacity == other.cardOpacity &&
+          defaultVideoCodec == other.defaultVideoCodec &&
+          fileNamingFormat == other.fileNamingFormat &&
+          preserveMediaDate == other.preserveMediaDate &&
+          suppressAdvancedModeWarning == other.suppressAdvancedModeWarning;
+
+  @override
+  int get hashCode => Object.hash(
+    cpuThreads,
+    ramBufferMb,
+    encodingPreset,
+    audioBitrateKbps,
+    languageCode,
+    themeMode,
+    keepScreenAwake,
+    isFirstLaunch,
+    outputDirectory,
+    audioOutputDirectory,
+    cardOpacity,
+    defaultVideoCodec,
+    fileNamingFormat,
+    preserveMediaDate,
+    suppressAdvancedModeWarning,
+  );
 }

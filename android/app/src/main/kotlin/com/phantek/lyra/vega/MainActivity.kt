@@ -5,6 +5,7 @@ package com.phantek.lyra.vega
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 import android.media.MediaExtractor
@@ -35,7 +36,9 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
@@ -43,8 +46,8 @@ import java.nio.ByteOrder
 import java.util.concurrent.Executors
 
 class MainActivity : FlutterActivity() {
-    private val MEDIA_SCANNER_CHANNEL = "com.phantek.cygnus.albireo/media_scanner"
-    private val TRANSFORMER_CHANNEL = "com.phantek.cygnus.albireo/transformer"
+    private val MEDIA_SCANNER_CHANNEL = "com.phantek.lyra.vega/media_scanner"
+    private val TRANSFORMER_CHANNEL = "com.phantek.lyra.vega/transformer"
 
     private var methodChannel: MethodChannel? = null
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -90,6 +93,7 @@ class MainActivity : FlutterActivity() {
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "getVideoInfo" -> handleGetVideoInfo(call, result)
+                "getVideoThumbnail" -> handleGetVideoThumbnail(call, result)
                 "getHardwareEncoders" -> handleGetHardwareEncoders(result)
                 "transcodeVideo" -> handleTranscodeVideo(call, result)
                 "extractAudio" -> handleExtractAudio(call, result)
@@ -204,6 +208,43 @@ class MainActivity : FlutterActivity() {
                 mainHandler.post {
                     result.error("PROBE_FAILED", e.localizedMessage ?: "Failed to probe media", null)
                 }
+            }
+        }
+    }
+
+    private fun handleGetVideoThumbnail(call: MethodCall, result: MethodChannel.Result) {
+        val filePath = call.argument<String>("filePath")
+        if (filePath.isNullOrEmpty()) {
+            result.error("INVALID_ARGUMENT", "filePath is required", null)
+            return
+        }
+
+        Executors.newSingleThreadExecutor().execute {
+            val retriever = MediaMetadataRetriever()
+            try {
+                retriever.setDataSource(filePath)
+                val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                    retriever.getScaledFrameAtTime(1000000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 256, 256)
+                        ?: retriever.frameAtTime
+                } else {
+                    retriever.frameAtTime
+                }
+
+                if (bitmap != null) {
+                    val stream = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream)
+                    val byteArray = stream.toByteArray()
+                    bitmap.recycle()
+                    mainHandler.post { result.success(byteArray) }
+                } else {
+                    mainHandler.post { result.success(null) }
+                }
+            } catch (e: Exception) {
+                mainHandler.post { result.success(null) }
+            } finally {
+                try {
+                    retriever.release()
+                } catch (_: Exception) {}
             }
         }
     }

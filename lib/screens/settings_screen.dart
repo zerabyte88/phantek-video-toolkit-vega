@@ -23,8 +23,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.2.2';
-  String _buildNumber = '22003';
+  String _appVersion = 'v2.3.0';
+  String _buildNumber = '23000';
   double? _dragCardOpacity;
 
   @override
@@ -53,14 +53,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '22003';
+              : '23000';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.2.2';
-          _buildNumber = '22003';
+          _appVersion = 'v2.3.0';
+          _buildNumber = '23000';
         });
       }
     }
@@ -1789,17 +1789,66 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _confirmResetDefaults(BuildContext context) {
     final l10n = _settingsService.l10n;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.t('settings_reset_confirm_title')),
-        content: Text(l10n.t('settings_reset_confirm_desc')),
+        backgroundColor: theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.red.withAlpha(25),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.redAccent,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                l10n.t('settings_reset_confirm_title'),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          l10n.t('settings_reset_confirm_desc'),
+          style: TextStyle(
+            fontSize: 13.5,
+            height: 1.4,
+            color: theme.colorScheme.onSurface.withAlpha(190),
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.t('proc_no')),
+            style: TextButton.styleFrom(
+              foregroundColor: isDark ? Colors.white : Colors.black87,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            ),
+            child: Text(
+              l10n.t('proc_dialog_no'),
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () async {
               final nav = Navigator.of(ctx);
               final messenger = ScaffoldMessenger.of(context);
@@ -1812,9 +1861,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 );
               }
             },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+            ),
             child: Text(
-              l10n.t('settings_reset_default'),
-              style: const TextStyle(color: Color(0xFFEF4444)),
+              l10n.t('proc_dialog_yes'),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
           ),
         ],

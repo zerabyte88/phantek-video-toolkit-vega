@@ -35,6 +35,10 @@ class AppLocalizations {
 
   static const Map<String, Map<String, String>> _localizedValues = {
     'id': {
+      'advanced_warning_title': 'Buka Pengaturan Lanjutan?',
+      'advanced_warning_desc': 'Pengaturan lanjutan memungkinkan penyesuaian manual CRF, bitrate, dan kontrol laju. Mengubah opsi ini dapat memengaruhi ukuran file dan kecepatan encoding.',
+      'dont_show_again': 'Jangan tampilkan lagi',
+      'preset_disabled_by_advanced': 'Preset kecepatan dinonaktifkan karena Pengaturan Lanjutan sedang aktif',
       'theme_oled_pure': 'AMOLED Murni',
       'theme_oled_pure_desc': 'Latar Hitam Pekat Statis Tanpa Animasi',
       'theme_light_clean': 'Terang Bersih',
@@ -53,7 +57,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'Versi Aplikasi',
       'audio_bitrate': 'Kualitas Bitrate Audio',
-      'audio_copy': 'Salin Asli · Paling Cepat',
+      'audio_copy': 'Salin Asli',
       'audio_extracted': 'Audio Diekstrak',
       'audio_format': 'Format Audio',
       'audio_options': 'Opsi Ekstrak Audio',
@@ -77,8 +81,8 @@ class AppLocalizations {
       'desc_audio_wav': 'Lossless Uncompressed — Kualitas Audio Studio Mentah',
       'desc_bitrate': 'Membatasi laju bit untuk target ukuran file pasti\nKualitas visual menyesuaikan batas ukuran',
       'desc_crf': 'Menjaga konsistensi kualitas visual video\nUkuran file menyesuaikan kerumitan gambar',
-      'desc_h264': 'Live Streaming, Video Web, Rekaman HP standar. Kompatibilitas Luar Biasa.',
-      'desc_hevc': 'Streaming 4K, Film Kualitas Tinggi. Efisiensi Kompresi Sangat Tinggi.',
+      'desc_h264': 'Kompatibel luas di segala pemutar dan perangkat',
+      'desc_hevc': 'Kompresi efisien tinggi, ukuran file lebih hemat',
       'desc_mkv': 'Format fleksibel multi-audio & subtitle\nDirekomendasikan untuk koleksi film & anime',
       'desc_mov': 'Kontainer standar Apple dengan kualitas mentah tinggi\nIdeal untuk editing video lanjutan / NLE',
       'desc_mp4': 'Format universal dengan kompatibilitas terbaik\nIdeal untuk media sosial, web & berbagi file',
@@ -269,7 +273,11 @@ class AppLocalizations {
       'start_conversion': 'Mulai Konversi',
       'storage_cache': 'Penyimpanan',
       'storage_free': 'Tersedia',
-      'supported_formats_hint': 'MP4, MKV, MOV — hingga 4K / 60 FPS',
+      'supported_formats_hint': 'Pilih file video dari perangkat Anda untuk memulai',
+      'rename_dialog_title': 'Ubah Nama File',
+      'rename_dialog_hint': 'Nama file baru',
+      'rename_tooltip': 'Ubah nama',
+      'dialog_save': 'Simpan',
       'target_fps': 'Target FPS',
       'target_resolution': 'Target Resolusi',
       'telemetry_memory': 'Alokasi RAM',
@@ -295,51 +303,7 @@ class AppLocalizations {
       'unknown': 'Tidak Diketahui',
       'video_options': 'Opsi Video & Kompresi',
       'settings_advanced_title': 'Pengaturan Lanjutan',
-      'settings_advanced_enable': 'Aktifkan Pengaturan Lanjutan',
-      'settings_advanced_enable_desc':
-          'Buka opsi preset kustom dan algoritma scaler',
 
-      'settings_custom_preset': 'Preset Kecepatan Khusus',
-      'settings_custom_preset_desc':
-          'Pilih preset x264 dari ultrafast hingga veryslow',
-      'settings_custom_scaler': 'Metode Skala Video (Scaler)',
-      'settings_custom_scaler_desc':
-          'Pilih algoritma interpolasi piksel downscaling',
-      'preset_default': 'Otomatis (Sesuai Preset)',
-      'scaler_default': 'Otomatis (Sesuai Preset)',
-      'preset_default_desc':
-          'Mengikuti preset tampilan (Cepat, Normal, Maksimal)',
-      'preset_ultrafast_desc':
-          'Paling cepat, efisiensi kompresi & kualitas paling rendah',
-      'preset_superfast_desc':
-          'Sangat cepat, kualitas rendah, beban CPU minimal',
-      'preset_veryfast_desc':
-          'Cepat, efisiensi lumayan hemat baterai (bawaan mode Cepat)',
-      'preset_faster_desc':
-          'Cukup cepat, kualitas seimbang harian (bawaan mode Normal)',
-      'preset_fast_custom_desc':
-          'Kecepatan moderat, visual tajam (bawaan mode Maksimal)',
-      'preset_medium_desc': 'Sedang, standar x264 kompromi kecepatan & ukuran',
-      'preset_slow_custom_desc': 'Lambat, kompresi lebih padat & visual jernih',
-      'preset_slower_desc':
-          'Sangat lambat, analisis makroblok mendalam & detail presisi',
-      'preset_veryslow_desc':
-          'Paling lambat, efisiensi kompresi maksimal & kualitas terbaik',
-      'scaler_default_desc':
-          'Mengikuti preset aktif (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Paling cepat, kualitas terendah (linear sederhana ARM NEON)',
-      'scaler_bilinear_desc':
-          'Sangat cepat, kualitas rendah (lembut/blur, minim ketajaman)',
-      'scaler_bicubic_desc':
-          'Sedang-lambat, standar seimbang antara kecepatan & ketajaman',
-      'scaler_area_desc':
-          'Sedang, sampling area terbaik cegah moiré pada downscale',
-      'scaler_lanczos_desc': 'Paling lambat, rekonstruksi sinc 3-lobe dengan detail & ketajaman terbaik',
-      'scaler_spline_desc':
-          'Lambat, kurva spline alami tajam tanpa artefak dering',
-      'scaler_gauss_desc':
-          'Cepat-sedang, filter gaussian lembut untuk meredam noise',
       'trim_title': 'Pratinjau & Potong Video',
       'trim_start': 'Mulai',
       'trim_end': 'Selesai',
@@ -350,6 +314,10 @@ class AppLocalizations {
       'reset': 'Reset',
     },
     'en': {
+      'advanced_warning_title': 'Open Advanced Settings?',
+      'advanced_warning_desc': 'Advanced settings allow manual adjustment of CRF, bitrate, and rate control. Modifying these options can affect file size and encoding speed.',
+      'dont_show_again': 'Do not show again',
+      'preset_disabled_by_advanced': 'Speed presets are disabled while Advanced Settings are active',
       'theme_oled_pure': 'Pure AMOLED',
       'theme_oled_pure_desc':
           'Static Pitch-Black Background Without Animations',
@@ -370,7 +338,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'App Version',
       'audio_bitrate': 'Audio Bitrate Quality',
-      'audio_copy': 'Copy Original · Fastest',
+      'audio_copy': 'Copy Original',
       'audio_extracted': 'Audio Extracted',
       'audio_format': 'Audio Format',
       'audio_options': 'Audio Extraction Options',
@@ -395,8 +363,8 @@ class AppLocalizations {
           'Lossless Uncompressed — Studio-grade raw audio quality',
       'desc_bitrate': 'Enforces fixed bitrate for predictable file size\nVisual fidelity adjusts to size target',
       'desc_crf': 'Maintains consistent visual video quality\nFile size adapts to visual complexity',
-      'desc_h264': 'Live Streaming, Web Video, Standard Phone recordings. Excellent Compatibility.',
-      'desc_hevc': '4K Streaming, High Quality Movies. Very High Compression Efficiency.',
+      'desc_h264': 'Widely compatible across all players and devices',
+      'desc_hevc': 'High-efficiency compression, saves more storage',
       'desc_mkv': 'Flexible container for multi-audio & subtitles\nRecommended for movies & media archives',
       'desc_mov': 'Apple standard container with raw visual fidelity\nIdeal for post-production & video editing',
       'desc_mp4': 'Universal container with widest compatibility\nIdeal for social media, web & file sharing',
@@ -590,7 +558,11 @@ class AppLocalizations {
       'start_conversion': 'Start Conversion',
       'storage_cache': 'Storage',
       'storage_free': 'Free',
-      'supported_formats_hint': 'MP4, MKV, MOV — up to 4K / 60 FPS',
+      'supported_formats_hint': 'Choose a video file from your device to get started',
+      'rename_dialog_title': 'Rename File',
+      'rename_dialog_hint': 'New file name',
+      'rename_tooltip': 'Rename',
+      'dialog_save': 'Save',
       'target_fps': 'Target FPS',
       'target_resolution': 'Target Resolution',
       'telemetry_memory': 'RAM Allocation',
@@ -615,50 +587,7 @@ class AppLocalizations {
       'unknown': 'Unknown',
       'video_options': 'Video & Compression Options',
       'settings_advanced_title': 'Advanced Settings',
-      'settings_advanced_enable': 'Enable Advanced Settings',
-      'settings_advanced_enable_desc':
-          'Unlock custom presets and scaler algorithms',
 
-      'settings_custom_preset': 'Custom Speed Preset',
-      'settings_custom_preset_desc':
-          'Select x264 preset from ultrafast to veryslow',
-      'settings_custom_scaler': 'Video Scaling Method (Scaler)',
-      'settings_custom_scaler_desc':
-          'Select pixel interpolation algorithm for downscaling',
-      'preset_default': 'Auto (Follow Preset)',
-      'scaler_default': 'Auto (Follow Preset)',
-      'preset_default_desc':
-          'Follows active display preset (Fast, Normal, Maximum)',
-      'preset_ultrafast_desc':
-          'Fastest, lowest compression efficiency & quality',
-      'preset_superfast_desc': 'Very fast, low quality, minimal CPU load',
-      'preset_veryfast_desc':
-          'Fast, battery-friendly efficiency (Fast mode default)',
-      'preset_faster_desc':
-          'Fairly fast, balanced daily quality (Normal mode default)',
-      'preset_fast_custom_desc':
-          'Moderate speed, crisp visual detail (Maximum mode default)',
-      'preset_medium_desc': 'Medium, standard x264 speed & compression balance',
-      'preset_slow_custom_desc': 'Slow, tighter compression & cleaner visuals',
-      'preset_slower_desc':
-          'Very slow, deep macroblock analysis & precise detail',
-      'preset_veryslow_desc':
-          'Slowest, maximum compression efficiency & highest quality',
-      'scaler_default_desc': 'Follows active preset (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Fastest, lowest quality (simple linear on ARM NEON)',
-      'scaler_bilinear_desc':
-          'Very fast, low quality (soft/blurry, low sharpness)',
-      'scaler_bicubic_desc':
-          'Medium-slow, standard balance of speed & edge sharpness',
-      'scaler_area_desc':
-          'Medium, area averaging optimal for anti-moiré downscaling',
-      'scaler_lanczos_desc':
-          'Slowest, 3-lobe sinc filter with best detail & sharpness',
-      'scaler_spline_desc':
-          'Slow, natural spline curves with sharp ringing-free edges',
-      'scaler_gauss_desc':
-          'Fast-medium, soft Gaussian filter to suppress grain & noise',
       'trim_title': 'Video Preview & Trim',
       'trim_start': 'Start',
       'trim_end': 'End',
@@ -669,6 +598,10 @@ class AppLocalizations {
       'reset': 'Reset',
     },
     'zh': {
+      'advanced_warning_title': '打开高级设置？',
+      'advanced_warning_desc': '高级设置支持手动调整 CRF、码率和速率控制。修改这些选项可能会影响文件大小和编码速度。',
+      'dont_show_again': '不再提示',
+      'preset_disabled_by_advanced': '高级设置已启用，速度预设已禁用',
       'recovery_title': '先前处理意外中断',
       'recovery_desc': '先前的转码意外终止，可能是由于内存不足。是否尝试使用更少的核心（{cores} 核）重新运行？',
       'recovery_retry': '使用 {cores} 核重试',
@@ -681,7 +614,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': '应用版本',
       'audio_bitrate': '音频码率质量',
-      'audio_copy': '直接复制原音轨 · 最快',
+      'audio_copy': '直接复制原音轨',
       'audio_extracted': '已提取音频',
       'audio_format': '输出音频格式',
       'audio_options': '音频提取设置',
@@ -703,8 +636,8 @@ class AppLocalizations {
       'desc_audio_wav': '无损未压缩 — 录音室级别的原始音频品质',
       'desc_bitrate': '强制视频达到设定的目标文件大小 (MB)，画质将随之自动调整。',
       'desc_crf': '不考虑最终文件大小，保持恒定的视觉画质。数值越小画质越好，但文件越大。强烈推荐。',
-      'desc_h264': '直播、网络视频与标准录像。拥有无与伦比的极高兼容性。',
-      'desc_hevc': '4K 流媒体与高清影视。超高压缩效率，可节省高达 50% 空间。',
+      'desc_h264': '广泛兼容各类播放器与设备',
+      'desc_hevc': '高效压缩，大幅节省存储空间',
       'desc_mkv': '单文件支持多音轨与多字幕。适用于电影、动漫与连续剧收藏。',
       'desc_mov': '极高原始画质。适用于专业剪辑软件 (Premiere / FCPX)。',
       'desc_mp4': '轻量且兼具极致兼容性。适用于社交媒体、手机录像与分享。',
@@ -880,7 +813,11 @@ class AppLocalizations {
       'start_conversion': '开始转换',
       'storage_cache': '存储',
       'storage_free': '可用',
-      'supported_formats_hint': 'MP4, MKV, MOV — 最高支持 4K / 60 FPS',
+      'supported_formats_hint': '从您的设备中选择视频文件以开始',
+      'rename_dialog_title': '重命名文件',
+      'rename_dialog_hint': '新文件名',
+      'rename_tooltip': '重命名',
+      'dialog_save': '保存',
       'target_fps': '目标帧率 · FPS',
       'target_resolution': '目标分辨率',
       'telemetry_memory': '内存分配',
@@ -903,33 +840,7 @@ class AppLocalizations {
       'unknown': '未知',
       'video_options': '视频与压缩设置',
       'settings_advanced_title': '高级设置',
-      'settings_advanced_enable': '启用高级设置',
-      'settings_advanced_enable_desc': '解锁自定义预设与缩放算法',
 
-      'settings_custom_preset': '自定义速度预设',
-      'settings_custom_preset_desc': '选择从 ultrafast 到 veryslow 的 x264 预设',
-      'settings_custom_scaler': '视频缩放算法 (Scaler)',
-      'settings_custom_scaler_desc': '选择画面降采样的像素插值算法',
-      'preset_default': '自动（跟随预设）',
-      'scaler_default': '自动（跟随预设）',
-      'preset_default_desc': '跟随当前界面预设（极速、均衡、慢速）',
-      'preset_ultrafast_desc': '最快，压缩效率与画质最低',
-      'preset_superfast_desc': '极快，画质较低，CPU 负载极小',
-      'preset_veryfast_desc': '快速，能效优良且省电（极速模式默认）',
-      'preset_faster_desc': '较快，日常均衡画质（均衡模式默认）',
-      'preset_fast_custom_desc': '中速偏快，细节清晰锐利（慢速模式默认）',
-      'preset_medium_desc': '中等，标准 x264 速度与压缩率平衡',
-      'preset_slow_custom_desc': '较慢，压缩更紧凑，画面更纯净',
-      'preset_slower_desc': '很慢，深度宏块分析，微细节更精准',
-      'preset_veryslow_desc': '最慢，极限压缩效率与最高画质',
-      'scaler_default_desc': '跟随当前预设（Bicubic / Lanczos / Area）',
-      'scaler_fast_bilinear_desc': '最快，画质最低（ARM NEON 极简线性插值）',
-      'scaler_bilinear_desc': '极快，画质较低（边缘偏软/模糊，缺乏锐度）',
-      'scaler_bicubic_desc': '中偏慢，速度与边缘清晰度的经典平衡',
-      'scaler_area_desc': '中等，区域重采样，下采样防摩尔纹首选',
-      'scaler_lanczos_desc': '最慢，3-Lobe Sinc 高精度重构，细节与锐度最佳',
-      'scaler_spline_desc': '较慢，自然样条曲线，锐利无明显振铃光晕',
-      'scaler_gauss_desc': '较快，柔和高斯滤波可有效抑制杂色与噪点',
       'trim_title': '视频预览与裁剪',
       'trim_start': '开始',
       'trim_end': '结束',
@@ -940,6 +851,10 @@ class AppLocalizations {
       'reset': '重置',
     },
     'zh_CN': {
+      'advanced_warning_title': '打开高级设置？',
+      'advanced_warning_desc': '高级设置支持手动调整 CRF、码率和速率控制。修改这些选项可能会影响文件大小和编码速度。',
+      'dont_show_again': '不再提示',
+      'preset_disabled_by_advanced': '高级设置已启用，速度预设已禁用',
       'theme_oled_pure': '纯粹AMOLED',
       'theme_oled_pure_desc': '无动画的静态纯黑背景',
       'theme_light_clean': '清爽浅色',
@@ -958,7 +873,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': '应用版本',
       'audio_bitrate': '音频码率质量',
-      'audio_copy': '直接复制原音轨 · 最快',
+      'audio_copy': '直接复制原音轨',
       'audio_extracted': '已提取音频',
       'audio_format': '输出音频格式',
       'audio_options': '音频提取设置',
@@ -980,8 +895,8 @@ class AppLocalizations {
       'desc_audio_wav': '无损未压缩 — 录音室级别的原始音频品质',
       'desc_bitrate': '强制视频达到设定的目标文件大小 (MB)，画质将随之自动调整。',
       'desc_crf': '不考虑最终文件大小，保持恒定的视觉画质。数值越小画质越好，但文件越大。强烈推荐。',
-      'desc_h264': '直播、网络视频与标准录像。拥有无与伦比的极高兼容性。',
-      'desc_hevc': '4K 流媒体与高清影视。超高压缩效率，可节省高达 50% 空间。',
+      'desc_h264': '广泛兼容各类播放器与设备',
+      'desc_hevc': '高效压缩，大幅节省存储空间',
       'desc_mkv': '单文件支持多音轨与多字幕。适用于电影、动漫与连续剧收藏。',
       'desc_mov': '极高原始画质。适用于专业剪辑软件 (Premiere / FCPX)。',
       'desc_mp4': '轻量且兼具极致兼容性。适用于社交媒体、手机录像与分享。',
@@ -1159,7 +1074,11 @@ class AppLocalizations {
       'start_conversion': '开始转换',
       'storage_cache': '存储',
       'storage_free': '可用',
-      'supported_formats_hint': 'MP4, MKV, MOV — 最高支持 4K / 60 FPS',
+      'supported_formats_hint': '从您的设备中选择视频文件以开始',
+      'rename_dialog_title': '重命名文件',
+      'rename_dialog_hint': '新文件名',
+      'rename_tooltip': '重命名',
+      'dialog_save': '保存',
       'target_fps': '目标帧率 · FPS',
       'target_resolution': '目标分辨率',
       'telemetry_memory': '内存分配',
@@ -1182,33 +1101,7 @@ class AppLocalizations {
       'unknown': '未知',
       'video_options': '视频与压缩设置',
       'settings_advanced_title': '高级设置',
-      'settings_advanced_enable': '启用高级设置',
-      'settings_advanced_enable_desc': '解锁自定义预设与缩放算法',
 
-      'settings_custom_preset': '自定义速度预设',
-      'settings_custom_preset_desc': '选择从 ultrafast 到 veryslow 的 x264 预设',
-      'settings_custom_scaler': '视频缩放算法 (Scaler)',
-      'settings_custom_scaler_desc': '选择画面降采样的像素插值算法',
-      'preset_default': '自动（跟随预设）',
-      'scaler_default': '自动（跟随预设）',
-      'preset_default_desc': '跟随当前界面预设（极速、均衡、慢速）',
-      'preset_ultrafast_desc': '最快，压缩效率与画质最低',
-      'preset_superfast_desc': '极快，画质较低，CPU 负载极小',
-      'preset_veryfast_desc': '快速，能效优良且省电（极速模式默认）',
-      'preset_faster_desc': '较快，日常均衡画质（均衡模式默认）',
-      'preset_fast_custom_desc': '中速偏快，细节清晰锐利（慢速模式默认）',
-      'preset_medium_desc': '中等，标准 x264 速度与压缩率平衡',
-      'preset_slow_custom_desc': '较慢，压缩更紧凑，画面更纯净',
-      'preset_slower_desc': '很慢，深度宏块分析，微细节更精准',
-      'preset_veryslow_desc': '最慢，极限压缩效率与最高画质',
-      'scaler_default_desc': '跟随当前预设（Bicubic / Lanczos / Area）',
-      'scaler_fast_bilinear_desc': '最快，画质最低（ARM NEON 极简线性插值）',
-      'scaler_bilinear_desc': '极快，画质较低（边缘偏软/模糊，缺乏锐度）',
-      'scaler_bicubic_desc': '中偏慢，速度与边缘清晰度的经典平衡',
-      'scaler_area_desc': '中等，区域重采样，下采样防摩尔纹首选',
-      'scaler_lanczos_desc': '最慢，3-Lobe Sinc 高精度重构，细节与锐度最佳',
-      'scaler_spline_desc': '较慢，自然样条曲线，锐利无明显振铃光晕',
-      'scaler_gauss_desc': '较快，柔和高斯滤波可有效抑制杂色与噪点',
       'trim_title': '视频预览与裁剪',
       'trim_start': '开始',
       'trim_end': '结束',
@@ -1219,6 +1112,10 @@ class AppLocalizations {
       'reset': '重置',
     },
     'zh_TW': {
+      'advanced_warning_title': '開啟進階設定？',
+      'advanced_warning_desc': '進階設定支援手動調整 CRF、位元速率和速率控制。修改這些選項可能會影響檔案大小和編碼速度。',
+      'dont_show_again': '不再提示',
+      'preset_disabled_by_advanced': '進階設定已啟用，速度預設已停用',
       'theme_oled_pure': '純粹AMOLED',
       'theme_oled_pure_desc': '無動畫的靜態純黑背景',
       'theme_light_clean': '清爽淺色',
@@ -1237,7 +1134,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': '應用程式版本',
       'audio_bitrate': '音訊位元率品質',
-      'audio_copy': '直接複製原音軌 · 最快',
+      'audio_copy': '直接複製原音軌',
       'audio_extracted': '已提取音訊',
       'audio_format': '輸出音訊格式',
       'audio_options': '音訊提取設定',
@@ -1259,8 +1156,8 @@ class AppLocalizations {
       'desc_audio_wav': '無損未壓縮 — 錄音室等級的原始音質',
       'desc_bitrate': '強制影片達到設定的目標大小 (MB)，畫質將自動配合調整。',
       'desc_crf': '不論最終檔案大小，保持穩定的畫質表現。數值越小畫質越好，但檔案越大。強烈推薦。',
-      'desc_h264': '直播串流、網路影片與標準拍攝。擁有極度廣泛的相容度。',
-      'desc_hevc': '4K 串流與高畫質影視。極致壓縮效率，容量最高節省 50%。',
+      'desc_h264': '廣泛相容各類播放器與裝置',
+      'desc_hevc': '高效壓縮，大幅節省儲存空間',
       'desc_mkv': '單一檔案容納多音軌與多字幕。適合收藏電影、動畫與電視影集。',
       'desc_mov': '超高原始畫質。適合專業剪輯軟體 (Premiere / FCPX)。',
       'desc_mp4': '輕巧且具備極佳相容性。適合社群媒體、手機拍攝與影片分享。',
@@ -1438,7 +1335,11 @@ class AppLocalizations {
       'start_conversion': '開始轉換',
       'storage_cache': '儲存空間',
       'storage_free': '可用',
-      'supported_formats_hint': 'MP4, MKV, MOV — 最高支援 4K / 60 FPS',
+      'supported_formats_hint': '從您的裝置選取影片檔案以開始',
+      'rename_dialog_title': '重新命名檔案',
+      'rename_dialog_hint': '新檔案名稱',
+      'rename_tooltip': '重新命名',
+      'dialog_save': '儲存',
       'target_fps': '目標幀率 · FPS',
       'target_resolution': '目標解析度',
       'telemetry_memory': '記憶體配置',
@@ -1461,33 +1362,7 @@ class AppLocalizations {
       'unknown': '未知',
       'video_options': '影片與壓縮設定',
       'settings_advanced_title': '進階設定',
-      'settings_advanced_enable': '啟用進階設定',
-      'settings_advanced_enable_desc': '解鎖自訂預設值與縮放演算法',
 
-      'settings_custom_preset': '自訂速度預設值',
-      'settings_custom_preset_desc': '選擇從 ultrafast 到 veryslow 的 x264 預設值',
-      'settings_custom_scaler': '影片縮放演算法 (Scaler)',
-      'settings_custom_scaler_desc': '選擇畫面縮小處理的像素插值演算法',
-      'preset_default': '自動（跟隨預設）',
-      'scaler_default': '自動（跟隨預設）',
-      'preset_default_desc': '跟隨當前介面預設（極速、均衡、慢速）',
-      'preset_ultrafast_desc': '最快，壓縮效率與畫質最低',
-      'preset_superfast_desc': '極快，畫質較低，CPU 負載極小',
-      'preset_veryfast_desc': '快速，能效優良且省電（極速模式預設）',
-      'preset_faster_desc': '較快，日常均衡畫質（均衡模式預設）',
-      'preset_fast_custom_desc': '中速偏快，細節清晰銳利（慢速模式預設）',
-      'preset_medium_desc': '中等，標準 x264 速度與壓縮率平衡',
-      'preset_slow_custom_desc': '較慢，壓縮更緊湊，畫面更純淨',
-      'preset_slower_desc': '很慢，深度巨集塊分析，微細節更精準',
-      'preset_veryslow_desc': '最慢，極限壓縮效率與最高畫質',
-      'scaler_default_desc': '跟隨當前預設（Bicubic / Lanczos / Area）',
-      'scaler_fast_bilinear_desc': '最快，畫質最低（ARM NEON 極簡線性插值）',
-      'scaler_bilinear_desc': '極快，畫質較低（邊緣偏軟/模糊，缺乏銳度）',
-      'scaler_bicubic_desc': '中偏慢，速度與邊緣清晰度的經典平衡',
-      'scaler_area_desc': '中等，區域重取樣，縮放防摩爾紋首選',
-      'scaler_lanczos_desc': '最慢，3-Lobe Sinc 高精度重構，細節與銳度最佳',
-      'scaler_spline_desc': '較慢，自然樣條曲線，銳利無明顯振鈴光暈',
-      'scaler_gauss_desc': '較快，柔和高斯濾波可有效抑制雜色與噪點',
       'trim_title': '影片預覽與剪輯',
       'trim_start': '開始',
       'trim_end': '結束',
@@ -1498,6 +1373,10 @@ class AppLocalizations {
       'reset': '重設',
     },
     'es': {
+      'advanced_warning_title': '¿Abrir Ajustes Avanzados?',
+      'advanced_warning_desc': 'Los ajustes avanzados permiten modificar manualmente el CRF, la tasa de bits y el control de velocidad. Modificar estas opciones puede afectar el tamaño del archivo y la velocidad de codificación.',
+      'dont_show_again': 'No volver a mostrar',
+      'preset_disabled_by_advanced': 'Los preajustes de velocidad están deshabilitados mientras los Ajustes Avanzados estén activos',
       'theme_oled_pure': 'AMOLED Puro',
       'theme_oled_pure_desc': 'Fondo negro azabache estático sin animaciones',
       'theme_light_clean': 'Luz Limpia',
@@ -1517,7 +1396,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'Versión de la App',
       'audio_bitrate': 'Calidad de Tasa de Bits de Audio',
-      'audio_copy': 'Copia Directa · Más Rápido',
+      'audio_copy': 'Copia Directa',
       'audio_extracted': 'Audio Extraído',
       'audio_format': 'Formato de Audio de Salida',
       'audio_options': 'Opciones de Extracción de Audio',
@@ -1541,8 +1420,8 @@ class AppLocalizations {
           'Calidad de estudio sin pérdida — Audio puro sin compresión',
       'desc_bitrate': 'Fuerza al video a alcanzar un tamaño de archivo objetivo en MB, la calidad visual se ajustará dinámicamente.',
       'desc_crf': 'Mantiene una calidad visual constante sin importar el tamaño final del archivo. Un número menor significa mayor calidad y mayor tamaño de archivo. Muy recomendado.',
-      'desc_h264': 'Transmisión en vivo, videos web y reproducción estándar en móviles. Compatibilidad universal excepcional.',
-      'desc_hevc': 'Transmisión 4K, películas de alta calidad. Eficiencia de compresión de próxima generación (H.265).',
+      'desc_h264': 'Ampliamente compatible con todos los reproductores y dispositivos',
+      'desc_hevc': 'Compresión de alta eficiencia, ahorra más almacenamiento',
       'desc_mkv': 'Múltiples pistas de audio y subtítulos en un solo archivo. Excelente para películas, anime y series de TV.',
       'desc_mov': 'Máxima calidad visual sin comprimir. Ideal para edición de video profesional (Premiere / DaVinci / FCPX).',
       'desc_mp4': 'Ligero y universal. Ideal para redes sociales, grabaciones de teléfono y compartir videos.',
@@ -1736,7 +1615,11 @@ class AppLocalizations {
       'start_conversion': 'Iniciar Conversión',
       'storage_cache': 'Almacenamiento',
       'storage_free': 'Libre',
-      'supported_formats_hint': 'MP4, MKV, MOV — hasta 4K / 60 FPS',
+      'supported_formats_hint': 'Elige un archivo de video de tu dispositivo para comenzar',
+      'rename_dialog_title': 'Renombrar archivo',
+      'rename_dialog_hint': 'Nuevo nombre de archivo',
+      'rename_tooltip': 'Renombrar',
+      'dialog_save': 'Guardar',
       'target_fps': 'FPS Objetivo',
       'target_resolution': 'Resolución Objetivo',
       'telemetry_memory': 'Asignación de RAM',
@@ -1762,51 +1645,7 @@ class AppLocalizations {
       'unknown': 'Desconocido',
       'video_options': 'Opciones de Video y Compresión',
       'settings_advanced_title': 'Configuración Avanzada',
-      'settings_advanced_enable': 'Habilitar Configuración Avanzada',
-      'settings_advanced_enable_desc':
-          'Desbloquea ajustes personalizados y algoritmos de escalado',
 
-      'settings_custom_preset': 'Ajuste de Velocidad Personalizado',
-      'settings_custom_preset_desc':
-          'Selecciona el ajuste x264 desde ultrafast hasta veryslow',
-      'settings_custom_scaler': 'Método de Escalado de Video (Scaler)',
-      'settings_custom_scaler_desc':
-          'Selecciona el algoritmo de interpolación de píxeles para reducción',
-      'preset_default': 'Automático (Según Ajuste)',
-      'scaler_default': 'Automático (Según Ajuste)',
-      'preset_default_desc': 'Sigue el ajuste activo (Rápido, Normal, Máximo)',
-      'preset_ultrafast_desc':
-          'El más rápido, menor eficiencia de compresión y calidad',
-      'preset_superfast_desc': 'Muy rápido, calidad baja, carga mínima de CPU',
-      'preset_veryfast_desc':
-          'Rápido, eficiente y ahorra batería (predeterminado Rápido)',
-      'preset_faster_desc':
-          'Bastante rápido, calidad equilibrada diaria (predeterminado Normal)',
-      'preset_fast_custom_desc':
-          'Velocidad moderada, detalles nítidos (predeterminado Máximo)',
-      'preset_medium_desc':
-          'Medio, equilibrio estándar de velocidad y compresión x264',
-      'preset_slow_custom_desc':
-          'Lento, compresión más ajustada e imagen más limpia',
-      'preset_slower_desc':
-          'Muy lento, análisis profundo de macrobloques y detalle fino',
-      'preset_veryslow_desc':
-          'El más lento, máxima eficiencia de compresión y calidad superior',
-      'scaler_default_desc':
-          'Sigue el ajuste activo (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'El más rápido, menor calidad (lineal simple en ARM NEON)',
-      'scaler_bilinear_desc':
-          'Muy rápido, baja calidad (suave/borroso, poca nitidez)',
-      'scaler_bicubic_desc':
-          'Medio-lento, equilibrio estándar entre velocidad y nitidez',
-      'scaler_area_desc':
-          'Medio, muestreo de área óptimo para reducir sin efecto moiré',
-      'scaler_lanczos_desc': 'El más lento, filtro sinc de 3 lóbulos con el mejor detalle y nitidez',
-      'scaler_spline_desc':
-          'Lento, curvas spline naturales sin halos de timbre',
-      'scaler_gauss_desc':
-          'Rápido-medio, filtro gaussiano suave para suprimir ruido y grano',
       'trim_title': 'Vista previa y recorte',
       'trim_start': 'Inicio',
       'trim_end': 'Fin',
@@ -1817,6 +1656,10 @@ class AppLocalizations {
       'reset': 'Restablecer',
     },
     'pt': {
+      'advanced_warning_title': 'Abrir Configurações Avançadas?',
+      'advanced_warning_desc': 'As configurações avançadas permitem ajustar manualmente CRF, taxa de bits e controle de taxa. Modificar essas opções pode afetar o tamanho do arquivo e a velocidade de codificação.',
+      'dont_show_again': 'Não mostrar novamente',
+      'preset_disabled_by_advanced': 'Os perfis de velocidade estão desativados enquanto as Configurações Avançadas estiverem ativas',
       'theme_oled_pure': 'AMOLED Puro',
       'theme_oled_pure_desc': 'Fundo preto puro estático sem animações',
       'theme_light_clean': 'Claro Limpo',
@@ -1836,7 +1679,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'Versão do App',
       'audio_bitrate': 'Qualidade da Taxa de Bits de Áudio',
-      'audio_copy': 'Cópia Direta · Mais Rápido',
+      'audio_copy': 'Cópia Direta',
       'audio_extracted': 'Áudio Extraído',
       'audio_format': 'Formato de Áudio de Saída',
       'audio_options': 'Opções de Extração de Áudio',
@@ -1859,8 +1702,8 @@ class AppLocalizations {
           'Qualidade de estúdio sem perdas — Áudio puro sem compressão',
       'desc_bitrate': 'Força o vídeo a atingir um tamanho de arquivo alvo em MB, ajustando dinamicamente a qualidade visual.',
       'desc_crf': 'Mantém uma qualidade visual constante independentemente do tamanho final do arquivo. Menor número significa maior qualidade e maior tamanho. Altamente recomendado.',
-      'desc_h264': 'Transmissão ao vivo, vídeos na web e reprodução móvel padrão. Compatibilidade excepcional.',
-      'desc_hevc': 'Transmissão 4K e filmes de altíssima fidelidade. Eficiência de compressão de última geração (H.265).',
+      'desc_h264': 'Amplamente compatível com todos os reprodutores e dispositivos',
+      'desc_hevc': 'Compressão de alta eficiência, economiza mais armazenamento',
       'desc_mkv': 'Múltiplas faixas de áudio e legendas em um único arquivo. Ótimo para filmes, animes e séries.',
       'desc_mov': 'Qualidade visual original máxima. Ideal para edição profissional (Premiere / DaVinci / FCPX).',
       'desc_mp4': 'Leve e universal. Ideal para redes sociais, gravações de celular e compartilhamento.',
@@ -2052,7 +1895,11 @@ class AppLocalizations {
       'start_conversion': 'Iniciar Conversão',
       'storage_cache': 'Armazenamento',
       'storage_free': 'Livre',
-      'supported_formats_hint': 'MP4, MKV, MOV — até 4K / 60 FPS',
+      'supported_formats_hint': 'Escolha um arquivo de vídeo do seu dispositivo para começar',
+      'rename_dialog_title': 'Renomear arquivo',
+      'rename_dialog_hint': 'Novo nome do arquivo',
+      'rename_tooltip': 'Renomear',
+      'dialog_save': 'Salvar',
       'target_fps': 'FPS Alvo',
       'target_resolution': 'Resolução Alvo',
       'telemetry_memory': 'Alocação de RAM',
@@ -2079,52 +1926,7 @@ class AppLocalizations {
       'unknown': 'Desconhecido',
       'video_options': 'Opções de Vídeo e Compressão',
       'settings_advanced_title': 'Configurações Avançadas',
-      'settings_advanced_enable': 'Ativar Configurações Avançadas',
-      'settings_advanced_enable_desc': 'Desbloqueie predefinições e algoritmos de escalonamento personalizados',
 
-      'settings_custom_preset': 'Predefinição de Velocidade Personalizada',
-      'settings_custom_preset_desc':
-          'Selecione a predefinição x264 de ultrafast a veryslow',
-      'settings_custom_scaler': 'Método de Escalonamento de Vídeo (Scaler)',
-      'settings_custom_scaler_desc':
-          'Selecione o algoritmo de interpolação de pixels para redução',
-      'preset_default': 'Automático (Padrão)',
-      'scaler_default': 'Automático (Padrão)',
-      'preset_default_desc':
-          'Segue a predefinição ativa (Rápido, Normal, Máximo)',
-      'preset_ultrafast_desc':
-          'Mais rápido, menor eficiência de compressão e qualidade',
-      'preset_superfast_desc':
-          'Muito rápido, qualidade baixa, uso mínimo de CPU',
-      'preset_veryfast_desc':
-          'Rápido, eficiente e poupa bateria (padrão Rápido)',
-      'preset_faster_desc':
-          'Bastante rápido, qualidade diária equilibrada (padrão Normal)',
-      'preset_fast_custom_desc':
-          'Velocidade moderada, detalhes visuais nítidos (padrão Máximo)',
-      'preset_medium_desc':
-          'Médio, equilíbrio padrão de velocidade e compressão x264',
-      'preset_slow_custom_desc':
-          'Lento, compressão mais compacta e visual mais límpido',
-      'preset_slower_desc':
-          'Muito lento, análise profunda de macroblocos e detalhes finos',
-      'preset_veryslow_desc':
-          'Mais lento, máxima eficiência de compressão e qualidade máxima',
-      'scaler_default_desc':
-          'Segue a predefinição ativa (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Mais rápido, menor qualidade (linear simples em ARM NEON)',
-      'scaler_bilinear_desc':
-          'Muito rápido, qualidade baixa (suave/desfocado, pouca nitidez)',
-      'scaler_bicubic_desc':
-          'Médio-lento, equilíbrio clássico entre velocidade e nitidez',
-      'scaler_area_desc':
-          'Médio, amostragem de área ideal contra padrões de moiré',
-      'scaler_lanczos_desc': 'Mais lento, filtro sinc de 3 lóbulos com detalhes e nitidez superiores',
-      'scaler_spline_desc':
-          'Lento, curvas spline naturais nítidas sem halos visíveis',
-      'scaler_gauss_desc':
-          'Rápido-médio, filtro gaussiano suave para atenuar ruído e grão',
       'trim_title': 'Pré-visualização e corte',
       'trim_start': 'Início',
       'trim_end': 'Fim',
@@ -2135,6 +1937,10 @@ class AppLocalizations {
       'reset': 'Redefinir',
     },
     'ja': {
+      'advanced_warning_title': '詳細設定を開きますか？',
+      'advanced_warning_desc': '詳細設定ではCRF、ビットレート、レート制御を手動で調整できます。これらの設定を変更すると、ファイルサイズやエンコード速度に影響する場合があります。',
+      'dont_show_again': '次回から表示しない',
+      'preset_disabled_by_advanced': '詳細設定が有効なため速度プリセットは無効です',
       'theme_oled_pure': 'ピュアAMOLED',
       'theme_oled_pure_desc': 'アニメーションなしの静的な完全漆黒背景',
       'theme_light_clean': 'クリーンライト',
@@ -2154,7 +1960,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'アプリバージョン',
       'audio_bitrate': '音声ビットレート品質',
-      'audio_copy': 'オリジナルをコピー · 最速',
+      'audio_copy': 'オリジナルをコピー',
       'audio_extracted': '抽出された音声',
       'audio_format': '出力音声形式',
       'audio_options': '音声抽出設定',
@@ -2178,8 +1984,8 @@ class AppLocalizations {
       'desc_bitrate': '指定した目標サイズ（MB）に正確に収まるようにビットレートを固定します。画質は自動調整されます。',
       'desc_crf':
           '最終ファイルサイズに関係なく一定の画質を維持します。数値が小さいほど高画質になりますが、サイズが大きくなります。強く推奨されます。',
-      'desc_h264': 'ライブ配信、Web動画、スマホ撮影の標準規格。非常に優れた互換性。',
-      'desc_hevc': '4K配信、高画質映画。非常に高い圧縮効率で容量を約半分に削減。',
+      'desc_h264': 'あらゆるプレーヤーや端末と幅広く互換',
+      'desc_hevc': '高効率圧縮で保存容量を節約',
       'desc_mkv': '1つのファイルに複数の音声や字幕を保持可能。映画、アニメ、TV番組向け。',
       'desc_mov': '非圧縮に近い高画質。PremiereやFCPXなどの動画編集向け。',
       'desc_mp4': '軽量で最も高い互換性。SNS、スマホ撮影、動画共有に最適。',
@@ -2360,7 +2166,11 @@ class AppLocalizations {
       'start_conversion': '変換を開始',
       'storage_cache': 'ストレージ',
       'storage_free': '空き',
-      'supported_formats_hint': 'MP4, MKV, MOV — 最大 4K / 60 FPS',
+      'supported_formats_hint': '端末から動画ファイルを選択して開始',
+      'rename_dialog_title': 'ファイル名を変更',
+      'rename_dialog_hint': '新しいファイル名',
+      'rename_tooltip': '名前を変更',
+      'dialog_save': '保存',
       'target_fps': '目標フレームレート · FPS',
       'target_resolution': '目標解像度',
       'telemetry_memory': 'RAM割り当て',
@@ -2383,33 +2193,7 @@ class AppLocalizations {
       'unknown': '不明',
       'video_options': '動画・圧縮オプション',
       'settings_advanced_title': '詳細設定',
-      'settings_advanced_enable': '詳細設定を有効化',
-      'settings_advanced_enable_desc': 'カスタムプリセットとスケーラーアルゴリズムを解放',
 
-      'settings_custom_preset': 'カスタム速度プリセット',
-      'settings_custom_preset_desc': 'ultrafast から veryslow までの x264 プリセットを選択',
-      'settings_custom_scaler': '動画スケーリング方式 (Scaler)',
-      'settings_custom_scaler_desc': 'ダウンスケーリングのピクセル補間アルゴリズムを選択',
-      'preset_default': '自動（プリセット準拠）',
-      'scaler_default': '自動（プリセット準拠）',
-      'preset_default_desc': '現在の表示プリセット（高速、標準、最大）に従う',
-      'preset_ultrafast_desc': '最速、圧縮効率と画質は最低',
-      'preset_superfast_desc': '極めて高速、画質低め、CPU負荷最小限',
-      'preset_veryfast_desc': '高速、バッテリー節約と速度重視（高速モード既定）',
-      'preset_faster_desc': 'やや高速、日常的なバランス品質（標準モード既定）',
-      'preset_fast_custom_desc': '中速、輪郭のくっきりした高品位画質（最大モード既定）',
-      'preset_medium_desc': '標準、x264 の速度と圧縮率の基準バランス',
-      'preset_slow_custom_desc': '低速、高圧縮でノイズの少ないクリアな映像',
-      'preset_slower_desc': '極めて低速、緻密なマクロブロック分析で精密再現',
-      'preset_veryslow_desc': '最遅、究極の圧縮効率と最高峰の映像品質',
-      'scaler_default_desc': '選択中のプリセットに従う（Bicubic / Lanczos / Area）',
-      'scaler_fast_bilinear_desc': '最速、画質最低（ARM NEON 向け簡易線形補間）',
-      'scaler_bilinear_desc': '極めて高速、画質低め（輪郭がぼやけやすく眠い描写）',
-      'scaler_bicubic_desc': '中低速、処理速度と自然なシャープネスの黄金比',
-      'scaler_area_desc': '標準速度、モアレ防止に最適な面積平均縮小サンプリング',
-      'scaler_lanczos_desc': '最遅、3-Lobe Sinc補間による最高峰のディテールと鮮鋭度',
-      'scaler_spline_desc': '低速、リンギングのない滑らかな自然スプライン曲線',
-      'scaler_gauss_desc': '中速、ノイズや粒状感をマイルドに抑えるガウス処理',
       'trim_title': '動画プレビューとトリミング',
       'trim_start': '開始',
       'trim_end': '終了',
@@ -2420,6 +2204,10 @@ class AppLocalizations {
       'reset': 'リセット',
     },
     'ko': {
+      'advanced_warning_title': '고급 설정을 여시겠습니까?',
+      'advanced_warning_desc': '고급 설정에서는 CRF, 비트레이트 및 속도 제어를 수동으로 조정할 수 있습니다. 이 옵션을 변경하면 파일 크기와 인코딩 속도에 영향을 줄 수 있습니다.',
+      'dont_show_again': '다시 보지 않기',
+      'preset_disabled_by_advanced': '고급 설정이 활성화되어 속도 프리셋이 비활성화되었습니다',
       'theme_oled_pure': '퓨어 AMOLED',
       'theme_oled_pure_desc': '애니메이션 없는 정적인 완전 블랙 배경',
       'theme_light_clean': '클린 라이트',
@@ -2438,7 +2226,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': '앱 버전',
       'audio_bitrate': '오디오 비트레이트 품질',
-      'audio_copy': '원본 복사 · 가장 빠름',
+      'audio_copy': '원본 복사',
       'audio_extracted': '추출된 오디오',
       'audio_format': '출력 오디오 포맷',
       'audio_options': '오디오 추출 설정',
@@ -2461,8 +2249,8 @@ class AppLocalizations {
       'desc_audio_wav': '무손실 비압축 — 스튜디오 수준의 원음 품질',
       'desc_bitrate': '정확한 목표 용량(MB)에 맞추어 인코딩하며, 화질은 그에 맞게 자동 조절됩니다.',
       'desc_crf': '최종 파일 크기에 구애받지 않고 일관된 화질을 유지합니다. 값이 낮을수록 고화질이지만 용량이 커집니다. 가장 추천하는 방식입니다.',
-      'desc_h264': '라이브 스트리밍, 웹 동영상, 표준 스마트폰 녹화. 최고의 범용 호환성.',
-      'desc_hevc': '4K 스트리밍, 고화질 영화. 최대 50% 용량을 절약하는 최고 수준의 압축 효율.',
+      'desc_h264': '모든 플레이어 및 기기와 폭넓은 호환성',
+      'desc_hevc': '고효율 압축으로 더 많은 저장 공간 절약',
       'desc_mkv': '하나의 파일에 여러 오디오와 자막 수납 가능. 영화, 애니메이션, 드라마 보관용.',
       'desc_mov': '고화질 원본 품질 유지. 전문 영상 편집 프로그램(Premiere/FCPX)에 최적.',
       'desc_mp4': '가볍고 호환성이 가장 뛰어남. 소셜 미디어, 스마트폰 영상 촬영 및 공유에 최적.',
@@ -2643,7 +2431,11 @@ class AppLocalizations {
       'start_conversion': '변환 시작',
       'storage_cache': '저장소',
       'storage_free': '여유',
-      'supported_formats_hint': 'MP4, MKV, MOV — 최대 4K / 60 FPS',
+      'supported_formats_hint': '기기에서 동영상 파일을 선택하여 시작하세요',
+      'rename_dialog_title': '파일 이름 변경',
+      'rename_dialog_hint': '새 파일 이름',
+      'rename_tooltip': '이름 변경',
+      'dialog_save': '저장',
       'target_fps': '목표 프레임 · FPS',
       'target_resolution': '목표 해상도',
       'telemetry_memory': 'RAM 할당량',
@@ -2666,33 +2458,7 @@ class AppLocalizations {
       'unknown': '알 수 없음',
       'video_options': '동영상 및 압축 옵션',
       'settings_advanced_title': '고급 설정',
-      'settings_advanced_enable': '고급 설정 활성화',
-      'settings_advanced_enable_desc': '커스텀 프리셋 및 스케일러 알고리즘 잠금 해제',
 
-      'settings_custom_preset': '커스텀 속도 프리셋',
-      'settings_custom_preset_desc': 'ultrafast부터 veryslow까지의 x264 프리셋 선택',
-      'settings_custom_scaler': '비디오 스케일링 방식 (Scaler)',
-      'settings_custom_scaler_desc': '다운스케일링 픽셀 보간 알고리즘 선택',
-      'preset_default': '자동 (기본 프리셋 준수)',
-      'scaler_default': '자동 (기본 프리셋 준수)',
-      'preset_default_desc': '현재 표시 프리셋(빠름, 보통, 최대)을 따름',
-      'preset_ultrafast_desc': '가장 빠름, 압축 효율 및 화질 최하',
-      'preset_superfast_desc': '매우 빠름, 낮은 화질, 최소 CPU 부하',
-      'preset_veryfast_desc': '빠름, 배터리 절약 및 적정 효율 (빠름 모드 기본값)',
-      'preset_faster_desc': '비교적 빠름, 균형 잡힌 일상 화질 (보통 모드 기본값)',
-      'preset_fast_custom_desc': '중간 속도, 선명한 세부 묘사 (최대 모드 기본값)',
-      'preset_medium_desc': '보통, x264 표준 속도 및 압축 균형',
-      'preset_slow_custom_desc': '느림, 더 알찬 압축 및 깔끔한 영상',
-      'preset_slower_desc': '매우 느림, 심층 매크로블록 분석 및 정밀한 디테일',
-      'preset_veryslow_desc': '가장 느림, 최대 압축 효율 및 최고 화질',
-      'scaler_default_desc': '활성 프리셋을 따름 (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc': '가장 빠름, 화질 최하 (ARM NEON 단순 선형 보간)',
-      'scaler_bilinear_desc': '매우 빠름, 낮은 화질 (부드러우나 흐리고 디테일 저하)',
-      'scaler_bicubic_desc': '중저속, 속도와 선명도의 이상적인 표준 균형',
-      'scaler_area_desc': '보통, 모아레 패턴을 억제하는 다운스케일 영역 평균화',
-      'scaler_lanczos_desc': '가장 느림, 3-Lobe Sinc 보간으로 최상의 디테일 및 선명도',
-      'scaler_spline_desc': '느림, 링잉 아티팩트 없는 자연스러운 고화질 스플라인 곡선',
-      'scaler_gauss_desc': '중간 속도, 노이즈와 입자감을 억제하는 부드러운 가우시안',
       'trim_title': '동영상 미리보기 및 자르기',
       'trim_start': '시작',
       'trim_end': '종료',
@@ -2703,6 +2469,10 @@ class AppLocalizations {
       'reset': '초기화',
     },
     'hi': {
+      'advanced_warning_title': 'उन्नत सेटिंग्स खोलें?',
+      'advanced_warning_desc': 'उन्नत सेटिंग्स CRF, बिटरेट और दर नियंत्रण के मैन्युअल समायोजन की अनुमति देती हैं। इन विकल्पों को बदलने से फ़ाइल आकार और एन्कोडिंग गति प्रभावित हो सकती है।',
+      'dont_show_again': 'फिर कभी न दिखाएं',
+      'preset_disabled_by_advanced': 'उन्नत सेटिंग्स सक्रिय होने पर गति प्रीसेट अक्षम रहते हैं',
       'theme_oled_pure': 'शुद्ध AMOLED',
       'theme_oled_pure_desc': 'बिना एनिमेशन की स्थिर गहरी काली पृष्ठभूमि',
       'theme_light_clean': 'स्वच्छ लाइट',
@@ -2722,7 +2492,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'ऐप संस्करण',
       'audio_bitrate': 'ऑडियो बिटरेट गुणवत्ता',
-      'audio_copy': 'सीधी प्रतिलिपि · सबसे तेज़',
+      'audio_copy': 'सीधी प्रतिलिपि',
       'audio_extracted': 'निकाला गया ऑडियो',
       'audio_format': 'आउटपुट ऑडियो फ़ॉर्मेट',
       'audio_options': 'ऑडियो निष्कर्षण विकल्प',
@@ -2747,8 +2517,8 @@ class AppLocalizations {
           'हानिरहित स्टूडियो गुणवत्ता — असंपीड़ित शुद्ध मूल ऑडियो',
       'desc_bitrate': 'वीडियो को MB में एक निश्चित लक्ष्य फ़ाइल आकार तक सीमित करता है, दृश्य गुणवत्ता स्वचालित रूप से अनुकूलित होगी।',
       'desc_crf': 'फ़ाइल के अंतिम आकार की परवाह किए बिना निरंतर दृश्य गुणवत्ता बनाए रखता है। कम संख्या का अर्थ है उच्च गुणवत्ता और बड़ा फ़ाइल आकार। अत्यधिक अनुशंसित।',
-      'desc_h264': 'लाइव स्ट्रीमिंग, वेब वीडियो और मानक मोबाइल प्लेबैक। असाधारण सार्वभौमिक संगतता।',
-      'desc_hevc': '4K स्ट्रीमिंग और उच्च-निष्ठा फ़िल्में। अगली पीढ़ी की उच्च संपीड़न दक्षता (H.265)।',
+      'desc_h264': 'सभी खिलाड़ियों और उपकरणों के साथ व्यापक रूप से संगत',
+      'desc_hevc': 'उच्च-दक्षता संपीड़न, अधिक संग्रहण बचाता है',
       'desc_mkv': 'एक ही फ़ाइल में कई ऑडियो और सबटाइटल ट्रैक। फ़िल्मों, एनीमे और टीवी श्रृंखलाओं के लिए सर्वश्रेष्ठ।',
       'desc_mov': 'उच्चतम असंपीड़ित मूल दृश्य गुणवत्ता। पेशेवर वीडियो संपादन (Premiere / DaVinci / FCPX) के लिए आदर्श।',
       'desc_mp4': 'हल्का और सार्वभौमिक। सोशल मीडिया, मोबाइल रिकॉर्डिंग और वीडियो साझा करने के लिए उत्तम।',
@@ -2935,7 +2705,11 @@ class AppLocalizations {
       'start_conversion': 'रूपांतरण शुरू करें',
       'storage_cache': 'स्टोरेज',
       'storage_free': 'खाली',
-      'supported_formats_hint': 'MP4, MKV, MOV — 4K / 60 FPS तक',
+      'supported_formats_hint': 'शुरू करने के लिए अपने डिवाइस से एक वीडियो फ़ाइल चुनें',
+      'rename_dialog_title': 'फ़ाइल का नाम बदलें',
+      'rename_dialog_hint': 'नया फ़ाइल नाम',
+      'rename_tooltip': 'नाम बदलें',
+      'dialog_save': 'सहेजें',
       'target_fps': 'लक्ष्य FPS',
       'target_resolution': 'लक्ष्य रिज़ॉल्यूशन',
       'telemetry_memory': 'RAM आवंटन',
@@ -2961,47 +2735,7 @@ class AppLocalizations {
       'unknown': 'अज्ञात',
       'video_options': 'वीडियो और संपीड़न विकल्प',
       'settings_advanced_title': 'उन्नत सेटिंग्स',
-      'settings_advanced_enable': 'उन्नत सेटिंग्स सक्षम करें',
-      'settings_advanced_enable_desc':
-          'कस्टम प्रीसेट और स्केलर एल्गोरिदम अनलॉक करें',
 
-      'settings_custom_preset': 'कस्टम गति प्रीसेट',
-      'settings_custom_preset_desc':
-          'ultrafast से veryslow तक x264 प्रीसेट चुनें',
-      'settings_custom_scaler': 'वीडियो स्केलिंग विधि (Scaler)',
-      'settings_custom_scaler_desc':
-          'डाउनस्केलिंग के लिए पिक्सेल इंटरपोलेशन एल्गोरिदम चुनें',
-      'preset_default': 'स्वचालित (प्रीसेट अनुसार)',
-      'scaler_default': 'स्वचालित (प्रीसेट अनुसार)',
-      'preset_default_desc':
-          'सक्रिय डिस्प्ले प्रीसेट (तेज़, सामान्य, अधिकतम) का अनुसरण करता है',
-      'preset_ultrafast_desc': 'सबसे तेज़, संपीड़न दक्षता और गुणवत्ता सबसे कम',
-      'preset_superfast_desc': 'बहुत तेज़, कम गुणवत्ता, न्यूनतम सीपीयू लोड',
-      'preset_veryfast_desc': 'तेज़, बैटरी अनुकूल दक्षता (तेज़ मोड डिफ़ॉल्ट)',
-      'preset_faster_desc':
-          'काफी तेज़, संतुलित दैनिक गुणवत्ता (सामान्य मोड डिफ़ॉल्ट)',
-      'preset_fast_custom_desc':
-          'मध्यम गति, स्पष्ट विवरण (अधिकतम मोड डिफ़ॉल्ट)',
-      'preset_medium_desc': 'मध्यम, मानक x264 गति और संपीड़न संतुलन',
-      'preset_slow_custom_desc': 'धीमा, सघन संपीड़न और स्पष्ट दृश्य',
-      'preset_slower_desc':
-          'बहुत धीमा, गहरा मैक्रोब्लॉक विश्लेषण और सटीक विवरण',
-      'preset_veryslow_desc':
-          'सबसे धीमा, अधिकतम संपीड़न दक्षता और उच्चतम गुणवत्ता',
-      'scaler_default_desc':
-          'सक्रिय प्रीसेट का अनुसरण करता है (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'सबसे तेज़, गुणवत्ता सबसे कम (ARM NEON पर सरल रैखिक)',
-      'scaler_bilinear_desc': 'बहुत तेज़, कम गुणवत्ता (धुंधलापन, कम तीक्ष्णता)',
-      'scaler_bicubic_desc': 'धीमा-मध्यम, गति और तीक्ष्णता का संतुलित मानक',
-      'scaler_area_desc':
-          'मध्यम, मोइरे पैटर्न रोकने हेतु डाउनस्केलिंग के लिए अनुकूल',
-      'scaler_lanczos_desc':
-          'सबसे धीमा, बेहतरीन विवरण और तीक्ष्णता के लिए 3-लोब सिंक फिल्टर',
-      'scaler_spline_desc':
-          'धीमा, बिना रिंगिंग कलाकृतियों के प्राकृतिक स्प्लाइन वक्र',
-      'scaler_gauss_desc':
-          'मध्यम गति, शोर और कणों को दबाने के लिए नरम गॉसियन फिल्टर',
       'trim_title': 'वीडियो पूर्वावलोकन और ट्रिम',
       'trim_start': 'प्रारंभ',
       'trim_end': 'समाप्त',
@@ -3012,6 +2746,10 @@ class AppLocalizations {
       'reset': 'रीसेट करें',
     },
     'ar': {
+      'advanced_warning_title': 'فتح الإعدادات المتقدمة؟',
+      'advanced_warning_desc': 'تتيح الإعدادات المتقدمة الضبط اليدوي لـ CRF ومعدل البت والتحكم في المعدل. قد يؤثر تعديل هذه الخيارات على حجم الملف وسرعة الترميز.',
+      'dont_show_again': 'عدم الإظهار مرة أخرى',
+      'preset_disabled_by_advanced': 'تم تعطيل الإعدادات المسبقة للسرعة أثناء تنشيط الإعدادات المتقدمة',
       'theme_oled_pure': 'AMOLED نقي',
       'theme_oled_pure_desc': 'خلفية سوداء حالكة ثابتة بدون رسوم متحركة',
       'theme_light_clean': 'فاتح نقي',
@@ -3030,7 +2768,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'إصدار التطبيق',
       'audio_bitrate': 'جودة معدل بت الصوت',
-      'audio_copy': 'نسخ مباشر · الأسرع',
+      'audio_copy': 'نسخ مباشر',
       'audio_extracted': 'الصوت المستخرج',
       'audio_format': 'صيغة الصوت الناتجة',
       'audio_options': 'خيارات استخراج الصوت',
@@ -3055,8 +2793,8 @@ class AppLocalizations {
       'desc_audio_wav': 'جودة استوديو خام بدون فقدان — صوت نقي بدون ضغط',
       'desc_bitrate': 'يجبر الفيديو على الوصول إلى حجم ملف مستهدف بالميجابايت، ويتم ضبط الجودة المرئية تلقائياً.',
       'desc_crf': 'يحافظ على جودة بصرية ثابتة بغض النظر عن حجم الملف النهائي. الرقم الأقل يعني جودة أعلى وحجم ملف أكبر. موصى به للغاية.',
-      'desc_h264': 'بث مباشر، وفيديوهات ويب، وتشغيل قياسي على الهواتف. توافق استثنائي مع جميع الأجهزة.',
-      'desc_hevc': 'بث بدقة 4K وأفلام فائقة الوضوح. كفاءة ضغط عالية من الجيل التالي (H.265).',
+      'desc_h264': 'متوافق على نطاق واسع مع جميع المشغلات والأجهزة',
+      'desc_hevc': 'ضغط عالي الكفاءة ويوفر مساحة تخزين أكبر',
       'desc_mkv': 'مسارات صوتية وترجمات متعددة في ملف واحد. ممتاز للأفلام والأنمي والمسلسلات.',
       'desc_mov': 'أعلى جودة بصرية خام بدون ضغط. مثالي للتحرير الاحترافي (Premiere / DaVinci / FCPX).',
       'desc_mp4': 'خفيف وعالمي. مثالي لوسائل التواصل الاجتماعي وتسجيلات الهاتف ومشاركة الفيديو.',
@@ -3249,7 +2987,11 @@ class AppLocalizations {
       'start_conversion': 'بدء التحويل',
       'storage_cache': 'التخزين',
       'storage_free': 'المتاح',
-      'supported_formats_hint': 'MP4, MKV, MOV — حتى 4K / 60 FPS',
+      'supported_formats_hint': 'اختر ملف فيديو من جهازك للبدء',
+      'rename_dialog_title': 'إعادة تسمية الملف',
+      'rename_dialog_hint': 'اسم الملف الجديد',
+      'rename_tooltip': 'إعادة تسمية',
+      'dialog_save': 'حفظ',
       'target_fps': 'معدل الإطارات المستهدف',
       'target_resolution': 'الدقة المستهدفة',
       'telemetry_memory': 'تخصيص RAM',
@@ -3273,42 +3015,7 @@ class AppLocalizations {
       'unknown': 'غير معروف',
       'video_options': 'خيارات الفيديو والضغط',
       'settings_advanced_title': 'الإعدادات المتقدمة',
-      'settings_advanced_enable': 'تفعيل الإعدادات المتقدمة',
-      'settings_advanced_enable_desc':
-          'فتح الإعدادات المسبقة المخصصة وخوارزميات تغيير الحجم',
 
-      'settings_custom_preset': 'إعداد مسبق للسرعة مخصص',
-      'settings_custom_preset_desc':
-          'اختر إعداد x264 مسبق من ultrafast إلى veryslow',
-      'settings_custom_scaler': 'طريقة تحجيم الفيديو (Scaler)',
-      'settings_custom_scaler_desc':
-          'اختر خوارزمية استيفاء البكسل لتصغير الدقة',
-      'preset_default': 'تلقائي (حسب الإعداد المسبق)',
-      'scaler_default': 'تلقائي (حسب الإعداد المسبق)',
-      'preset_default_desc': 'يتبع الإعداد المسبق النشط (سريع، عادي، أقصى)',
-      'preset_ultrafast_desc': 'الأسرع، أقل كفاءة ضغط وجودة',
-      'preset_superfast_desc': 'سريع جداً، جودة منخفضة، أدنى حمل على المعالج',
-      'preset_veryfast_desc':
-          'سريع، موفر للطاقة ومتوازن (افتراضي الوضع السريع)',
-      'preset_faster_desc':
-          'سريع نسبياً، جودة يومية متوازنة (افتراضي الوضع العادي)',
-      'preset_fast_custom_desc':
-          'سرعة معتدلة، تفاصيل بصرية واضحة (افتراضي الوضع الأقصى)',
-      'preset_medium_desc': 'متوسط، توازن قياسي بين السرعة والضغط في x264',
-      'preset_slow_custom_desc': 'بطيء، ضغط أكثر إحكاماً وصورة أكثر نقاءً',
-      'preset_slower_desc': 'بطيء جداً، تحليل عميق للكتل وتفاصيل دقيقة',
-      'preset_veryslow_desc': 'الأبطأ، أقصى كفاءة ضغط وأعلى جودة مرئية',
-      'scaler_default_desc':
-          'يتبع الإعداد المسبق النشط (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'الأسرع، أقل جودة (استيفاء خطي مبسط على ARM NEON)',
-      'scaler_bilinear_desc': 'سريع جداً، جودة منخفضة (ناعم/ضبابي، وضوح قليل)',
-      'scaler_bicubic_desc': 'متوسط-بطيء، توازن قياسي بين السرعة وحدة الحواف',
-      'scaler_area_desc': 'متوسط، أخذ عينات مساحية مثالي لمنع تشوه التموج',
-      'scaler_lanczos_desc':
-          'الأبطأ، مرشح سينك ثلاثي الحلقات لأعلى وضوح وتفاصيل فائقة',
-      'scaler_spline_desc': 'بطيء، منحنيات طبيعية دقيقة وخالية من هالات الرنين',
-      'scaler_gauss_desc': 'متوسط السرعة، مرشح غاوسي ناعم لكتم الضوضاء والتحبب',
       'trim_title': 'معاينة وقص الفيديو',
       'trim_start': 'البدء',
       'trim_end': 'الانتهاء',
@@ -3319,6 +3026,10 @@ class AppLocalizations {
       'reset': 'إعادة تعيين',
     },
     'fr': {
+      'advanced_warning_title': 'Ouvrir les paramètres avancés ?',
+      'advanced_warning_desc': 'Les paramètres avancés permettent d\'ajuster manuellement le CRF, le débit binaire et le contrôle de débit. Modifier ces options peut influer sur la taille du fichier et la vitesse d\'encodage.',
+      'dont_show_again': 'Ne plus afficher',
+      'preset_disabled_by_advanced': 'Les préréglages de vitesse sont désactivés lorsque les paramètres avancés sont actifs',
       'theme_oled_pure': 'AMOLED Pur',
       'theme_oled_pure_desc':
           'Arrière-plan noir absolu statique sans animations',
@@ -3340,7 +3051,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'Version de l\'application',
       'audio_bitrate': 'Qualité du débit audio',
-      'audio_copy': 'Copie directe · Le plus rapide',
+      'audio_copy': 'Copie directe',
       'audio_extracted': 'Audio extrait',
       'audio_format': 'Format audio de sortie',
       'audio_options': 'Options d\'extraction audio',
@@ -3365,8 +3076,8 @@ class AppLocalizations {
       'desc_audio_wav': 'Qualité studio sans perte — Audio pur non compressé',
       'desc_bitrate': 'Force la vidéo à atteindre une taille de fichier cible en Mo, la qualité visuelle s\'ajustant automatiquement.',
       'desc_crf': 'Maintient une qualité visuelle constante sans se soucier de la taille finale. Un chiffre plus bas signifie une qualité supérieure et un fichier plus volumineux. Fortement recommandé.',
-      'desc_h264': 'Diffusion en direct, vidéos web et lecture mobile standard. Compatibilité universelle exceptionnelle.',
-      'desc_hevc': 'Streaming 4K, films très haute fidélité. Efficacité de compression de nouvelle génération (H.265).',
+      'desc_h264': 'Largement compatible avec tous les lecteurs et appareils',
+      'desc_hevc': 'Compression haute efficacité, économise plus d\'espace',
       'desc_mkv': 'Plusieurs pistes audio et sous-titres dans un seul fichier. Parfait pour les films, animes et séries.',
       'desc_mov': 'Qualité visuelle brute non compressée. Recommandé pour le montage professionnel (Premiere / DaVinci / FCPX).',
       'desc_mp4': 'Léger et universel. Idéal pour les réseaux sociaux, vidéos de smartphone et le partage.',
@@ -3552,7 +3263,11 @@ class AppLocalizations {
       'start_conversion': 'Lancer la conversion',
       'storage_cache': 'Stockage',
       'storage_free': 'Libre',
-      'supported_formats_hint': 'MP4, MKV, MOV — jusqu\'à 4K / 60 FPS',
+      'supported_formats_hint': 'Choisissez un fichier vidéo sur votre appareil pour commencer',
+      'rename_dialog_title': 'Renommer le fichier',
+      'rename_dialog_hint': 'Nouveau nom de fichier',
+      'rename_tooltip': 'Renommer',
+      'dialog_save': 'Enregistrer',
       'target_fps': 'FPS cible',
       'target_resolution': 'Résolution cible',
       'telemetry_memory': 'Allocation RAM',
@@ -3578,49 +3293,7 @@ class AppLocalizations {
       'unknown': 'Inconnu',
       'video_options': 'Options vidéo et compression',
       'settings_advanced_title': 'Paramètres Avancés',
-      'settings_advanced_enable': 'Activer les Paramètres Avancés',
-      'settings_advanced_enable_desc': 'Débloquez les préréglages personnalisés et les algorithmes d\'échelle',
 
-      'settings_custom_preset': 'Préréglage de Vitesse Personnalisé',
-      'settings_custom_preset_desc':
-          'Sélectionnez le préréglage x264 de ultrafast à veryslow',
-      'settings_custom_scaler': 'Méthode de Redimensionnement (Scaler)',
-      'settings_custom_scaler_desc': 'Sélectionnez l\'algorithme d\'interpolation des pixels pour la réduction',
-      'preset_default': 'Automatique (Selon Préréglage)',
-      'scaler_default': 'Automatique (Selon Préréglage)',
-      'preset_default_desc':
-          'Suit le préréglage actif (Rapide, Normal, Maximum)',
-      'preset_ultrafast_desc':
-          'Le plus rapide, efficacité de compression et qualité minimales',
-      'preset_superfast_desc': 'Très rapide, qualité faible, charge CPU minime',
-      'preset_veryfast_desc':
-          'Rapide, économe en batterie (par défaut mode Rapide)',
-      'preset_faster_desc': 'Assez rapide, qualité équilibrée quotidienne (par défaut mode Normal)',
-      'preset_fast_custom_desc':
-          'Vitesse modérée, détails visuels nets (par défaut mode Maximum)',
-      'preset_medium_desc':
-          'Moyen, compromis standard vitesse et compression x264',
-      'preset_slow_custom_desc':
-          'Lent, compression plus dense et image plus propre',
-      'preset_slower_desc':
-          'Très lent, analyse approfondie des macroblocs et détails fins',
-      'preset_veryslow_desc':
-          'Le plus lent, efficacité de compression maximale et qualité ultime',
-      'scaler_default_desc':
-          'Suit le préréglage actif (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Le plus rapide, qualité minimale (linéaire simplifié ARM NEON)',
-      'scaler_bilinear_desc':
-          'Très rapide, qualité faible (flou/doux, manque de piqué)',
-      'scaler_bicubic_desc':
-          'Moyen-lent, équilibre classique entre rapidité et netteté',
-      'scaler_area_desc':
-          'Moyen, moyenne surfacique idéale contre les effets de moiré',
-      'scaler_lanczos_desc': 'Le plus lent, filtre sinc à 3 lobes pour les détails et la netteté ultimes',
-      'scaler_spline_desc':
-          'Lent, courbes splines naturelles et nettes sans artéfacts de halo',
-      'scaler_gauss_desc':
-          'Rapide-moyen, filtre gaussien doux pour atténuer bruit et grain',
       'trim_title': 'Aperçu et découpage',
       'trim_start': 'Début',
       'trim_end': 'Fin',
@@ -3631,6 +3304,10 @@ class AppLocalizations {
       'reset': 'Réinitialiser',
     },
     'ru': {
+      'advanced_warning_title': 'Открыть расширенные настройки?',
+      'advanced_warning_desc': 'Расширенные настройки позволяют вручную регулировать CRF, битрейт и управление скоростью. Изменение этих параметров может повлиять на размер файла и скорость кодирования.',
+      'dont_show_again': 'Больше не показывать',
+      'preset_disabled_by_advanced': 'Предустановки скорости отключены, пока активны расширенные настройки',
       'theme_oled_pure': 'Чистый AMOLED',
       'theme_oled_pure_desc': 'Статичный глубокий черный фон без анимаций',
       'theme_light_clean': 'Чистый Светлый',
@@ -3650,7 +3327,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'Версия приложения',
       'audio_bitrate': 'Битрейт качества звука',
-      'audio_copy': 'Прямое копирование · Быстрее всего',
+      'audio_copy': 'Прямое копирование',
       'audio_extracted': 'Извлеченное аудио',
       'audio_format': 'Выходной аудиоформат',
       'audio_options': 'Параметры извлечения аудио',
@@ -3672,8 +3349,8 @@ class AppLocalizations {
       'desc_audio_wav': 'Студийное качество без потерь — Несжатый чистый звук',
       'desc_bitrate': 'Принудительно подгоняет видео под целевой размер файла в МБ, качество подстраивается динамически.',
       'desc_crf': 'Сохраняет стабильное визуальное качество независимо от итогового размера файла. Меньшее число означает выше качество и больше размер. Настоятельно рекомендуется.',
-      'desc_h264': 'Прямые трансляции, веб-видео и стандартное мобильное воспроизведение. Превосходная совместимость.',
-      'desc_hevc': '4K-трансляции и фильмы высокой четкости. Высокоэффективное сжатие нового поколения (H.265).',
+      'desc_h264': 'Широкая совместимость со всеми плеерами и устройствами',
+      'desc_hevc': 'Высокоэффективное сжатие, экономит больше места',
       'desc_mkv': 'Поддержка нескольких аудиодорожек и субтитров в одном файле. Отлично для фильмов, аниме и сериалов.',
       'desc_mov': 'Максимальное исходное качество без потерь. Идеально для профессионального видеомонтажа (Premiere / DaVinci / FCPX).',
       'desc_mp4': 'Легкий и универсальный. Идеально подходит для соцсетей, записей с телефона и обмена файлами.',
@@ -3860,7 +3537,11 @@ class AppLocalizations {
       'start_conversion': 'Начать конвертацию',
       'storage_cache': 'Память',
       'storage_free': 'Свободно',
-      'supported_formats_hint': 'MP4, MKV, MOV — до 4K / 60 FPS',
+      'supported_formats_hint': 'Выберите видеофайл на устройстве, чтобы начать',
+      'rename_dialog_title': 'Переименовать файл',
+      'rename_dialog_hint': 'Новое имя файла',
+      'rename_tooltip': 'Переименовать',
+      'dialog_save': 'Сохранить',
       'target_fps': 'Целевой FPS',
       'target_resolution': 'Целевое разрешение',
       'telemetry_memory': 'Выделение ОЗУ',
@@ -3885,51 +3566,7 @@ class AppLocalizations {
       'unknown': 'Неизвестно',
       'video_options': 'Параметры видео и сжатия',
       'settings_advanced_title': 'Расширенные настройки',
-      'settings_advanced_enable': 'Включить расширенные настройки',
-      'settings_advanced_enable_desc':
-          'Разблокировать кастомные пресеты и алгоритмы масштабирования',
 
-      'settings_custom_preset': 'Пользовательский пресет скорости',
-      'settings_custom_preset_desc':
-          'Выберите пресет x264 от ultrafast до veryslow',
-      'settings_custom_scaler': 'Метод масштабирования (Scaler)',
-      'settings_custom_scaler_desc':
-          'Выберите алгоритм интерполяции пикселей для уменьшения',
-      'preset_default': 'Авто (По пресету)',
-      'scaler_default': 'Авто (По пресету)',
-      'preset_default_desc':
-          'Следует активному пресету экрана (Быстрый, Обычный, Максимум)',
-      'preset_ultrafast_desc':
-          'Самый быстрый, минимальная эффективность сжатия и качество',
-      'preset_superfast_desc':
-          'Очень быстрый, низкое качество, минимальная нагрузка на CPU',
-      'preset_veryfast_desc':
-          'Быстрый, экономичный к батарее (по умолчанию для Быстрого режима)',
-      'preset_faster_desc': 'Достаточно быстрый, сбалансированное качество (по умолчанию для Обычного)',
-      'preset_fast_custom_desc':
-          'Умеренная скорость, четкие детали (по умолчанию для Максимума)',
-      'preset_medium_desc':
-          'Средний, стандартный баланс скорости и сжатия x264',
-      'preset_slow_custom_desc':
-          'Медленный, более плотное сжатие и чистое изображение',
-      'preset_slower_desc':
-          'Очень медленный, глубокий анализ макроблоков и точные детали',
-      'preset_veryslow_desc':
-          'Самый медленный, максимальное сжатие и наивысшее качество',
-      'scaler_default_desc':
-          'Следует активному пресету (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc': 'Самый быстрый, низшее качество (простая линейная интерполяция на ARM NEON)',
-      'scaler_bilinear_desc':
-          'Очень быстрый, низкое качество (мягкий/размытый, слабая четкость)',
-      'scaler_bicubic_desc':
-          'Средне-медленный, эталонный баланс скорости и четкости контуров',
-      'scaler_area_desc':
-          'Средний, усреднение по площади, идеально против муара при сжатии',
-      'scaler_lanczos_desc': 'Самый медленный, 3-лепестковый фильтр sinc с максимальной детализацией',
-      'scaler_spline_desc':
-          'Медленный, естественные сплайны без артефактов ореолов',
-      'scaler_gauss_desc':
-          'Быстрый-средний, мягкий фильтр Гаусса для подавления шума и зерна',
       'trim_title': 'Предпросмотр и обрезка',
       'trim_start': 'Начало',
       'trim_end': 'Конец',
@@ -3940,6 +3577,10 @@ class AppLocalizations {
       'reset': 'Сбросить',
     },
     'de': {
+      'advanced_warning_title': 'Erweiterte Einstellungen öffnen?',
+      'advanced_warning_desc': 'Erweiterte Einstellungen ermöglichen die manuelle Anpassung von CRF, Bitrate und Ratensteuerung. Das Ändern dieser Optionen kann die Dateigröße und die Codierungsgeschwindigkeit beeinflussen.',
+      'dont_show_again': 'Nicht mehr anzeigen',
+      'preset_disabled_by_advanced': 'Geschwindigkeits-Voreinstellungen sind deaktiviert, solange die erweiterten Einstellungen aktiv sind',
       'theme_oled_pure': 'Reines AMOLED',
       'theme_oled_pure_desc':
           'Statischer tiefschwarzer Hintergrund ohne Animationen',
@@ -3961,7 +3602,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'App-Version',
       'audio_bitrate': 'Audio-Bitrate-Qualität',
-      'audio_copy': 'Original kopieren · Am schnellsten',
+      'audio_copy': 'Original kopieren',
       'audio_extracted': 'Audio extrahiert',
       'audio_format': 'Audioformat',
       'audio_options': 'Optionen zur Audio-Extraktion',
@@ -3986,9 +3627,8 @@ class AppLocalizations {
           'Verlustfrei unkomprimiert — Roh-Audio in Studioqualität',
       'desc_bitrate': 'Zwingt das Video auf eine exakte MB-Zielgröße, visuelle Qualität passt sich an.',
       'desc_crf': 'Erhält konsistente visuelle Qualität unabhängig von der Dateigröße. Empfohlen.',
-      'desc_h264': 'Streaming, Web-Video, Standard-Aufnahmen. Hervorragende Kompatibilität.',
-      'desc_hevc':
-          '4K-Streaming, hochwertige Filme. Sehr hohe Kompressionseffizienz.',
+      'desc_h264': 'Weitgehend kompatibel mit allen Playern und Geräten',
+      'desc_hevc': 'Hocheffiziente Kompression, spart mehr Speicherplatz',
       'desc_mkv': 'Mehrere Audiospuren & Untertitel. Filme, Serien, Anime.',
       'desc_mov': 'Hohe visuelle Rohqualität. Professionelle Videobearbeitung.',
       'desc_mp4': 'Leicht und universell. Soziale Medien, Aufnahmen, Teilen.',
@@ -4178,7 +3818,11 @@ class AppLocalizations {
       'start_conversion': 'Konvertierung starten',
       'storage_cache': 'Speicher',
       'storage_free': 'Frei',
-      'supported_formats_hint': 'MP4, MKV, MOV — bis zu 4K / 60 FPS',
+      'supported_formats_hint': 'Wählen Sie eine Videodatei von Ihrem Gerät, um zu beginnen',
+      'rename_dialog_title': 'Datei umbenennen',
+      'rename_dialog_hint': 'Neuer Dateiname',
+      'rename_tooltip': 'Umbenennen',
+      'dialog_save': 'Speichern',
       'target_fps': 'Ziel-FPS',
       'target_resolution': 'Zielauflösung',
       'telemetry_memory': 'RAM-Belegung',
@@ -4203,49 +3847,7 @@ class AppLocalizations {
       'unknown': 'Unbekannt',
       'video_options': 'Video- & Kompressionsoptionen',
       'settings_advanced_title': 'Erweiterte Einstellungen',
-      'settings_advanced_enable': 'Erweiterte Einstellungen aktivieren',
-      'settings_advanced_enable_desc':
-          'Benutzerdefinierte Presets und Skalierungsalgorithmen freischalten',
 
-      'settings_custom_preset': 'Benutzerdefiniertes Geschwindigkeits-Preset',
-      'settings_custom_preset_desc':
-          'Wählen Sie das x264-Preset von ultrafast bis veryslow',
-      'settings_custom_scaler': 'Videoskalierungsmethode (Scaler)',
-      'settings_custom_scaler_desc': 'Wählen Sie den Pixel-Interpolationsalgorithmus für die Verkleinerung',
-      'preset_default': 'Automatisch (Gemäß Preset)',
-      'scaler_default': 'Automatisch (Gemäß Preset)',
-      'preset_default_desc':
-          'Folgt der aktiven Voreinstellung (Schnell, Normal, Maximal)',
-      'preset_ultrafast_desc':
-          'Am schnellsten, geringste Kompressionseffizienz und Qualität',
-      'preset_superfast_desc':
-          'Sehr schnell, niedrige Qualität, minimale CPU-Last',
-      'preset_veryfast_desc':
-          'Schnell, akkuschonend und effizient (Standard im Schnell-Modus)',
-      'preset_faster_desc': 'Ziemlich schnell, ausgewogene Alltagsqualität (Standard im Normal-Modus)',
-      'preset_fast_custom_desc': 'Moderate Geschwindigkeit, scharfe Details (Standard im Maximal-Modus)',
-      'preset_medium_desc':
-          'Mittel, x264-Standardkompromiss aus Tempo und Kompression',
-      'preset_slow_custom_desc':
-          'Langsam, dichtere Kompression und sauberes Bild',
-      'preset_slower_desc':
-          'Sehr langsam, tiefe Makroblock-Analyse und feine Details',
-      'preset_veryslow_desc':
-          'Am langsamsten, maximale Kompressionseffizienz und höchste Qualität',
-      'scaler_default_desc':
-          'Folgt der aktiven Voreinstellung (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Am schnellsten, niedrigste Qualität (einfach linear auf ARM NEON)',
-      'scaler_bilinear_desc': 'Sehr schnell, geringe Qualität (weich/unscharf, wenig Kantenschärfe)',
-      'scaler_bicubic_desc':
-          'Mittel-langsam, Standardbalance aus Geschwindigkeit und Schärfe',
-      'scaler_area_desc': 'Mittel, Flächenmittelung optimal gegen Moiré-Effekte beim Verkleinern',
-      'scaler_lanczos_desc':
-          'Am langsamsten, 3-Lobe-Sinc-Filter für beste Details und Schärfe',
-      'scaler_spline_desc':
-          'Langsam, natürliche Spline-Kurven ohne störende Ringing-Artefakte',
-      'scaler_gauss_desc':
-          'Mittel-schnell, sanfter Gauß-Filter zur Dämpfung von Bildrauschen',
       'trim_title': 'Vorschau & Zuschneiden',
       'trim_start': 'Start',
       'trim_end': 'Ende',
@@ -4256,6 +3858,10 @@ class AppLocalizations {
       'reset': 'Zurücksetzen',
     },
     'it': {
+      'advanced_warning_title': 'Aprire le impostazioni avanzate?',
+      'advanced_warning_desc': 'Le impostazioni avanzate consentono di regolare manualmente CRF, bitrate e controllo della frequenza. La modifica di queste opzioni può influire sulle dimensioni del file e sulla velocità di codifica.',
+      'dont_show_again': 'Non mostrare più',
+      'preset_disabled_by_advanced': 'I preset di velocità sono disabilitati finché le impostazioni avanzate sono attive',
       'theme_oled_pure': 'AMOLED Puro',
       'theme_oled_pure_desc': 'Sfondo nero assoluto statico senza animazioni',
       'theme_light_clean': 'Luce Pulita',
@@ -4275,7 +3881,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'Versione app',
       'audio_bitrate': 'Qualità bitrate audio',
-      'audio_copy': 'Copia originale · Più veloce',
+      'audio_copy': 'Copia originale',
       'audio_extracted': 'Audio estratto',
       'audio_format': 'Formato audio',
       'audio_options': 'Opzioni estrazione audio',
@@ -4299,9 +3905,8 @@ class AppLocalizations {
       'desc_audio_wav': 'Senza perdita non compresso — Qualità audio da studio',
       'desc_bitrate': 'Forza il video su una dimensione esatta in MB, la qualità si adatterà.',
       'desc_crf': 'Mantiene una qualità visiva costante indipendentemente dalla dimensione del file. Consigliato.',
-      'desc_h264':
-          'Streaming, video web, registrazioni standard. Ottima compatibilità.',
-      'desc_hevc': 'Streaming 4K, filmati di alta qualità. Altissima efficienza di compressione.',
+      'desc_h264': 'Ampiamente compatibile con tutti i lettori e dispositivi',
+      'desc_hevc': 'Compressione ad alta efficienza, risparmia più spazio',
       'desc_mkv': 'Tracce audio e sottotitoli multipli. Film, anime, serie TV.',
       'desc_mov': 'Alta qualità visiva grezza. Montaggio video professionale.',
       'desc_mp4':
@@ -4490,7 +4095,11 @@ class AppLocalizations {
       'start_conversion': 'Avvia conversione',
       'storage_cache': 'Memoria',
       'storage_free': 'Libero',
-      'supported_formats_hint': 'MP4, MKV, MOV — fino a 4K / 60 FPS',
+      'supported_formats_hint': 'Scegli un file video dal tuo dispositivo per iniziare',
+      'rename_dialog_title': 'Rinomina file',
+      'rename_dialog_hint': 'Nuovo nome file',
+      'rename_tooltip': 'Rinomina',
+      'dialog_save': 'Salva',
       'target_fps': 'FPS di destinazione',
       'target_resolution': 'Risoluzione di destinazione',
       'telemetry_memory': 'Allocazione RAM',
@@ -4516,50 +4125,7 @@ class AppLocalizations {
       'unknown': 'Sconosciuto',
       'video_options': 'Opzioni video e compressione',
       'settings_advanced_title': 'Impostazioni Avanzate',
-      'settings_advanced_enable': 'Abilita Impostazioni Avanzate',
-      'settings_advanced_enable_desc':
-          'Sblocca preset personalizzati e algoritmi di ridimensionamento',
 
-      'settings_custom_preset': 'Preset di Velocità Personalizzato',
-      'settings_custom_preset_desc':
-          'Seleziona il preset x264 da ultrafast a veryslow',
-      'settings_custom_scaler': 'Metodo di Ridimensionamento Video (Scaler)',
-      'settings_custom_scaler_desc':
-          'Seleziona l\'algoritmo di interpolazione pixel per il downscaling',
-      'preset_default': 'Automatico (Segui Preset)',
-      'scaler_default': 'Automatico (Segui Preset)',
-      'preset_default_desc':
-          'Segue il preset attivo (Veloce, Normale, Massimo)',
-      'preset_ultrafast_desc':
-          'Il più veloce, minore efficienza di compressione e qualità',
-      'preset_superfast_desc': 'Molto veloce, bassa qualità, carico CPU minimo',
-      'preset_veryfast_desc':
-          'Veloce, efficiente e a basso consumo (predefinito Veloce)',
-      'preset_faster_desc': 'Abbastanza veloce, qualità bilanciata quotidiana (predefinito Normale)',
-      'preset_fast_custom_desc':
-          'Velocità moderata, dettagli visivi nitidi (predefinito Massimo)',
-      'preset_medium_desc':
-          'Medio, equilibrio standard x264 tra velocità e compressione',
-      'preset_slow_custom_desc':
-          'Lento, compressione più compatta e immagini più pulite',
-      'preset_slower_desc':
-          'Molto lento, analisi approfondita dei macroblocchi e dettagli fini',
-      'preset_veryslow_desc': 'Il più lento, massima efficienza di compressione e qualità superiore',
-      'scaler_default_desc':
-          'Segue il preset attivo (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Il più veloce, qualità minima (lineare semplice su ARM NEON)',
-      'scaler_bilinear_desc':
-          'Molto veloce, bassa qualità (morbido/sfocato, poca nitidezza)',
-      'scaler_bicubic_desc':
-          'Medio-lento, equilibrio classico tra velocità e nitidezza dei bordi',
-      'scaler_area_desc':
-          'Medio, campionamento ad area ottimale contro il moiré nel downscale',
-      'scaler_lanczos_desc': 'Il più lento, filtro sinc a 3 lobi con i dettagli e la nitidezza migliori',
-      'scaler_spline_desc':
-          'Lento, curve spline naturali senza artefatti di ringing',
-      'scaler_gauss_desc':
-          'Medio-veloce, filtro gaussiano morbido per attenuare rumore e grana',
       'trim_title': 'Anteprima e ritaglio video',
       'trim_start': 'Inizio',
       'trim_end': 'Fine',
@@ -4570,6 +4136,10 @@ class AppLocalizations {
       'reset': 'Ripristina',
     },
     'nl': {
+      'advanced_warning_title': 'Geavanceerde instellingen openen?',
+      'advanced_warning_desc': 'Geavanceerde instellingen maken handmatige aanpassing van CRF, bitrate en snelheidsregeling mogelijk. Het wijzigen van deze opties kan invloed hebben op de bestandsgrootte en coderingssnelheid.',
+      'dont_show_again': 'Niet meer weergeven',
+      'preset_disabled_by_advanced': 'Snelheidsvoorinstellingen zijn uitgeschakeld zolang geavanceerde instellingen actief zijn',
       'theme_oled_pure': 'Puur AMOLED',
       'theme_oled_pure_desc':
           'Statische diepzwarte achtergrond zonder animaties',
@@ -4590,7 +4160,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'App-versie',
       'audio_bitrate': 'Audiobitratekwaliteit',
-      'audio_copy': 'Origineel kopiëren · Snelst',
+      'audio_copy': 'Origineel kopiëren',
       'audio_extracted': 'Audio geëxtraheerd',
       'audio_format': 'Audioformaat',
       'audio_options': 'Opties voor audio-extractie',
@@ -4613,9 +4183,8 @@ class AppLocalizations {
       'desc_audio_wav': 'Lossless ongecomprimeerd — Studiokwaliteit ruwe audio',
       'desc_bitrate': 'Dwingt de video naar een exacte MB-doelgrootte, visuele kwaliteit past zich aan.',
       'desc_crf': 'Behoudt consistente visuele kwaliteit ongeacht de bestandsgrootte. Aanbevolen.',
-      'desc_h264': 'Livestreaming, webvideo, standaard opnamen. Uitstekende compatibiliteit.',
-      'desc_hevc':
-          '4K-streaming, hoogwaardige films. Zeer hoge compressie-efficiëntie.',
+      'desc_h264': 'Breed compatibel met alle spelers en apparaten',
+      'desc_hevc': 'Zeer efficiënte compressie, bespaart meer opslagruimte',
       'desc_mkv': 'Meerdere audiosporen en ondertitels. Films, series, anime.',
       'desc_mov': 'Hoge visuele ruwe kwaliteit. Professionele videobewerking.',
       'desc_mp4': 'Lichtgewicht en universeel. Sociale media, opnamen, delen.',
@@ -4805,7 +4374,11 @@ class AppLocalizations {
       'start_conversion': 'Conversie starten',
       'storage_cache': 'Opslag',
       'storage_free': 'Vrij',
-      'supported_formats_hint': 'MP4, MKV, MOV — tot 4K / 60 FPS',
+      'supported_formats_hint': 'Kies een videobestand van uw apparaat om te beginnen',
+      'rename_dialog_title': 'Bestand hernoemen',
+      'rename_dialog_hint': 'Nieuwe bestandsnaam',
+      'rename_tooltip': 'Hernoemen',
+      'dialog_save': 'Opslaan',
       'target_fps': 'Doel-FPS',
       'target_resolution': 'Doelresolutie',
       'telemetry_memory': 'RAM-toewijzing',
@@ -4831,53 +4404,7 @@ class AppLocalizations {
       'unknown': 'Onbekend',
       'video_options': 'Video- & compressie-opties',
       'settings_advanced_title': 'Geavanceerde Instellingen',
-      'settings_advanced_enable': 'Geavanceerde Instellingen Inschakelen',
-      'settings_advanced_enable_desc':
-          'Ontgrendel aangepaste voorinstellingen en schaalalgoritmen',
 
-      'settings_custom_preset': 'Aangepaste Snelheidsvoorinstelling',
-      'settings_custom_preset_desc':
-          'Selecteer x264-voorinstelling van ultrafast tot veryslow',
-      'settings_custom_scaler': 'Videoschaalmethode (Scaler)',
-      'settings_custom_scaler_desc':
-          'Selecteer pixelinterpolatie-algoritme voor verkleinen',
-      'preset_default': 'Automatisch (Volgens Voorinstelling)',
-      'scaler_default': 'Automatisch (Volgens Voorinstelling)',
-      'preset_default_desc':
-          'Volgt de actieve voorinstelling (Snel, Normaal, Maximaal)',
-      'preset_ultrafast_desc':
-          'Snelst, laagste compressie-efficiëntie en kwaliteit',
-      'preset_superfast_desc':
-          'Zeer snel, lage kwaliteit, minimale CPU-belasting',
-      'preset_veryfast_desc':
-          'Snel, batterijvriendelijk en efficiënt (standaard Snel-modus)',
-      'preset_faster_desc': 'Vrij snel, gebalanceerde dagelijkse kwaliteit (standaard Normaal-modus)',
-      'preset_fast_custom_desc':
-          'Matige snelheid, scherpe visuele details (standaard Maximaal-modus)',
-      'preset_medium_desc':
-          'Gemiddeld, standaard x264-balans tussen snelheid en compressie',
-      'preset_slow_custom_desc':
-          'Langzaam, strakkere compressie en helderder beeld',
-      'preset_slower_desc':
-          'Zeer langzaam, diepe macroblok-analyse en fijne details',
-      'preset_veryslow_desc':
-          'Langzaamst, maximale compressie-efficiëntie en hoogste kwaliteit',
-      'scaler_default_desc':
-          'Volgt de actieve voorinstelling (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Snelst, laagste kwaliteit (eenvoudig lineair op ARM NEON)',
-      'scaler_bilinear_desc':
-          'Zeer snel, lage kwaliteit (zacht/wazig, weinig scherpte)',
-      'scaler_bicubic_desc':
-          'Gemiddeld-langzaam, standaardbalans tussen snelheid en randscherpte',
-      'scaler_area_desc':
-          'Gemiddeld, oppervlakte-middeling ideaal tegen moiré bij verkleinen',
-      'scaler_lanczos_desc':
-          'Langzaamst, 3-lobig sinc-filter voor ultieme details en scherpte',
-      'scaler_spline_desc':
-          'Langzaam, natuurlijke spline-curven zonder storende randeffecten',
-      'scaler_gauss_desc':
-          'Snel-gemiddeld, zacht Gaussiaans filter om ruis en korrel te dempen',
       'trim_title': 'Videovoorbeeld & bijsnijden',
       'trim_start': 'Start',
       'trim_end': 'Einde',
@@ -4888,6 +4415,10 @@ class AppLocalizations {
       'reset': 'Herstellen',
     },
     'da': {
+      'advanced_warning_title': 'Åbn avancerede indstillinger?',
+      'advanced_warning_desc': 'Avancerede indstillinger tillader manuel justering af CRF, bithastighed og hastighedsstyring. Ændring af disse indstillinger kan påvirke filstørrelse og kodningshastighed.',
+      'dont_show_again': 'Vis ikke igen',
+      'preset_disabled_by_advanced': 'Hastighedsforudindstillinger er deaktiveret, mens avancerede indstillinger er aktive',
       'theme_oled_pure': 'Ren AMOLED',
       'theme_oled_pure_desc': 'Statisk kulsort baggrund uden animationer',
       'theme_light_clean': 'Rent Lys',
@@ -4907,7 +4438,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'App-version',
       'audio_bitrate': 'Lydbithastighedskvalitet',
-      'audio_copy': 'Kopiér original · Hurtigst',
+      'audio_copy': 'Kopiér original',
       'audio_extracted': 'Lyd udtrukket',
       'audio_format': 'Lydformat',
       'audio_options': 'Valgmuligheder for lydudtræk',
@@ -4931,8 +4462,8 @@ class AppLocalizations {
           'Tabsfrit ukomprimeret — Rå lydkvalitet i studiekvalitet',
       'desc_bitrate': 'Tvinger videoen til en nøjagtig MB-målstørrelse, visuel kvalitet justeres tilsvarende.',
       'desc_crf': 'Bevarer ensartet visuel kvalitet uanset endelig filstørrelse. Lavere værdi betyder bedre kvalitet, men større fil. Stærkt anbefalet.',
-      'desc_h264': 'Streaming, webvideo, standard telefonoptagelser. Fremragende kompatibilitet.',
-      'desc_hevc': '4K-streaming, film i høj kvalitet. Meget høj komprimeringseffektivitet.',
+      'desc_h264': 'Bredt kompatibel med alle afspillere og enheder',
+      'desc_hevc': 'Højeffektiv komprimering, sparer mere lagerplads',
       'desc_mkv': 'Flere lydspor og undertekster i 1 fil. Film, anime, serier.',
       'desc_mov': 'Høj visuel råkvalitet. Professionel videoredigering (Premiere/FCPX).',
       'desc_mp4':
@@ -5119,7 +4650,11 @@ class AppLocalizations {
       'start_conversion': 'Start konvertering',
       'storage_cache': 'Lagerplads',
       'storage_free': 'Ledig',
-      'supported_formats_hint': 'MP4, MKV, MOV — op til 4K / 60 FPS',
+      'supported_formats_hint': 'Vælg en videofil fra din enhed for at starte',
+      'rename_dialog_title': 'Omdøb fil',
+      'rename_dialog_hint': 'Nyt filnavn',
+      'rename_tooltip': 'Omdøb',
+      'dialog_save': 'Gem',
       'target_fps': 'Mål-FPS',
       'target_resolution': 'Målopløsning',
       'telemetry_memory': 'RAM-allokering',
@@ -5144,51 +4679,7 @@ class AppLocalizations {
       'unknown': 'Ukendt',
       'video_options': 'Video- og komprimeringsmuligheder',
       'settings_advanced_title': 'Avancerede Indstillinger',
-      'settings_advanced_enable': 'Aktivér Avancerede Indstillinger',
-      'settings_advanced_enable_desc': 'Lås op for brugerdefinerede forudindstillinger og skaleringsalgoritmer',
 
-      'settings_custom_preset': 'Brugerdefineret Hastighedsindstilling',
-      'settings_custom_preset_desc':
-          'Vælg x264-forudindstilling fra ultrafast til veryslow',
-      'settings_custom_scaler': 'Videoskaleringsmetode (Scaler)',
-      'settings_custom_scaler_desc':
-          'Vælg pixelinterpoleringsalgoritme til nedskalering',
-      'preset_default': 'Automatisk (Følg Indstilling)',
-      'scaler_default': 'Automatisk (Følg Indstilling)',
-      'preset_default_desc':
-          'Følger den aktive forudindstilling (Hurtig, Normal, Maksimal)',
-      'preset_ultrafast_desc':
-          'Hurtigst, laveste komprimeringseffektivitet og kvalitet',
-      'preset_superfast_desc':
-          'Meget hurtig, lav kvalitet, minimal CPU-belastning',
-      'preset_veryfast_desc':
-          'Hurtig, batterivenlig effektivitet (standard i Hurtig-tilstand)',
-      'preset_faster_desc': 'Temmelig hurtig, afbalanceret hverdagskvalitet (standard i Normal-tilstand)',
-      'preset_fast_custom_desc':
-          'Moderat hastighed, skarpe detaljer (standard i Maksimal-tilstand)',
-      'preset_medium_desc':
-          'Middel, x264-standardkompromis mellem fart og komprimering',
-      'preset_slow_custom_desc':
-          'Langsom, strammere komprimering og renere billede',
-      'preset_slower_desc':
-          'Meget langsom, dyb makroblokanalyse og præcise detaljer',
-      'preset_veryslow_desc':
-          'Langsomst, maksimal komprimeringseffektivitet og højeste kvalitet',
-      'scaler_default_desc':
-          'Følger aktiv forudindstilling (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Hurtigst, laveste kvalitet (simpel lineær på ARM NEON)',
-      'scaler_bilinear_desc':
-          'Meget hurtig, lav kvalitet (blød/sløret, ringe skarphed)',
-      'scaler_bicubic_desc':
-          'Middel-langsom, klassisk balance mellem hastighed og kantskarphed',
-      'scaler_area_desc':
-          'Middel, arealgennemsnit ideelt mod moiré-mønstre ved nedskalering',
-      'scaler_lanczos_desc': 'Langsomst, 3-fløjet sinc-filter for de skarpeste detaljer og konturer',
-      'scaler_spline_desc':
-          'Langsom, naturlige spline-kurver uden uønskede ringe-artefakter',
-      'scaler_gauss_desc':
-          'Mellem-hurtig, blødt Gauss-filter til at dæmpe støj og korn',
       'trim_title': 'Forhåndsvisning og trimning',
       'trim_start': 'Start',
       'trim_end': 'Slut',
@@ -5199,6 +4690,10 @@ class AppLocalizations {
       'reset': 'Nulstil',
     },
     'fi': {
+      'advanced_warning_title': 'Avataanko lisäasetukset?',
+      'advanced_warning_desc': 'Lisäasetukset mahdollistavat CRF:n, bittinopeuden ja nopeudenhallinnan manuaalisen säätämisen. Näiden asetusten muuttaminen voi vaikuttaa tiedostokokoon ja koodausnopeuteen.',
+      'dont_show_again': 'Älä näytä uudelleen',
+      'preset_disabled_by_advanced': 'Nopeuden esiasetukset on poistettu käytöstä lisäasetusten ollessa aktiivisia',
       'theme_oled_pure': 'Puhdas AMOLED',
       'theme_oled_pure_desc': 'Staattinen pikimusta tausta ilman animaatioita',
       'theme_light_clean': 'Puhdas Vaalea',
@@ -5219,7 +4714,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'Sovellusversio',
       'audio_bitrate': 'Äänen bittinopeuden laatu',
-      'audio_copy': 'Kopioi alkuperäinen · Nopein',
+      'audio_copy': 'Kopioi alkuperäinen',
       'audio_extracted': 'Ääni erotettu',
       'audio_format': 'Äänimuoto',
       'audio_options': 'Äänen erotusasetukset',
@@ -5242,8 +4737,8 @@ class AppLocalizations {
       'desc_audio_wav': 'Häviötön pakkaamaton — Studiotason raaka-äänenlaatu',
       'desc_bitrate': 'Pakottaa videon tarkkaan megatavukokoon, visuaalinen laatu säätyy vastaavasti.',
       'desc_crf': 'Säilyttää tasaisen visuaalisen laadun tiedostokoosta riippumatta. Pienempi arvo tarkoittaa parempaa laatua mutta suurempaa tiedostokokoa. Erittäin suositeltavaa.',
-      'desc_h264': 'Suoratoisto, verkkovideo, tavalliset puhelintallenteet. Erinomainen yhteensopivuus.',
-      'desc_hevc': '4K-suoratoisto, laadukkaat elokuvat. Erittäin korkea pakkaustehokkuus.',
+      'desc_h264': 'Laajasti yhteensopiva kaikkien soittimien ja laitteiden kanssa',
+      'desc_hevc': 'Erittäin tehokas pakkaus, säästää enemmän tallennustilaa',
       'desc_mkv': 'Useita ääniraitoja ja tekstityksiä yhdessä tiedostossa. Elokuvat, anime, sarjat.',
       'desc_mov': 'Korkea raakakuvanlaatu. Ammattimainen videoeditointi (Premiere/FCPX).',
       'desc_mp4': 'Kevyt ja yleinen. Sosiaalinen media, puhelintallenteet, videoiden jakaminen.',
@@ -5431,7 +4926,11 @@ class AppLocalizations {
       'start_conversion': 'Aloita muunnos',
       'storage_cache': 'Tallennustila',
       'storage_free': 'Vapaana',
-      'supported_formats_hint': 'MP4, MKV, MOV — jopa 4K / 60 FPS',
+      'supported_formats_hint': 'Valitse laitteeltasi videotiedosto aloittaaksesi',
+      'rename_dialog_title': 'Nimeä tiedosto uudelleen',
+      'rename_dialog_hint': 'Uusi tiedostonimi',
+      'rename_tooltip': 'Nimeä uudelleen',
+      'dialog_save': 'Tallenna',
       'target_fps': 'Tavoite-FPS',
       'target_resolution': 'Tavoiteresoluutio',
       'telemetry_memory': 'RAM-muistin käyttö',
@@ -5457,52 +4956,7 @@ class AppLocalizations {
       'unknown': 'Tuntematon',
       'video_options': 'Video- ja pakkausasetukset',
       'settings_advanced_title': 'Lisäasetukset',
-      'settings_advanced_enable': 'Ota Lisäasetukset Käyttöön',
-      'settings_advanced_enable_desc':
-          'Avaa mukautetut esiasetukset ja skaalausalgoritmit',
 
-      'settings_custom_preset': 'Mukautettu Nopeuden Esiasetus',
-      'settings_custom_preset_desc':
-          'Valitse x264-esiasetus väliltä ultrafast – veryslow',
-      'settings_custom_scaler': 'Videon Skaalausmenetelmä (Scaler)',
-      'settings_custom_scaler_desc':
-          'Valitse pikseli-interpolaatioalgoritmi pienentämiseen',
-      'preset_default': 'Automaattinen (Esiasetuksen mukaan)',
-      'scaler_default': 'Automaattinen (Esiasetuksen mukaan)',
-      'preset_default_desc':
-          'Noudattaa aktiivista esiasetusta (Nopea, Normaali, Maksimi)',
-      'preset_ultrafast_desc': 'Nopein, alhaisin pakkaustehokkuus ja laatu',
-      'preset_superfast_desc':
-          'Erittäin nopea, heikko laatu, minimaalinen CPU-kuormitus',
-      'preset_veryfast_desc':
-          'Nopea, akkuystävällinen ja kevyt (Nopea-tilan oletus)',
-      'preset_faster_desc':
-          'Melko nopea, tasapainoinen arkilaatu (Normaali-tilan oletus)',
-      'preset_fast_custom_desc':
-          'Kohtalainen nopeus, terävät yksityiskohdat (Maksimi-tilan oletus)',
-      'preset_medium_desc':
-          'Keskitaso, x264-standardin mukainen nopeuden ja koon tasapaino',
-      'preset_slow_custom_desc':
-          'Hidas, tiiviimpi pakkaus ja puhtaampi visuaalinen laatu',
-      'preset_slower_desc':
-          'Erittäin hidas, syvä makrolohkoanalyysi ja tarkat yksityiskohdat',
-      'preset_veryslow_desc':
-          'Hitain, maksimaalinen pakkaustehokkuus ja korkein laatu',
-      'scaler_default_desc':
-          'Noudattaa aktiivista esiasetusta (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Nopein, heikoin laatu (yksinkertainen lineaarinen ARM NEONissa)',
-      'scaler_bilinear_desc':
-          'Erittäin nopea, alhainen laatu (pehmeä/sumea, matala terävyys)',
-      'scaler_bicubic_desc':
-          'Keski-hidas, nopeuden ja reunaterävyyden kultainen keskitie',
-      'scaler_area_desc':
-          'Keskitaso, pinta-alakeskiarvoistus moiré-ilmiön ehkäisyyn',
-      'scaler_lanczos_desc':
-          'Hitain, 3-lohkoinen sinc-suodatin parhaalla terävyydellä',
-      'scaler_spline_desc':
-          'Hidas, luonnolliset spline-käyrät ilman häiritsevää rengaskohinaa',
-      'scaler_gauss_desc': 'Keskinopea, pehmeä Gauss-suodatin kohinan ja rakeisuuden vaimennukseen',
       'trim_title': 'Esikatselu ja leikkaus',
       'trim_start': 'Alku',
       'trim_end': 'Loppu',
@@ -5513,6 +4967,10 @@ class AppLocalizations {
       'reset': 'Palauta',
     },
     'no': {
+      'advanced_warning_title': 'Åpne avanserte innstillinger?',
+      'advanced_warning_desc': 'Avanserte innstillinger tillater manuell justering av CRF, bithastighet og hastighetskontroll. Endring av disse alternativene kan påvirke filstørrelse og kodingshastighet.',
+      'dont_show_again': 'Ikke vis igjen',
+      'preset_disabled_by_advanced': 'Hastighetsforhåndsinnstillinger er deaktivert mens avanserte innstillinger er aktive',
       'theme_oled_pure': 'Ren AMOLED',
       'theme_oled_pure_desc':
           'Statisk stummende svart bakgrunn uten animasjoner',
@@ -5532,7 +4990,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'Appversjon',
       'audio_bitrate': 'Lydbithastighet og kvalitet',
-      'audio_copy': 'Kopier original · Raskest',
+      'audio_copy': 'Kopier original',
       'audio_extracted': 'Lyd trukket ut',
       'audio_format': 'Lydformat',
       'audio_options': 'Alternativer for lyduttrekk',
@@ -5555,8 +5013,8 @@ class AppLocalizations {
       'desc_audio_wav': 'Tapsfri ukomprimert — Rå lydkvalitet i studiokvalitet',
       'desc_bitrate': 'Tvinger videoen til en nøyaktig målfilstørrelse i MB, visuell kvalitet justeres deretter.',
       'desc_crf': 'Opprettholder jevn visuell kvalitet uavhengig av endelig filstørrelse. Lavere verdi gir bedre kvalitet, men større fil. Anbefales på det sterkeste.',
-      'desc_h264': 'Streaming, nettvideo, standard telefonopptak. Utmerket kompatibilitet.',
-      'desc_hevc': '4K-streaming, høykvalitetsfilmer. Veldig høy komprimeringseffektivitet.',
+      'desc_h264': 'Bredt kompatibel med alle spillere og enheter',
+      'desc_hevc': 'Svært effektiv komprimering, sparer mer lagringsplass',
       'desc_mkv':
           'Flere lydspor og undertekster i 1 fil. Filmer, anime, serier.',
       'desc_mov': 'Høy visuell råkvalitet. Profesjonell videoredigering (Premiere/FCPX).',
@@ -5742,7 +5200,11 @@ class AppLocalizations {
       'start_conversion': 'Start konvertering',
       'storage_cache': 'Lagring',
       'storage_free': 'Ledig',
-      'supported_formats_hint': 'MP4, MKV, MOV — opptil 4K / 60 FPS',
+      'supported_formats_hint': 'Velg en videofil fra enheten din for å starte',
+      'rename_dialog_title': 'Gi nytt navn til fil',
+      'rename_dialog_hint': 'Nytt filnavn',
+      'rename_tooltip': 'Gi nytt navn',
+      'dialog_save': 'Lagre',
       'target_fps': 'Mål-FPS',
       'target_resolution': 'Måloppløsning',
       'telemetry_memory': 'RAM-tildeling',
@@ -5767,52 +5229,7 @@ class AppLocalizations {
       'unknown': 'Ukjent',
       'video_options': 'Video- og komprimeringsalternativer',
       'settings_advanced_title': 'Avanserte Innstillinger',
-      'settings_advanced_enable': 'Aktiver Avanserte Innstillinger',
-      'settings_advanced_enable_desc':
-          'Lås opp tilpassede forhåndsinnstillinger og skaleringsalgoritmer',
 
-      'settings_custom_preset': 'Tilpasset Hastighetsforhåndsinnstilling',
-      'settings_custom_preset_desc':
-          'Velg x264-forhåndsinnstilling fra ultrafast til veryslow',
-      'settings_custom_scaler': 'Videoskaleringsmetode (Scaler)',
-      'settings_custom_scaler_desc':
-          'Velg pikselinterpolasjonsalgoritme for nedskalering',
-      'preset_default': 'Automatisk (Følg Forhåndsinnstilling)',
-      'scaler_default': 'Automatisk (Følg Forhåndsinnstilling)',
-      'preset_default_desc':
-          'Følger den aktive forhåndsinnstillingen (Rask, Normal, Maksimal)',
-      'preset_ultrafast_desc':
-          'Raskest, lavest komprimeringseffektivitet og kvalitet',
-      'preset_superfast_desc':
-          'Veldig rask, lav kvalitet, minimal CPU-belastning',
-      'preset_veryfast_desc':
-          'Rask, batterivennlig effektivitet (standard i Rask-modus)',
-      'preset_faster_desc':
-          'Ganske rask, balansert hverdagskvalitet (standard i Normal-modus)',
-      'preset_fast_custom_desc':
-          'Moderat hastighet, skarpe detaljer (standard i Maksimal-modus)',
-      'preset_medium_desc':
-          'Middels, x264-standardbalanse mellom fart og komprimering',
-      'preset_slow_custom_desc': 'Treg, strammere komprimering og renere bilde',
-      'preset_slower_desc':
-          'Veldig treg, dyp makroblokkanalyse og presise detaljer',
-      'preset_veryslow_desc':
-          'Tregest, maksimal komprimeringseffektivitet og høyeste kvalitet',
-      'scaler_default_desc':
-          'Følger aktiv forhåndsinnstilling (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Raskest, lavest kvalitet (enkel lineær på ARM NEON)',
-      'scaler_bilinear_desc':
-          'Veldig rask, lav kvalitet (myk/uskarp, lite skarphet)',
-      'scaler_bicubic_desc':
-          'Middels-treg, klassisk balanse mellom hastighet og kantskarphet',
-      'scaler_area_desc': 'Middels, arealgjennomsnitt ideelt mot moiré-mønstre ved nedskalering',
-      'scaler_lanczos_desc':
-          'Tregest, 3-fløyet sinc-filter med overlegne detaljer og skarphet',
-      'scaler_spline_desc':
-          'Treg, naturlige spline-kurver uten forstyrrende ringeartefakter',
-      'scaler_gauss_desc':
-          'Middels rask, mykt Gauss-filter for å dempe støy og korn',
       'trim_title': 'Forhåndsvisning og trimming',
       'trim_start': 'Start',
       'trim_end': 'Slutt',
@@ -5823,6 +5240,10 @@ class AppLocalizations {
       'reset': 'Tilbakestill',
     },
     'sv': {
+      'advanced_warning_title': 'Öppna avancerade inställningar?',
+      'advanced_warning_desc': 'Avancerade inställningar tillåter manuell justering av CRF, bithastighet och hastighetskontroll. Ändring av dessa alternativ kan påverka filstorlek och kodningshastighet.',
+      'dont_show_again': 'Visa inte igen',
+      'preset_disabled_by_advanced': 'Hastighetsförinställningar är inaktiverade medan avancerade inställningar är aktiva',
       'theme_oled_pure': 'Ren AMOLED',
       'theme_oled_pure_desc': 'Statisk kolsvart bakgrund utan animationer',
       'theme_light_clean': 'Rent Ljus',
@@ -5842,7 +5263,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'Appversion',
       'audio_bitrate': 'Ljudbithastighet och kvalitet',
-      'audio_copy': 'Kopiera original · Snabbast',
+      'audio_copy': 'Kopiera original',
       'audio_extracted': 'Ljud extraherat',
       'audio_format': 'Ljudformat',
       'audio_options': 'Alternativ för ljudextrahering',
@@ -5866,8 +5287,8 @@ class AppLocalizations {
           'Förlustfritt okomprimerat — Rå ljudkvalitet i studioklass',
       'desc_bitrate': 'Tvingar videon till en exakt målfilstorlek i MB, visuell kvalitet anpassas därefter.',
       'desc_crf': 'Behåller jämn visuell kvalitet oavsett slutlig filstorlek. Lägre värde ger bättre kvalitet men större fil. Rekommenderas starkt.',
-      'desc_h264': 'Streaming, webbvideo, vanliga mobilinspelningar. Utmärkt kompatibilitet.',
-      'desc_hevc': '4K-streaming, högkvalitativa filmer. Mycket hög komprimeringseffektivitet.',
+      'desc_h264': 'Bred kompatibilitet med alla spelare och enheter',
+      'desc_hevc': 'Mycket effektiv komprimering, sparar mer lagringsutrymme',
       'desc_mkv':
           'Flera ljudspår och undertexter i 1 fil. Filmer, anime, serier.',
       'desc_mov': 'Hög visuell råkvalitet. Professionell videoredigering (Premiere/FCPX).',
@@ -6056,7 +5477,11 @@ class AppLocalizations {
       'start_conversion': 'Starta konvertering',
       'storage_cache': 'Lagring',
       'storage_free': 'Ledigt',
-      'supported_formats_hint': 'MP4, MKV, MOV — upp till 4K / 60 FPS',
+      'supported_formats_hint': 'Välj en videofil från din enhet för att börja',
+      'rename_dialog_title': 'Byt namn på fil',
+      'rename_dialog_hint': 'Nytt filnamn',
+      'rename_tooltip': 'Byt namn',
+      'dialog_save': 'Spara',
       'target_fps': 'Mål-FPS',
       'target_resolution': 'Målupplösning',
       'telemetry_memory': 'RAM-allokering',
@@ -6081,53 +5506,7 @@ class AppLocalizations {
       'unknown': 'Okänd',
       'video_options': 'Video- och komprimeringsalternativ',
       'settings_advanced_title': 'Avancerade Inställningar',
-      'settings_advanced_enable': 'Aktivera Avancerade Inställningar',
-      'settings_advanced_enable_desc':
-          'Lås upp anpassade förinställningar och skaleringsalgoritmer',
 
-      'settings_custom_preset': 'Anpassad Hastighetsförinställning',
-      'settings_custom_preset_desc':
-          'Välj x264-förinställning från ultrafast till veryslow',
-      'settings_custom_scaler': 'Videoskaleringsmetod (Scaler)',
-      'settings_custom_scaler_desc':
-          'Välj pixelinterpoleringsalgoritm för nedskalning',
-      'preset_default': 'Automatisk (Följ Förinställning)',
-      'scaler_default': 'Automatisk (Följ Förinställning)',
-      'preset_default_desc':
-          'Följer aktiv förinställning (Snabb, Normal, Maximal)',
-      'preset_ultrafast_desc':
-          'Snabbast, lägst komprimeringseffektivitet och kvalitet',
-      'preset_superfast_desc':
-          'Mycket snabb, låg kvalitet, minimal CPU-belastning',
-      'preset_veryfast_desc':
-          'Snabb, batterivänlig effektivitet (standard i Snabb-läge)',
-      'preset_faster_desc':
-          'Ganska snabb, balanserad vardagskvalitet (standard i Normal-läge)',
-      'preset_fast_custom_desc':
-          'Måttlig hastighet, skarpa detaljer (standard i Maximal-läge)',
-      'preset_medium_desc':
-          'Medel, x264-standardbalans mellan hastighet och komprimering',
-      'preset_slow_custom_desc': 'Långsam, tätare komprimering och renare bild',
-      'preset_slower_desc':
-          'Mycket långsam, djup makroblocksanalys och exakta detaljer',
-      'preset_veryslow_desc':
-          'Långsammast, maximal komprimeringseffektivitet och högsta kvalitet',
-      'scaler_default_desc':
-          'Följer aktiv förinställning (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Snabbast, lägst kvalitet (enkel linjär på ARM NEON)',
-      'scaler_bilinear_desc':
-          'Mycket snabb, låg kvalitet (mjuk/suddig, låg skärpa)',
-      'scaler_bicubic_desc':
-          'Medel-långsam, klassisk balans mellan fart och kantskärpa',
-      'scaler_area_desc':
-          'Medel, areamedelvärde optimalt mot moirémönster vid nedskalning',
-      'scaler_lanczos_desc':
-          'Långsammast, 3-lobers sinc-filter för bästa detaljer och skärpa',
-      'scaler_spline_desc':
-          'Långsam, naturliga splinekurvor utan störande ringningsartefakter',
-      'scaler_gauss_desc':
-          'Medelsnabb, mjukt Gauss-filter för att dämpa brus och kornighet',
       'trim_title': 'Förhandsvisning och trimning',
       'trim_start': 'Start',
       'trim_end': 'Slut',
@@ -6138,6 +5517,10 @@ class AppLocalizations {
       'reset': 'Återställ',
     },
     'ms': {
+      'advanced_warning_title': 'Buka Tetapan Lanjutan?',
+      'advanced_warning_desc': 'Tetapan lanjutan membolehkan pelarasan manual CRF, kadar bit, dan kawalan kadar. Mengubah pilihan ini boleh mempengaruhi saiz fail dan kelajuan pengekodan.',
+      'dont_show_again': 'Jangan tunjukkan lagi',
+      'preset_disabled_by_advanced': 'Pratetap kelajuan dinyahdayakan semasa Tetapan Lanjutan aktif',
       'theme_oled_pure': 'AMOLED Tulen',
       'theme_oled_pure_desc': 'Latar Hitam Pekat Statik Tanpa Animasi',
       'theme_light_clean': 'Cerah Bersih',
@@ -6156,7 +5539,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'Versi Aplikasi',
       'audio_bitrate': 'Kualiti Kadar Bit Audio',
-      'audio_copy': 'Salin Asal · Paling Pantas',
+      'audio_copy': 'Salin Asal',
       'audio_extracted': 'Audio Diekstrak',
       'audio_format': 'Format Audio',
       'audio_options': 'Pilihan Pengekstrakan Audio',
@@ -6180,8 +5563,8 @@ class AppLocalizations {
       'desc_audio_wav': 'Tanpa Kehilangan Tidak Dimampatkan — Kualiti audio mentah gred studio',
       'desc_bitrate': 'Memaksa video memenuhi saiz sasaran MB yang tepat, kualiti visual akan dilaraskan sewajarnya.',
       'desc_crf': 'Mengekalkan kualiti visual yang konsisten tanpa mengira saiz fail akhir. Nilai lebih rendah bermakna kualiti lebih baik tetapi saiz lebih besar. Sangat disyorkan.',
-      'desc_h264': 'Penstriman Langsung, Video Web, Rakaman Telefon Standard. Keserasian Sangat Baik.',
-      'desc_hevc': 'Penstriman 4K, Filem Berkualiti Tinggi. Kecekapan Pemampatan Sangat Tinggi.',
+      'desc_h264': 'Serasi secara meluas di semua pemain dan peranti',
+      'desc_hevc': 'Pemampatan kecekapan tinggi, lebih jimat storan',
       'desc_mkv': 'Pelbagai trek audio & sari kata dalam 1 fail. Filem, Anime, Siri TV.',
       'desc_mov': 'Kualiti mentah visual tinggi. Penyuntingan Video Profesional (Premiere/FCPX).',
       'desc_mp4': 'Ringan dan universal. Media Sosial, Rakaman Telefon, Perkongsian video.',
@@ -6367,7 +5750,11 @@ class AppLocalizations {
       'start_conversion': 'Mula Penukaran',
       'storage_cache': 'Storan',
       'storage_free': 'Bebas',
-      'supported_formats_hint': 'MP4, MKV, MOV — sehingga 4K / 60 FPS',
+      'supported_formats_hint': 'Pilih fail video dari peranti anda untuk memulakan',
+      'rename_dialog_title': 'Ubah Nama Fail',
+      'rename_dialog_hint': 'Nama fail baharu',
+      'rename_tooltip': 'Ubah nama',
+      'dialog_save': 'Simpan',
       'target_fps': 'Sasaran FPS',
       'target_resolution': 'Sasaran Resolusi',
       'telemetry_memory': 'Peruntukan RAM',
@@ -6394,51 +5781,7 @@ class AppLocalizations {
       'unknown': 'Tidak diketahui',
       'video_options': 'Pilihan Video & Mampatan',
       'settings_advanced_title': 'Tetapan Lanjutan',
-      'settings_advanced_enable': 'Dayakan Tetapan Lanjutan',
-      'settings_advanced_enable_desc':
-          'Buka pilihan pratetap tersuai dan algoritma penskala',
 
-      'settings_custom_preset': 'Pratetap Kelajuan Tersuai',
-      'settings_custom_preset_desc':
-          'Pilih pratetap x264 daripada ultrafast hingga veryslow',
-      'settings_custom_scaler': 'Kaedah Penskalaan Video (Scaler)',
-      'settings_custom_scaler_desc':
-          'Pilih algoritma interpolasi piksel penskalaan ke bawah',
-      'preset_default': 'Auto (Ikut Pratetap)',
-      'scaler_default': 'Auto (Ikut Pratetap)',
-      'preset_default_desc':
-          'Mengikut pratetap paparan aktif (Pantas, Normal, Maksimum)',
-      'preset_ultrafast_desc':
-          'Paling pantas, kecekapan mampatan & kualiti terendah',
-      'preset_superfast_desc':
-          'Sangat pantas, kualiti rendah, beban CPU minimum',
-      'preset_veryfast_desc': 'Pantas, cekap jimat bateri (lalai mod Pantas)',
-      'preset_faster_desc':
-          'Agak pantas, kualiti harian seimbang (lalai mod Normal)',
-      'preset_fast_custom_desc':
-          'Kelajuan sederhana, perincian visual tajam (lalai mod Maksimum)',
-      'preset_medium_desc':
-          'Sederhana, kompromi standard x264 antara kelajuan & saiz',
-      'preset_slow_custom_desc':
-          'Perlahan, mampatan lebih padat & visual jernih',
-      'preset_slower_desc':
-          'Sangat perlahan, analisis makroblok mendalam & perincian tepat',
-      'preset_veryslow_desc':
-          'Paling perlahan, kecekapan mampatan maksimum & kualiti tertinggi',
-      'scaler_default_desc':
-          'Mengikut pratetap aktif (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'Paling pantas, kualiti terendah (linear ringkas ARM NEON)',
-      'scaler_bilinear_desc':
-          'Sangat pantas, kualiti rendah (lembut/kabur, ketajaman minima)',
-      'scaler_bicubic_desc':
-          'Sederhana-perlahan, standard seimbang antara kelajuan & ketajaman',
-      'scaler_area_desc': 'Sederhana, pensampelan kawasan terbaik cegah moiré semasa turun skala',
-      'scaler_lanczos_desc': 'Paling perlahan, penapis sinc 3-lob dengan perincian & ketajaman terbaik',
-      'scaler_spline_desc':
-          'Perlahan, lengkung spline semula jadi tajam tanpa artifak dering',
-      'scaler_gauss_desc':
-          'Pantas-sederhana, penapis gaussian lembut untuk meredam hingar',
       'trim_title': 'Pratonton & Pangkas Video',
       'trim_start': 'Mula',
       'trim_end': 'Tamat',
@@ -6449,6 +5792,10 @@ class AppLocalizations {
       'reset': 'Tetapkan Semula',
     },
     'vi': {
+      'advanced_warning_title': 'Mở cài đặt nâng cao?',
+      'advanced_warning_desc': 'Cài đặt nâng cao cho phép điều chỉnh thủ công CRF, tốc độ bit và kiểm soát tốc độ. Thay đổi các tùy chọn này có thể ảnh hưởng đến kích thước tệp và tốc độ mã hóa.',
+      'dont_show_again': 'Không hiển thị lại',
+      'preset_disabled_by_advanced': 'Các cài đặt trước tốc độ bị tắt khi Cài đặt nâng cao đang hoạt động',
       'theme_oled_pure': 'AMOLED Thuần Khiết',
       'theme_oled_pure_desc': 'Nền đen tuyệt đối tĩnh không hoạt ảnh',
       'theme_light_clean': 'Sáng Tinh Khôi',
@@ -6468,7 +5815,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'Phiên bản ứng dụng',
       'audio_bitrate': 'Chất lượng tốc độ bit âm thanh',
-      'audio_copy': 'Sao chép gốc · Nhanh nhất',
+      'audio_copy': 'Sao chép gốc',
       'audio_extracted': 'Đã trích xuất âm thanh',
       'audio_format': 'Định dạng âm thanh',
       'audio_options': 'Tùy chọn trích xuất âm thanh',
@@ -6493,9 +5840,8 @@ class AppLocalizations {
           'Không nén không mất dữ liệu — Chất lượng âm thanh phòng thu',
       'desc_bitrate': 'Buộc video đáp ứng chính xác dung lượng mục tiêu tính bằng MB, chất lượng hình ảnh sẽ tự điều chỉnh tương ứng.',
       'desc_crf': 'Duy trì chất lượng hình ảnh nhất quán bất kể dung lượng tệp cuối cùng. Giá trị thấp hơn nghĩa là chất lượng tốt hơn nhưng kích thước tệp lớn hơn. Rất khuyến khích.',
-      'desc_h264': 'Phát trực tiếp, Video web, Quay video điện thoại thông thường. Khả năng tương thích tuyệt vời.',
-      'desc_hevc':
-          'Truyền trực tuyến 4K, Phim chất lượng cao. Hiệu quả nén rất cao.',
+      'desc_h264': 'Tương thích rộng rãi với mọi trình phát và thiết bị',
+      'desc_hevc': 'Nén hiệu quả cao, tiết kiệm nhiều dung lượng hơn',
       'desc_mkv': 'Nhiều luồng âm thanh & phụ đề trong 1 tệp. Phim, Anime, Phim truyền hình.',
       'desc_mov': 'Chất lượng hình ảnh thô cao. Chỉnh sửa video chuyên nghiệp (Premiere/FCPX).',
       'desc_mp4':
@@ -6685,7 +6031,11 @@ class AppLocalizations {
       'start_conversion': 'Bắt đầu chuyển đổi',
       'storage_cache': 'Bộ nhớ',
       'storage_free': 'Còn trống',
-      'supported_formats_hint': 'MP4, MKV, MOV — lên đến 4K / 60 FPS',
+      'supported_formats_hint': 'Chọn tệp video từ thiết bị của bạn để bắt đầu',
+      'rename_dialog_title': 'Đổi tên tệp',
+      'rename_dialog_hint': 'Tên tệp mới',
+      'rename_tooltip': 'Đổi tên',
+      'dialog_save': 'Lưu',
       'target_fps': 'FPS mục tiêu',
       'target_resolution': 'Độ phân giải mục tiêu',
       'telemetry_memory': 'Phân bổ RAM',
@@ -6712,49 +6062,7 @@ class AppLocalizations {
       'unknown': 'Không xác định',
       'video_options': 'Tùy chọn video & nén',
       'settings_advanced_title': 'Cài đặt nâng cao',
-      'settings_advanced_enable': 'Bật cài đặt nâng cao',
-      'settings_advanced_enable_desc':
-          'Mở khóa preset tùy chỉnh và thuật toán scaler',
 
-      'settings_custom_preset': 'Preset tốc độ tùy chỉnh',
-      'settings_custom_preset_desc':
-          'Chọn preset x264 từ ultrafast đến veryslow',
-      'settings_custom_scaler': 'Phương pháp thu phóng video (Scaler)',
-      'settings_custom_scaler_desc':
-          'Chọn thuật toán nội suy điểm ảnh khi giảm độ phân giải',
-      'preset_default': 'Tự động (Theo preset)',
-      'scaler_default': 'Tự động (Theo preset)',
-      'preset_default_desc':
-          'Theo cài đặt trước hiển thị (Nhanh, Bình thường, Tối đa)',
-      'preset_ultrafast_desc':
-          'Nhanh nhất, hiệu quả nén và chất lượng thấp nhất',
-      'preset_superfast_desc': 'Rất nhanh, chất lượng thấp, tải CPU tối thiểu',
-      'preset_veryfast_desc':
-          'Nhanh, tiết kiệm pin và hiệu quả (mặc định chế độ Nhanh)',
-      'preset_faster_desc': 'Khá nhanh, chất lượng cân bằng hằng ngày (mặc định chế độ Bình thường)',
-      'preset_fast_custom_desc':
-          'Tốc độ vừa phải, chi tiết sắc nét (mặc định chế độ Tối đa)',
-      'preset_medium_desc':
-          'Trung bình, cân bằng chuẩn x264 giữa tốc độ và độ nén',
-      'preset_slow_custom_desc':
-          'Chậm, nén chặt hơn và hình ảnh trong trẻo hơn',
-      'preset_slower_desc':
-          'Rất chậm, phân tích macroblock sâu và chi tiết chính xác',
-      'preset_veryslow_desc':
-          'Chậm nhất, hiệu quả nén tối đa và chất lượng cao nhất',
-      'scaler_default_desc':
-          'Theo cài đặt trước đang kích hoạt (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc': 'Nhanh nhất, chất lượng thấp nhất (nội suy tuyến tính đơn giản ARM NEON)',
-      'scaler_bilinear_desc':
-          'Rất nhanh, chất lượng thấp (mềm/mờ, ít độ sắc nét)',
-      'scaler_bicubic_desc':
-          'Trung bình-chậm, cân bằng chuẩn mực giữa tốc độ và độ sắc nét viền',
-      'scaler_area_desc': 'Trung bình, lấy mẫu diện tích tối ưu chống hiện tượng moiré khi hạ độ phân giải',
-      'scaler_lanczos_desc':
-          'Chậm nhất, bộ lọc sinc 3-lobe tái tạo chi tiết và độ sắc nét tối ưu',
-      'scaler_spline_desc':
-          'Chậm, đường cong spline tự nhiên sắc nét không bị viền bóng mờ',
-      'scaler_gauss_desc': 'Nhanh vừa, bộ lọc gaussian mềm để khử nhiễu và hạt',
       'trim_title': 'Xem trước & cắt video',
       'trim_start': 'Bắt đầu',
       'trim_end': 'Kết thúc',
@@ -6765,6 +6073,10 @@ class AppLocalizations {
       'reset': 'Đặt lại',
     },
     'th': {
+      'advanced_warning_title': 'เปิดการตั้งค่าขั้นสูงหรือไม่?',
+      'advanced_warning_desc': 'การตั้งค่าขั้นสูงช่วยให้สามารถปรับ CRF, บิตเรต และการควบคุมอัตราได้ด้วยตนเอง การแก้ไขตัวเลือกเหล่านี้อาจส่งผลต่อขนาดไฟล์และความเร็วในการเข้ารหัส',
+      'dont_show_again': 'ไม่ต้องแสดงอีก',
+      'preset_disabled_by_advanced': 'ค่าที่ตั้งไว้ล่วงหน้าของความเร็วจะถูกปิดใช้งานขณะที่การตั้งค่าขั้นสูงทำงานอยู่',
       'theme_oled_pure': 'AMOLED แท้',
       'theme_oled_pure_desc': 'พื้นหลังดำสนิทแบบนิ่งไร้อนิเมชัน',
       'theme_light_clean': 'สว่างสบายตา',
@@ -6783,7 +6095,7 @@ class AppLocalizations {
       'app_title': 'Phantek',
       'app_version': 'เวอร์ชันแอป',
       'audio_bitrate': 'คุณภาพบิตเรตเสียง',
-      'audio_copy': 'คัดลอกจากต้นฉบับ · เร็วที่สุด',
+      'audio_copy': 'คัดลอกจากต้นฉบับ',
       'audio_extracted': 'แยกเสียงเรียบร้อยแล้ว',
       'audio_format': 'รูปแบบไฟล์เสียง',
       'audio_options': 'ตัวเลือกการแยกเสียง',
@@ -6806,8 +6118,8 @@ class AppLocalizations {
       'desc_audio_wav': 'ไม่สูญเสียคุณภาพ ไม่บีบอัด — คุณภาพเสียงระดับสตูดิโอ',
       'desc_bitrate': 'บังคับให้วิดีโอมีขนาดเป้าหมายเป็น MB ตามที่กำหนดอย่างแม่นยำ คุณภาพของภาพจะปรับเปลี่ยนตามขนาด',
       'desc_crf': 'รักษาคุณภาพของภาพให้คงที่สม่ำเสมอไม่ว่าขนาดไฟล์สุดท้ายจะเป็นเท่าใด ค่ายิ่งต่ำคุณภาพยิ่งดีแต่ขนาดไฟล์จะใหญ่ขึ้น แนะนำเป็นอย่างยิ่ง',
-      'desc_h264': 'การสตรีมสด, วิดีโอบนเว็บ, การบันทึกวิดีโอบนโทรศัพท์ทั่วไป ความเข้ากันได้ยอดเยี่ยม',
-      'desc_hevc': 'การสตรีม 4K, ภาพยนตร์คุณภาพสูง ประสิทธิภาพการบีบอัดสูงมาก',
+      'desc_h264': 'เข้ากันได้ดีกับเครื่องเล่นและอุปกรณ์ทุกชนิด',
+      'desc_hevc': 'การบีบอัดประสิทธิภาพสูง ประหยัดพื้นที่จัดเก็บได้มากขึ้น',
       'desc_mkv': 'รวมแทร็กเสียงและคำบรรยายหลายรายการในไฟล์เดียว ภาพยนตร์, อนิเมะ, ซีรีส์ทีวี',
       'desc_mov':
           'คุณภาพของภาพดิบสูง การตัดต่อวิดีโอระดับมืออาชีพ (Premiere/FCPX)',
@@ -6996,7 +6308,11 @@ class AppLocalizations {
       'start_conversion': 'เริ่มการแปลงไฟล์',
       'storage_cache': 'พื้นที่จัดเก็บ',
       'storage_free': 'ว่าง',
-      'supported_formats_hint': 'MP4, MKV, MOV — สูงสุด 4K / 60 FPS',
+      'supported_formats_hint': 'เลือกไฟล์วิดีโอจากอุปกรณ์ของคุณเพื่อเริ่มต้น',
+      'rename_dialog_title': 'เปลี่ยนชื่อไฟล์',
+      'rename_dialog_hint': 'ชื่อไฟล์ใหม่',
+      'rename_tooltip': 'เปลี่ยนชื่อ',
+      'dialog_save': 'บันทึก',
       'target_fps': 'FPS เป้าหมาย',
       'target_resolution': 'ความละเอียดเป้าหมาย',
       'telemetry_memory': 'การใช้ RAM',
@@ -7021,48 +6337,7 @@ class AppLocalizations {
       'unknown': 'ไม่ทราบ',
       'video_options': 'ตัวเลือกวิดีโอและการบีบอัด',
       'settings_advanced_title': 'การตั้งค่าขั้นสูง',
-      'settings_advanced_enable': 'เปิดใช้งานการตั้งค่าขั้นสูง',
-      'settings_advanced_enable_desc':
-          'ปลดล็อกพรีเซ็ตแบบกำหนดเองและอัลกอริทึมการปรับขนาด',
 
-      'settings_custom_preset': 'พรีเซ็ตความเร็วแบบกำหนดเอง',
-      'settings_custom_preset_desc':
-          'เลือกพรีเซ็ต x264 ตั้งแต่ ultrafast ถึง veryslow',
-      'settings_custom_scaler': 'วิธีปรับขนาดวิดีโอ (Scaler)',
-      'settings_custom_scaler_desc':
-          'เลือกอัลกอริทึมการประมาณค่าพิกเซลสำหรับการย่อขนาด',
-      'preset_default': 'อัตโนมัติ (ตามพรีเซ็ต)',
-      'scaler_default': 'อัตโนมัติ (ตามพรีเซ็ต)',
-      'preset_default_desc':
-          'ทำตามพรีเซ็ตหน้าจอที่ใช้งานอยู่ (เร็ว, ปกติ, สูงสุด)',
-      'preset_ultrafast_desc':
-          'เร็วที่สุด, ประสิทธิภาพการบีบอัดและคุณภาพต่ำที่สุด',
-      'preset_superfast_desc': 'เร็วมาก, คุณภาพต่ำ, ใช้ CPU น้อยที่สุด',
-      'preset_veryfast_desc':
-          'เร็ว, ประหยัดพลังงานแบตเตอรี่ (ค่าเริ่มต้นโหมดเร็ว)',
-      'preset_faster_desc': 'ค่อนข้างเร็ว, คุณภาพสมดุลสำหรับการใช้งานทั่วไป (ค่าเริ่มต้นโหมดปกติ)',
-      'preset_fast_custom_desc':
-          'ความเร็วปานกลาง, รายละเอียดภาพคมชัด (ค่าเริ่มต้นโหมดสูงสุด)',
-      'preset_medium_desc':
-          'ปานกลาง, ความสมดุลมาตรฐานของ x264 ระหว่างความเร็วและขนาด',
-      'preset_slow_custom_desc': 'ช้า, บีบอัดได้แน่นขึ้นและภาพสะอาดตาขึ้น',
-      'preset_slower_desc':
-          'ช้ามาก, วิเคราะห์มาโครบล็อกเชิงลึกเพื่อความแม่นยำสูง',
-      'preset_veryslow_desc':
-          'ช้าที่สุด, ประสิทธิภาพการบีบอัดสูงสุดและคุณภาพดีที่สุด',
-      'scaler_default_desc': 'ทำตามพรีเซ็ตที่เลือก (Bicubic / Lanczos / Area)',
-      'scaler_fast_bilinear_desc':
-          'เร็วที่สุด, คุณภาพต่ำที่สุด (ลิเนียร์พื้นฐานบน ARM NEON)',
-      'scaler_bilinear_desc': 'เร็วมาก, คุณภาพต่ำ (ภาพนุ่ม/เบลอ, ขาดความคมชัด)',
-      'scaler_bicubic_desc':
-          'ปานกลาง-ช้า, ความสมดุลมาตรฐานระหว่างความเร็วและความคมชัด',
-      'scaler_area_desc':
-          'ปานกลาง, เฉลี่ยพื้นที่ช่วยป้องกันลายคลื่นมัวเรเมื่อลดขนาด',
-      'scaler_lanczos_desc':
-          'ช้าที่สุด, ตัวกรอง Sinc 3 ลูป ให้รายละเอียดและความคมชัดสูงที่สุด',
-      'scaler_spline_desc': 'ช้า, เส้นโค้งสไปลน์ธรรมชาติ คมชัดไร้เงาขอบกวนตา',
-      'scaler_gauss_desc':
-          'เร็วปานกลาง, ตัวกรองเกาส์เซียนแบบนุ่มเพื่อลดสัญญาณรบกวน',
       'trim_title': 'ดูตัวอย่างและตัดวิดีโอ',
       'trim_start': 'เริ่ม',
       'trim_end': 'สิ้นสุด',

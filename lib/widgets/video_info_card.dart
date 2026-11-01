@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2026 zerabyte88
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../models/video_info.dart';
@@ -10,8 +12,15 @@ import 'app_glass_card.dart';
 
 class VideoInfoCard extends StatelessWidget {
   final VideoInfo videoInfo;
+  final Uint8List? thumbnailBytes;
+  final VoidCallback? onRename;
 
-  const VideoInfoCard({super.key, required this.videoInfo});
+  const VideoInfoCard({
+    super.key,
+    required this.videoInfo,
+    this.thumbnailBytes,
+    this.onRename,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,27 +42,53 @@ class VideoInfoCard extends StatelessWidget {
                   color: theme.colorScheme.primary.withAlpha(24),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  Icons.movie_outlined,
-                  color: theme.colorScheme.primary,
-                  size: 24,
-                ),
+                child: thumbnailBytes != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.memory(
+                          thumbnailBytes!,
+                          width: 44,
+                          height: 44,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Icon(
+                        Icons.movie_outlined,
+                        color: theme.colorScheme.primary,
+                        size: 24,
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      videoInfo.fileName,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                        letterSpacing: -0.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            videoInfo.fileName,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface,
+                              letterSpacing: -0.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (onRename != null) ...[
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 18),
+                            onPressed: onRename,
+                            tooltip: l10n.t('rename_tooltip'),
+                            constraints: const BoxConstraints(),
+                            padding: const EdgeInsets.all(4),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 6),
                     Wrap(

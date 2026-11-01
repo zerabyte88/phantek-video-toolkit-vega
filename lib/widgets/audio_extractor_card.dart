@@ -22,36 +22,6 @@ class AudioExtractorCard extends StatelessWidget {
     required this.l10n,
   });
 
-  String _formatEstimatedSize() {
-    final durationSec = sourceVideo.durationSeconds;
-    if (durationSec <= 0) return '~';
-
-    int bitrateKbps = encodingOptions.audioExtractBitrateKbps;
-    if (bitrateKbps <= 0) {
-      // Fallback estimate if source bitrate is unknown
-      bitrateKbps = 160;
-    }
-
-    final estimatedBytes = (durationSec * (bitrateKbps * 1024 / 8)).round();
-    final mb = estimatedBytes / (1024 * 1024);
-    if (mb < 1) {
-      final kb = (estimatedBytes / 1024).round();
-      return '$kb KB';
-    }
-    return '${mb.toStringAsFixed(1)} MB';
-  }
-
-  String _getAudioFormatDescription(AudioFormat format, AppLocalizations l10n) {
-    switch (format) {
-      case AudioFormat.mp3:
-        return l10n.t('desc_audio_mp3');
-      case AudioFormat.m4a:
-        return l10n.t('desc_audio_m4a');
-      case AudioFormat.wav:
-        return l10n.t('desc_audio_wav');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -176,17 +146,6 @@ class AudioExtractorCard extends StatelessWidget {
               }).toList(),
             ),
           ),
-          const SizedBox(height: 8),
-          Center(
-            child: Text(
-              _getAudioFormatDescription(encodingOptions.audioFormat, l10n),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11.5,
-                color: theme.colorScheme.onSurface.withAlpha(140),
-              ),
-            ),
-          ),
 
           const SizedBox(height: 16),
           Divider(height: 1, color: theme.dividerColor),
@@ -290,50 +249,7 @@ class AudioExtractorCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            Divider(height: 1, color: theme.dividerColor),
-            const SizedBox(height: 16),
           ],
-
-          // Estimated size
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: theme.colorScheme.outline.withAlpha(60),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  size: 18,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    l10n.t('est_size_title'),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-                Text(
-                  _formatEstimatedSize(),
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

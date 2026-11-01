@@ -55,6 +55,38 @@ class VideoInfo {
     this.audioBitrateKbps,
   });
 
+  VideoInfo copyWith({
+    String? filePath,
+    String? fileName,
+    int? width,
+    int? height,
+    double? durationSeconds,
+    int? bitrate,
+    double? fps,
+    String? codec,
+    int? fileSizeBytes,
+    bool? hasAudio,
+    String? audioCodec,
+    int? audioChannels,
+    int? audioBitrateKbps,
+  }) {
+    return VideoInfo(
+      filePath: filePath ?? this.filePath,
+      fileName: fileName ?? this.fileName,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      bitrate: bitrate ?? this.bitrate,
+      fps: fps ?? this.fps,
+      codec: codec ?? this.codec,
+      fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,
+      hasAudio: hasAudio ?? this.hasAudio,
+      audioCodec: audioCodec ?? this.audioCodec,
+      audioChannels: audioChannels ?? this.audioChannels,
+      audioBitrateKbps: audioBitrateKbps ?? this.audioBitrateKbps,
+    );
+  }
+
   /// True if video is 4K (2160p or higher in any orientation).
   bool get is4K =>
       shortDimension >= 2160 ||
@@ -113,11 +145,11 @@ class VideoInfo {
     return '${(bitrate / 1000).toStringAsFixed(0)} Kbps';
   }
 
-  /// Formatted codec display name (e.g. 'H.264', 'H.265 / HEVC', 'VP9', 'AV1').
+  /// Formatted codec display name (e.g. 'H.264 / AVC', 'H.265 / HEVC', 'VP9', 'AV1').
   String get formattedCodec {
     final c = codec.toLowerCase();
     if (c.contains('avc') || c.contains('h264') || c.contains('h.264')) {
-      return 'H.264';
+      return 'H.264 / AVC';
     }
     if (c.contains('hevc') || c.contains('h265') || c.contains('h.265')) {
       return 'H.265 / HEVC';
@@ -128,7 +160,7 @@ class VideoInfo {
     if (c.contains('mp4v') || c.contains('mpeg4')) return 'MPEG-4';
     if (c.contains('h263')) return 'H.263';
     // Fallback if probed as container mime or generic mp4
-    if (c == 'video/mp4' || c == 'mp4') return 'H.264';
+    if (c == 'video/mp4' || c == 'mp4') return 'H.264 / AVC';
     return codec.toUpperCase();
   }
 

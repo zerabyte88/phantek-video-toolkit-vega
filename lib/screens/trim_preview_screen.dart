@@ -97,7 +97,7 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
       return;
     }
 
-    if ((_currentPositionSeconds - pos).abs() > 0.1 ||
+    if ((_currentPositionSeconds - pos).abs() > 0.05 ||
         _isPlaying != isPlaying) {
       setState(() {
         _currentPositionSeconds = pos;
@@ -121,6 +121,16 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
     }
   }
 
+  void _seekTo(double seconds) {
+    final clamped = seconds.clamp(0.0, _maxDurationSeconds);
+    setState(() {
+      _currentPositionSeconds = clamped;
+    });
+    if (_controller != null && _isControllerInitialized) {
+      _controller!.seekTo(Duration(milliseconds: (clamped * 1000).round()));
+    }
+  }
+
   @override
   void dispose() {
     _controller?.removeListener(_onVideoPlayerUpdate);
@@ -139,13 +149,11 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _proceed({required bool isTrimmed}) async {
-    final opts = isTrimmed
-        ? widget.encodingOptions.copyWith(
-            trimStartMs: (_startSeconds * 1000).round(),
-            trimEndMs: (_endSeconds * 1000).round(),
-          )
-        : widget.encodingOptions.copyWith(trimStartMs: null, trimEndMs: null);
+  Future<void> _proceed() async {
+    final opts = widget.encodingOptions.copyWith(
+      trimStartMs: (_startSeconds * 1000).round(),
+      trimEndMs: (_endSeconds * 1000).round(),
+    );
 
     if (_controller != null) {
       _controller!.removeListener(_onVideoPlayerUpdate);
@@ -194,11 +202,11 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
                     _buildVideoPreviewCard(theme),
                     const SizedBox(height: 16),
 
-                    // Trimming card with RangeSlider & badges
+                    // Trimming card with Timeline Scrubber & badges
                     _buildTrimmingCard(theme, l10n, durationTrimmed),
                     const SizedBox(height: 20),
 
-                    // Action buttons
+                    // Single Consolidated Action button
                     _buildActionButtons(theme, l10n),
                   ],
                 ),
@@ -323,6 +331,37 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
     );
   }
 
+  Widget _buildTimeRuler(ThemeData theme) {
+    final textColor = theme.colorScheme.onSurface.withAlpha(120);
+    const style = TextStyle(fontSize: 10, fontWeight: FontWeight.w500);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('00:00', style: style.copyWith(color: textColor)),
+          Text(
+            _formatTime(_maxDurationSeconds * 0.25),
+            style: style.copyWith(color: textColor),
+          ),
+          Text(
+            _formatTime(_maxDurationSeconds * 0.50),
+            style: style.copyWith(color: textColor),
+          ),
+          Text(
+            _formatTime(_maxDurationSeconds * 0.75),
+            style: style.copyWith(color: textColor),
+          ),
+          Text(
+            _formatTime(_maxDurationSeconds),
+            style: style.copyWith(color: textColor),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTrimmingCard(
     ThemeData theme,
     AppLocalizations l10n,
@@ -332,36 +371,31 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // RangeSlider
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: theme.colorScheme.primary,
-              inactiveTrackColor: theme.colorScheme.primary.withAlpha(40),
-              thumbColor: theme.colorScheme.primary,
-              overlayColor: theme.colorScheme.primary.withAlpha(30),
-              trackHeight: 4,
-              rangeThumbShape: const RoundRangeSliderThumbShape(
-                enabledThumbRadius: 8,
-              ),
-            ),
-            child: RangeSlider(
-              values: RangeValues(_startSeconds, _endSeconds),
-              min: 0.0,
-              max: _maxDurationSeconds,
-              onChanged: (RangeValues values) {
-                setState(() {
-                  _startSeconds = values.start;
-                  _endSeconds = values.end;
-                });
-                if (_controller != null && _isControllerInitialized) {
-                  _controller!.seekTo(
-                    Duration(milliseconds: (_startSeconds * 1000).round()),
-                  );
-                }
-              },
-            ),
+          // Time Ruler
+          _buildTimeRuler(theme),
+          const SizedBox(height: 6),
+
+          // Interactive Visual Timeline Scrubber
+          _TimelineScrubber(
+            currentPosition: _currentPositionSeconds,
+            startSeconds: _startSeconds,
+            endSeconds: _endSeconds,
+            maxDuration: _maxDurationSeconds,
+            primaryColor: theme.colorScheme.primary,
+            isDark: theme.brightness == Brightness.dark,
+            onStartChanged: (val) {
+              setState(() {
+                _startSeconds = val;
+              });
+            },
+            onEndChanged: (val) {
+              setState(() {
+                _endSeconds = val;
+              });
+            },
+            onSeek: _seekTo,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
           // Badges: Start, End, New Duration
           Row(
@@ -468,43 +502,326 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
   }
 
   Widget _buildActionButtons(ThemeData theme, AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Primary button: Proceed with trimming
-        ElevatedButton.icon(
-          onPressed: () => _proceed(isTrimmed: true),
-          icon: const Icon(Icons.check_rounded, size: 20),
-          label: Text(
-            l10n.t('trim_btn_proceed'),
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          style: ElevatedButton.styleFrom(
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-
-        // Secondary button: Skip trimming
-        OutlinedButton.icon(
-          onPressed: () => _proceed(isTrimmed: false),
-          icon: const Icon(Icons.all_inclusive_rounded, size: 18),
-          label: Text(
-            l10n.t('trim_btn_skip'),
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 13),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-      ],
+    return ElevatedButton.icon(
+      key: const Key('trim_proceed_button'),
+      onPressed: _proceed,
+      icon: const Icon(Icons.check_rounded, size: 20),
+      label: Text(
+        l10n.t('trim_btn_proceed'),
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      ),
+      style: ElevatedButton.styleFrom(
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     );
+  }
+}
+
+enum _TimelineDragTarget { none, startHandle, endHandle, playhead }
+
+class _TimelineScrubber extends StatefulWidget {
+  final double currentPosition;
+  final double startSeconds;
+  final double endSeconds;
+  final double maxDuration;
+  final Color primaryColor;
+  final bool isDark;
+  final ValueChanged<double> onStartChanged;
+  final ValueChanged<double> onEndChanged;
+  final ValueChanged<double> onSeek;
+
+  const _TimelineScrubber({
+    required this.currentPosition,
+    required this.startSeconds,
+    required this.endSeconds,
+    required this.maxDuration,
+    required this.primaryColor,
+    required this.isDark,
+    required this.onStartChanged,
+    required this.onEndChanged,
+    required this.onSeek,
+  });
+
+  @override
+  State<_TimelineScrubber> createState() => _TimelineScrubberState();
+}
+
+class _TimelineScrubberState extends State<_TimelineScrubber> {
+  _TimelineDragTarget _dragTarget = _TimelineDragTarget.none;
+
+  void _handlePointerDown(Offset localPosition, double width) {
+    if (width <= 0 || widget.maxDuration <= 0) return;
+    final dx = localPosition.dx;
+    final startPx = (widget.startSeconds / widget.maxDuration) * width;
+    final endPx = (widget.endSeconds / widget.maxDuration) * width;
+    const tolerance = 24.0;
+
+    if ((dx - startPx).abs() <= tolerance) {
+      _dragTarget = _TimelineDragTarget.startHandle;
+    } else if ((dx - endPx).abs() <= tolerance) {
+      _dragTarget = _TimelineDragTarget.endHandle;
+    } else {
+      _dragTarget = _TimelineDragTarget.playhead;
+      final t = (dx / width) * widget.maxDuration;
+      widget.onSeek(t.clamp(0.0, widget.maxDuration));
+    }
+  }
+
+  void _handlePointerMove(Offset localPosition, double width) {
+    if (width <= 0 || widget.maxDuration <= 0) return;
+    final dx = localPosition.dx.clamp(0.0, width);
+    final t = (dx / width) * widget.maxDuration;
+
+    switch (_dragTarget) {
+      case _TimelineDragTarget.startHandle:
+        final newStart = t
+            .clamp(0.0, math.max(0.0, widget.endSeconds - 0.5))
+            .toDouble();
+        widget.onStartChanged(newStart);
+        widget.onSeek(newStart);
+        break;
+      case _TimelineDragTarget.endHandle:
+        final newEnd = t
+            .clamp(
+              math.min(widget.maxDuration, widget.startSeconds + 0.5),
+              widget.maxDuration,
+            )
+            .toDouble();
+        widget.onEndChanged(newEnd);
+        widget.onSeek(newEnd);
+        break;
+      case _TimelineDragTarget.playhead:
+        widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
+        break;
+      case _TimelineDragTarget.none:
+        break;
+    }
+  }
+
+  void _handlePointerUp() {
+    _dragTarget = _TimelineDragTarget.none;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onHorizontalDragStart: (details) =>
+              _handlePointerDown(details.localPosition, width),
+          onHorizontalDragUpdate: (details) =>
+              _handlePointerMove(details.localPosition, width),
+          onHorizontalDragEnd: (_) => _handlePointerUp(),
+          onHorizontalDragCancel: _handlePointerUp,
+          onTapDown: (details) =>
+              _handlePointerDown(details.localPosition, width),
+          onTapUp: (_) => _handlePointerUp(),
+          child: CustomPaint(
+            size: Size(width, 68),
+            painter: _TimelineTrackPainter(
+              currentPosition: widget.currentPosition,
+              startSeconds: widget.startSeconds,
+              endSeconds: widget.endSeconds,
+              maxDuration: widget.maxDuration,
+              primaryColor: widget.primaryColor,
+              isDark: widget.isDark,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TimelineTrackPainter extends CustomPainter {
+  final double currentPosition;
+  final double startSeconds;
+  final double endSeconds;
+  final double maxDuration;
+  final Color primaryColor;
+  final bool isDark;
+
+  const _TimelineTrackPainter({
+    required this.currentPosition,
+    required this.startSeconds,
+    required this.endSeconds,
+    required this.maxDuration,
+    required this.primaryColor,
+    required this.isDark,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    if (w <= 0 || maxDuration <= 0) return;
+
+    const topY = 14.0;
+    final bottomY = size.height - 2.0;
+
+    // Track frame RRect
+    final trackRect = RRect.fromRectAndRadius(
+      Rect.fromLTRB(0, topY, w, bottomY),
+      const Radius.circular(8),
+    );
+
+    // 1. Draw base filmstrip track
+    final bgPaint = Paint()
+      ..color = isDark ? const Color(0xFF131722) : const Color(0xFFE2E8F0);
+    canvas.drawRRect(trackRect, bgPaint);
+
+    // Filmstrip subtle notch rails
+    final railPaint = Paint()
+      ..color = isDark
+          ? Colors.white.withAlpha(20)
+          : Colors.black.withAlpha(20);
+    const railStep = 24.0;
+    for (double x = 6.0; x < w - 6.0; x += railStep) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, topY + 3, 8, 3),
+          const Radius.circular(1.5),
+        ),
+        railPaint,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, bottomY - 6, 8, 3),
+          const Radius.circular(1.5),
+        ),
+        railPaint,
+      );
+    }
+
+    // Positions in pixels
+    final startPx = ((startSeconds / maxDuration) * w).clamp(0.0, w);
+    final endPx = ((endSeconds / maxDuration) * w).clamp(0.0, w);
+    final playheadPx = ((currentPosition / maxDuration) * w).clamp(0.0, w);
+
+    // Clip to track boundary for cut overlays
+    canvas.save();
+    canvas.clipRRect(trackRect);
+
+    // 2. Cut Out Zones (Dimmed/Dark)
+    final cutPaint = Paint()
+      ..color = Colors.black.withAlpha(isDark ? 180 : 120);
+
+    // Left cut zone (0 to startPx)
+    if (startPx > 0) {
+      canvas.drawRect(Rect.fromLTRB(0, topY, startPx, bottomY), cutPaint);
+    }
+
+    // Right cut zone (endPx to w)
+    if (endPx < w) {
+      canvas.drawRect(Rect.fromLTRB(endPx, topY, w, bottomY), cutPaint);
+    }
+
+    // 3. Kept active window tint
+    final activeRect = Rect.fromLTRB(startPx, topY, endPx, bottomY);
+    final activeFill = Paint()..color = primaryColor.withAlpha(22);
+    canvas.drawRect(activeRect, activeFill);
+
+    canvas.restore();
+
+    // 4. Active selection window bounding frame
+    final activeFrame = RRect.fromRectAndRadius(
+      activeRect,
+      const Radius.circular(8),
+    );
+    final framePaint = Paint()
+      ..color = primaryColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    canvas.drawRRect(activeFrame, framePaint);
+
+    // 5. Left Handle
+    const handleW = 12.0;
+    final leftHandleRect = RRect.fromRectAndCorners(
+      Rect.fromLTRB(startPx - handleW, topY - 1, startPx, bottomY + 1),
+      topLeft: const Radius.circular(8),
+      bottomLeft: const Radius.circular(8),
+    );
+    final handlePaint = Paint()..color = primaryColor;
+    canvas.drawRRect(leftHandleRect, handlePaint);
+
+    // Left handle notches
+    final notchPaint = Paint()
+      ..color = isDark ? Colors.black.withAlpha(220) : Colors.white
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    final midY = (topY + bottomY) / 2;
+    canvas.drawLine(
+      Offset(startPx - 6, midY - 7),
+      Offset(startPx - 6, midY + 7),
+      notchPaint,
+    );
+
+    // Right Handle
+    final rightHandleRect = RRect.fromRectAndCorners(
+      Rect.fromLTRB(endPx, topY - 1, endPx + handleW, bottomY + 1),
+      topRight: const Radius.circular(8),
+      bottomRight: const Radius.circular(8),
+    );
+    canvas.drawRRect(rightHandleRect, handlePaint);
+
+    // Right handle notches
+    canvas.drawLine(
+      Offset(endPx + 6, midY - 7),
+      Offset(endPx + 6, midY + 7),
+      notchPaint,
+    );
+
+    // 6. Needle Playhead Line & Teardrop/Needle Head
+    final needleLinePaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2.0;
+
+    // Vertical line through track
+    canvas.drawLine(
+      Offset(playheadPx, topY - 2),
+      Offset(playheadPx, bottomY + 2),
+      needleLinePaint,
+    );
+
+    // Top needle head (teardrop/pin)
+    final needlePath = Path()
+      ..moveTo(playheadPx - 6, 0)
+      ..lineTo(playheadPx + 6, 0)
+      ..lineTo(playheadPx + 6, 7)
+      ..lineTo(playheadPx, topY)
+      ..lineTo(playheadPx - 6, 7)
+      ..close();
+
+    final needleHeadPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(needlePath, needleHeadPaint);
+
+    // Needle shadow
+    final needleBorder = Paint()
+      ..color = Colors.black.withAlpha(160)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawPath(needlePath, needleBorder);
+
+    // Center eye dot
+    canvas.drawCircle(
+      Offset(playheadPx, 4),
+      1.5,
+      Paint()..color = Colors.black.withAlpha(220),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _TimelineTrackPainter oldDelegate) {
+    return oldDelegate.currentPosition != currentPosition ||
+        oldDelegate.startSeconds != startSeconds ||
+        oldDelegate.endSeconds != endSeconds ||
+        oldDelegate.maxDuration != maxDuration ||
+        oldDelegate.primaryColor != primaryColor ||
+        oldDelegate.isDark != isDark;
   }
 }

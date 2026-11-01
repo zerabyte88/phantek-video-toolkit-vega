@@ -4,144 +4,58 @@
 import 'dart:math' as math;
 
 enum VideoCodec {
-  h264(
-    'H.264 / AVC (HW)',
-    'video/avc',
-    'Live Streaming, Video Web, Rekaman HP standar. Kompatibilitas Luar Biasa.',
-  ),
-  hevc(
-    'H.265 / HEVC (HW)',
-    'video/hevc',
-    'Streaming 4K, Efisiensi Kompresi Sangat Tinggi via Hardware Encoder.',
-  );
+  h264('H.264 / AVC', 'video/avc'),
+  hevc('H.265 / HEVC', 'video/hevc');
 
   final String displayName;
   final String mimeType;
-  final String description;
 
-  const VideoCodec(this.displayName, this.mimeType, this.description);
+  const VideoCodec(this.displayName, this.mimeType);
+
+  static VideoCodec fromName(String? name) =>
+      name == 'hevc' ? VideoCodec.hevc : VideoCodec.h264;
 }
 
 enum VideoContainer {
-  mp4(
-    'MP4',
-    'mp4',
-    'Ringan dan universal. Media Sosial, Rekaman HP, Berbagi video.',
-  ),
-  mkv(
-    'MKV',
-    'mkv',
-    'Banyak audio & subtitle dalam 1 file. Menyimpan Film, Anime, Seri TV.',
-  ),
-  mov(
-    'MOV',
-    'mov',
-    'Kualitas visual mentah (tinggi). Editing Video Profesional (Premiere/FCPX).',
-  );
+  mp4('MP4', 'mp4'),
+  mkv('MKV', 'mkv'),
+  mov('MOV', 'mov');
 
   final String displayName;
   final String extension;
-  final String description;
 
-  const VideoContainer(this.displayName, this.extension, this.description);
+  const VideoContainer(this.displayName, this.extension);
 }
 
 enum RateControlMode {
-  crf(
-    'Constant Quality (CQ/CRF)',
-    'Mempertahankan kualitas visual yang konsisten menggunakan Hardware Encoder VBR/CQ.',
-  ),
-  bitrate(
-    'Bitrate (CBR/VBR)',
-    'Memaksa video untuk mencapai ukuran target MB yang pasti, kualitas visual akan menyesuaikan.',
-  );
+  crf('Constant Quality (CQ/CRF)'),
+  bitrate('Bitrate (CBR/VBR)');
 
   final String displayName;
-  final String description;
 
-  const RateControlMode(this.displayName, this.description);
+  const RateControlMode(this.displayName);
 }
 
 enum AudioFormat {
-  m4a(
-    'M4A / AAC (HW)',
-    'm4a',
-    'audio/mp4a-latm',
-    'Kualitas Tinggi & Efisiensi Terbaik (Apple & Android)',
-  ),
-  mp3(
-    'MP3',
-    'mp3',
-    'audio/mpeg',
-    'Universal (Kompatibel dengan semua perangkat dan pemutar)',
-  ),
-  wav(
-    'WAV (Lossless)',
-    'wav',
-    'audio/raw',
-    'Lossless Uncompressed (Kualitas Audio Studio Mentah)',
-  );
+  m4a('M4A', 'm4a', 'audio/mp4a-latm'),
+  mp3('MP3', 'mp3', 'audio/mpeg'),
+  wav('WAV', 'wav', 'audio/raw');
 
   final String displayName;
   final String extension;
   final String mimeType;
-  final String description;
 
-  const AudioFormat(
-    this.displayName,
-    this.extension,
-    this.mimeType,
-    this.description,
-  );
+  const AudioFormat(this.displayName, this.extension, this.mimeType);
 }
 
 enum SpeedPreset {
-  fast(
-    'Cepat',
-    'area',
-    'veryfast',
-    24,
-    'Kecepatan maksimal HW encoder, konsumsi daya minimal',
-  ),
-  normal(
-    'Normal',
-    'bicubic',
-    'faster',
-    22,
-    'Keseimbangan ideal kecepatan HW encoder dan kualitas visual',
-  ),
-  max(
-    'Maksimal',
-    'lanczos+accurate_rnd+full_chroma_int',
-    'fast',
-    20,
-    'Detail & warna paling tajam, kompresi efisien optimal',
-  );
+  fast(24),
+  normal(22),
+  max(20);
 
-  final String displayName;
-  final String scaler;
-  final String x264Preset;
   final int defaultCrf;
-  final String description;
 
-  const SpeedPreset(
-    this.displayName,
-    this.scaler,
-    this.x264Preset,
-    this.defaultCrf,
-    this.description,
-  );
-
-  String get cleanScaler {
-    switch (this) {
-      case SpeedPreset.fast:
-        return 'Area';
-      case SpeedPreset.normal:
-        return 'Bicubic';
-      case SpeedPreset.max:
-        return 'Lanczos';
-    }
-  }
+  const SpeedPreset(this.defaultCrf);
 
   String get encodingPresetName {
     switch (this) {
@@ -264,10 +178,7 @@ class EncodingOptions {
 
   factory EncodingOptions.fromJson(Map<String, dynamic> json) {
     return EncodingOptions(
-      codec: VideoCodec.values.firstWhere(
-        (e) => e.name == json['codec'],
-        orElse: () => VideoCodec.h264,
-      ),
+      codec: VideoCodec.fromName(json['codec'] as String?),
       container: VideoContainer.values.firstWhere(
         (e) => e.name == json['container'],
         orElse: () => VideoContainer.mp4,

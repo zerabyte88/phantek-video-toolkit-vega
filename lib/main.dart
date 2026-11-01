@@ -28,11 +28,11 @@ void main() async {
     ),
   );
 
-  runApp(const VideoDownscalerApp());
+  runApp(const PhantekVegaApp());
 }
 
-class VideoDownscalerApp extends StatelessWidget {
-  const VideoDownscalerApp({super.key});
+class PhantekVegaApp extends StatelessWidget {
+  const PhantekVegaApp({super.key});
 
   @override
   Widget build(BuildContext context) {

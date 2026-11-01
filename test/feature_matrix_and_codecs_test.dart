@@ -482,19 +482,13 @@ void main() {
     });
 
     test('SpeedPreset ladder configuration matches mobile optimized specifications', () {
-      expect(SpeedPreset.fast.scaler, equals('area'));
-      expect(SpeedPreset.fast.x264Preset, equals('veryfast'));
+      expect(SpeedPreset.fast.encodingPresetName, equals('fast'));
       expect(SpeedPreset.fast.defaultCrf, equals(24));
 
-      expect(SpeedPreset.normal.scaler, equals('bicubic'));
-      expect(SpeedPreset.normal.x264Preset, equals('faster'));
+      expect(SpeedPreset.normal.encodingPresetName, equals('medium'));
       expect(SpeedPreset.normal.defaultCrf, equals(22));
 
-      expect(
-        SpeedPreset.max.scaler,
-        equals('lanczos+accurate_rnd+full_chroma_int'),
-      );
-      expect(SpeedPreset.max.x264Preset, equals('fast'));
+      expect(SpeedPreset.max.encodingPresetName, equals('slow'));
       expect(SpeedPreset.max.defaultCrf, equals(20));
     });
 
