@@ -4115,6 +4115,167 @@ void main() {
       );
 
       testWidgets(
+        'Dragging playhead needle from start moves position without altering start trim boundary',
+        (tester) async {
+          tester.view.physicalSize = const Size(1080, 2400);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+
+          const video = VideoInfo(
+            filePath: '/test/sample_trim.mp4',
+            fileName: 'sample_trim.mp4',
+            width: 1920,
+            height: 1080,
+            durationSeconds: 100.0,
+            bitrate: 5000000,
+            fps: 30.0,
+            codec: 'h264',
+            fileSizeBytes: 15000000,
+          );
+
+          EncodingOptions? returnedOptions;
+
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppTheme.getTheme('oled_snowfall'),
+              home: Builder(
+                builder: (ctx) => Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () async {
+                      returnedOptions = await Navigator.of(ctx)
+                          .push<EncodingOptions>(
+                            MaterialPageRoute(
+                              builder: (_) => const TrimPreviewScreen(
+                                videoInfo: video,
+                                targetResolution: VideoResolution(
+                                  label: '1080p',
+                                  width: 1920,
+                                  height: 1080,
+                                ),
+                                encodingOptions: EncodingOptions(),
+                                appSettings: AppSettings(),
+                                isAudioExtraction: false,
+                              ),
+                            ),
+                          );
+                    },
+                    child: const Text('Open Trim Screen 1'),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.text('Open Trim Screen 1'));
+          await tester.pumpAndSettle();
+
+          final scrubberFinder = find.byWidgetPredicate(
+            (w) => w is CustomPaint && w.size.height == 68,
+          );
+          expect(scrubberFinder, findsOneWidget);
+
+          final scrubberTopLeft = tester.getTopLeft(scrubberFinder);
+
+          // Both startPx and playheadPx start at x = 14.0.
+          // Dragging from dx = 14.0 (the playhead needle line) towards the right
+          final needleStart = scrubberTopLeft + const Offset(14.0, 30.0);
+          await tester.dragFrom(needleStart, const Offset(100.0, 0.0));
+          await tester.pumpAndSettle();
+
+          // Tap proceed button
+          await tester.tap(find.byKey(const Key('trim_proceed_button')));
+          await tester.pumpAndSettle();
+
+          expect(returnedOptions, isNotNull);
+          // Start boundary MUST stay at 0 ms!
+          expect(returnedOptions!.trimStartMs, equals(0));
+          expect(returnedOptions!.trimEndMs, equals(100000));
+        },
+      );
+
+      testWidgets(
+        'Dragging start handle ear moves the video start trim boundary',
+        (tester) async {
+          tester.view.physicalSize = const Size(1080, 2400);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+
+          const video = VideoInfo(
+            filePath: '/test/sample_trim.mp4',
+            fileName: 'sample_trim.mp4',
+            width: 1920,
+            height: 1080,
+            durationSeconds: 100.0,
+            bitrate: 5000000,
+            fps: 30.0,
+            codec: 'h264',
+            fileSizeBytes: 15000000,
+          );
+
+          EncodingOptions? returnedOptions;
+
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppTheme.getTheme('oled_snowfall'),
+              home: Builder(
+                builder: (ctx) => Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () async {
+                      returnedOptions = await Navigator.of(ctx)
+                          .push<EncodingOptions>(
+                            MaterialPageRoute(
+                              builder: (_) => const TrimPreviewScreen(
+                                videoInfo: video,
+                                targetResolution: VideoResolution(
+                                  label: '1080p',
+                                  width: 1920,
+                                  height: 1080,
+                                ),
+                                encodingOptions: EncodingOptions(),
+                                appSettings: AppSettings(),
+                                isAudioExtraction: false,
+                              ),
+                            ),
+                          );
+                    },
+                    child: const Text('Open Trim Screen 2'),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.text('Open Trim Screen 2'));
+          await tester.pumpAndSettle();
+
+          final scrubberFinder = find.byWidgetPredicate(
+            (w) => w is CustomPaint && w.size.height == 68,
+          );
+          expect(scrubberFinder, findsOneWidget);
+
+          final scrubberTopLeft = tester.getTopLeft(scrubberFinder);
+
+          // Left handle is drawn within [2.0, 14.0].
+          // Touch at dx = 6.0 (< startPx - 2.0 = 12.0)
+          final handleEarTouch = scrubberTopLeft + const Offset(6.0, 30.0);
+          await tester.dragFrom(handleEarTouch, const Offset(80.0, 0.0));
+          await tester.pumpAndSettle();
+
+          // Tap proceed button
+          await tester.tap(find.byKey(const Key('trim_proceed_button')));
+          await tester.pumpAndSettle();
+
+          expect(returnedOptions, isNotNull);
+          // Start boundary MUST have moved forward!
+          expect(returnedOptions!.trimStartMs, greaterThan(0));
+        },
+      );
+
+      testWidgets(
         'SettingsScreen has single Reset to Default Settings button and resets all configurations',
         (tester) async {
           tester.view.physicalSize = const Size(1080, 2400);

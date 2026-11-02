@@ -336,7 +336,7 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
     const style = TextStyle(fontSize: 10, fontWeight: FontWeight.w500);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -549,30 +549,95 @@ class _TimelineScrubber extends StatefulWidget {
 }
 
 class _TimelineScrubberState extends State<_TimelineScrubber> {
+  static const double _horizontalPadding = 14.0;
+
   _TimelineDragTarget _dragTarget = _TimelineDragTarget.none;
+
+  double _secondsToPx(double seconds, double width) {
+    final trackW = width - (_horizontalPadding * 2);
+    if (trackW <= 0 || widget.maxDuration <= 0) return _horizontalPadding;
+    final ratio = (seconds / widget.maxDuration).clamp(0.0, 1.0);
+    return _horizontalPadding + (ratio * trackW);
+  }
+
+  double _pxToSeconds(double px, double width) {
+    final trackW = width - (_horizontalPadding * 2);
+    if (trackW <= 0 || widget.maxDuration <= 0) return 0.0;
+    final ratio = ((px - _horizontalPadding) / trackW).clamp(0.0, 1.0);
+    return ratio * widget.maxDuration;
+  }
 
   void _handlePointerDown(Offset localPosition, double width) {
     if (width <= 0 || widget.maxDuration <= 0) return;
     final dx = localPosition.dx;
-    final startPx = (widget.startSeconds / widget.maxDuration) * width;
-    final endPx = (widget.endSeconds / widget.maxDuration) * width;
-    const tolerance = 24.0;
+    final dy = localPosition.dy;
 
-    if ((dx - startPx).abs() <= tolerance) {
+    final startPx = _secondsToPx(widget.startSeconds, width);
+    final endPx = _secondsToPx(widget.endSeconds, width);
+    final playheadPx = _secondsToPx(widget.currentPosition, width);
+
+    const topY = 14.0;
+
+    // 1. Direct hit on top needle head pin
+    if (dy <= topY + 8 && (dx - playheadPx).abs() <= 24.0) {
+      _dragTarget = _TimelineDragTarget.playhead;
+      final t = _pxToSeconds(dx, width);
+      widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
+      return;
+    }
+
+    // 2. Playhead is on or very close to start handle
+    if ((playheadPx - startPx).abs() <= 16.0) {
+      if (dx < startPx - 2.0) {
+        // User explicitly touched the handle ear on the left
+        _dragTarget = _TimelineDragTarget.startHandle;
+      } else {
+        // User touched on/near the playhead line or to the right inside the video track
+        _dragTarget = _TimelineDragTarget.playhead;
+        final t = _pxToSeconds(dx, width);
+        widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
+      }
+      return;
+    }
+
+    // 3. Playhead is on or very close to end handle
+    if ((playheadPx - endPx).abs() <= 16.0) {
+      if (dx > endPx + 2.0) {
+        // User touched the handle ear on the right
+        _dragTarget = _TimelineDragTarget.endHandle;
+      } else {
+        _dragTarget = _TimelineDragTarget.playhead;
+        final t = _pxToSeconds(dx, width);
+        widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
+      }
+      return;
+    }
+
+    // 4. Playhead is separated from handles
+    final distPlayhead = (dx - playheadPx).abs();
+    final distStart = (dx - startPx).abs();
+    final distEnd = (dx - endPx).abs();
+
+    if (distPlayhead <= 18.0 &&
+        distPlayhead < distStart &&
+        distPlayhead < distEnd) {
+      _dragTarget = _TimelineDragTarget.playhead;
+      final t = _pxToSeconds(dx, width);
+      widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
+    } else if (distStart <= 22.0 && distStart < distEnd) {
       _dragTarget = _TimelineDragTarget.startHandle;
-    } else if ((dx - endPx).abs() <= tolerance) {
+    } else if (distEnd <= 22.0) {
       _dragTarget = _TimelineDragTarget.endHandle;
     } else {
       _dragTarget = _TimelineDragTarget.playhead;
-      final t = (dx / width) * widget.maxDuration;
-      widget.onSeek(t.clamp(0.0, widget.maxDuration));
+      final t = _pxToSeconds(dx, width);
+      widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
     }
   }
 
   void _handlePointerMove(Offset localPosition, double width) {
     if (width <= 0 || widget.maxDuration <= 0) return;
-    final dx = localPosition.dx.clamp(0.0, width);
-    final t = (dx / width) * widget.maxDuration;
+    final t = _pxToSeconds(localPosition.dx, width);
 
     switch (_dragTarget) {
       case _TimelineDragTarget.startHandle:
@@ -611,8 +676,13 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
         final width = constraints.maxWidth;
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onHorizontalDragStart: (details) =>
+          onHorizontalDragDown: (details) =>
               _handlePointerDown(details.localPosition, width),
+          onHorizontalDragStart: (details) {
+            if (_dragTarget == _TimelineDragTarget.none) {
+              _handlePointerDown(details.localPosition, width);
+            }
+          },
           onHorizontalDragUpdate: (details) =>
               _handlePointerMove(details.localPosition, width),
           onHorizontalDragEnd: (_) => _handlePointerUp(),
@@ -638,6 +708,9 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
 }
 
 class _TimelineTrackPainter extends CustomPainter {
+  static const double _horizontalPadding = 14.0;
+  static const double _handleW = 12.0;
+
   final double currentPosition;
   final double startSeconds;
   final double endSeconds;
@@ -654,6 +727,13 @@ class _TimelineTrackPainter extends CustomPainter {
     required this.isDark,
   });
 
+  double _secondsToPx(double seconds, double width) {
+    final trackW = width - (_horizontalPadding * 2);
+    if (trackW <= 0 || maxDuration <= 0) return _horizontalPadding;
+    final ratio = (seconds / maxDuration).clamp(0.0, 1.0);
+    return _horizontalPadding + (ratio * trackW);
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
@@ -662,9 +742,12 @@ class _TimelineTrackPainter extends CustomPainter {
     const topY = 14.0;
     final bottomY = size.height - 2.0;
 
+    final trackLeft = _horizontalPadding;
+    final trackRight = w - _horizontalPadding;
+
     // Track frame RRect
     final trackRect = RRect.fromRectAndRadius(
-      Rect.fromLTRB(0, topY, w, bottomY),
+      Rect.fromLTRB(trackLeft, topY, trackRight, bottomY),
       const Radius.circular(8),
     );
 
@@ -679,7 +762,7 @@ class _TimelineTrackPainter extends CustomPainter {
           ? Colors.white.withAlpha(20)
           : Colors.black.withAlpha(20);
     const railStep = 24.0;
-    for (double x = 6.0; x < w - 6.0; x += railStep) {
+    for (double x = trackLeft + 6.0; x < trackRight - 6.0; x += railStep) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(x, topY + 3, 8, 3),
@@ -697,9 +780,9 @@ class _TimelineTrackPainter extends CustomPainter {
     }
 
     // Positions in pixels
-    final startPx = ((startSeconds / maxDuration) * w).clamp(0.0, w);
-    final endPx = ((endSeconds / maxDuration) * w).clamp(0.0, w);
-    final playheadPx = ((currentPosition / maxDuration) * w).clamp(0.0, w);
+    final startPx = _secondsToPx(startSeconds, w);
+    final endPx = _secondsToPx(endSeconds, w);
+    final playheadPx = _secondsToPx(currentPosition, w);
 
     // Clip to track boundary for cut overlays
     canvas.save();
@@ -709,14 +792,20 @@ class _TimelineTrackPainter extends CustomPainter {
     final cutPaint = Paint()
       ..color = Colors.black.withAlpha(isDark ? 180 : 120);
 
-    // Left cut zone (0 to startPx)
-    if (startPx > 0) {
-      canvas.drawRect(Rect.fromLTRB(0, topY, startPx, bottomY), cutPaint);
+    // Left cut zone (trackLeft to startPx)
+    if (startPx > trackLeft) {
+      canvas.drawRect(
+        Rect.fromLTRB(trackLeft, topY, startPx, bottomY),
+        cutPaint,
+      );
     }
 
-    // Right cut zone (endPx to w)
-    if (endPx < w) {
-      canvas.drawRect(Rect.fromLTRB(endPx, topY, w, bottomY), cutPaint);
+    // Right cut zone (endPx to trackRight)
+    if (endPx < trackRight) {
+      canvas.drawRect(
+        Rect.fromLTRB(endPx, topY, trackRight, bottomY),
+        cutPaint,
+      );
     }
 
     // 3. Kept active window tint
@@ -738,9 +827,8 @@ class _TimelineTrackPainter extends CustomPainter {
     canvas.drawRRect(activeFrame, framePaint);
 
     // 5. Left Handle
-    const handleW = 12.0;
     final leftHandleRect = RRect.fromRectAndCorners(
-      Rect.fromLTRB(startPx - handleW, topY - 1, startPx, bottomY + 1),
+      Rect.fromLTRB(startPx - _handleW, topY - 1, startPx, bottomY + 1),
       topLeft: const Radius.circular(8),
       bottomLeft: const Radius.circular(8),
     );
@@ -754,14 +842,14 @@ class _TimelineTrackPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     final midY = (topY + bottomY) / 2;
     canvas.drawLine(
-      Offset(startPx - 6, midY - 7),
-      Offset(startPx - 6, midY + 7),
+      Offset(startPx - (_handleW / 2), midY - 7),
+      Offset(startPx - (_handleW / 2), midY + 7),
       notchPaint,
     );
 
     // Right Handle
     final rightHandleRect = RRect.fromRectAndCorners(
-      Rect.fromLTRB(endPx, topY - 1, endPx + handleW, bottomY + 1),
+      Rect.fromLTRB(endPx, topY - 1, endPx + _handleW, bottomY + 1),
       topRight: const Radius.circular(8),
       bottomRight: const Radius.circular(8),
     );
@@ -769,12 +857,21 @@ class _TimelineTrackPainter extends CustomPainter {
 
     // Right handle notches
     canvas.drawLine(
-      Offset(endPx + 6, midY - 7),
-      Offset(endPx + 6, midY + 7),
+      Offset(endPx + (_handleW / 2), midY - 7),
+      Offset(endPx + (_handleW / 2), midY + 7),
       notchPaint,
     );
 
-    // 6. Needle Playhead Line & Teardrop/Needle Head
+    // 6. Needle Playhead Line & Pins
+    final needleShadowPaint = Paint()
+      ..color = Colors.black.withAlpha(160)
+      ..strokeWidth = 3.5;
+    canvas.drawLine(
+      Offset(playheadPx, topY - 2),
+      Offset(playheadPx, bottomY + 2),
+      needleShadowPaint,
+    );
+
     final needleLinePaint = Paint()
       ..color = Colors.white
       ..strokeWidth = 2.0;
@@ -800,7 +897,7 @@ class _TimelineTrackPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     canvas.drawPath(needlePath, needleHeadPaint);
 
-    // Needle shadow
+    // Needle shadow / outline
     final needleBorder = Paint()
       ..color = Colors.black.withAlpha(160)
       ..style = PaintingStyle.stroke
@@ -813,6 +910,15 @@ class _TimelineTrackPainter extends CustomPainter {
       1.5,
       Paint()..color = Colors.black.withAlpha(220),
     );
+
+    // Bottom foot pin
+    final bottomPinPath = Path()
+      ..moveTo(playheadPx, bottomY)
+      ..lineTo(playheadPx + 5, bottomY + 5)
+      ..lineTo(playheadPx - 5, bottomY + 5)
+      ..close();
+    canvas.drawPath(bottomPinPath, needleHeadPaint);
+    canvas.drawPath(bottomPinPath, needleBorder);
   }
 
   @override

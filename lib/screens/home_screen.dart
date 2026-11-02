@@ -119,6 +119,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadVideoFromPath(String path, {String? customName}) async {
     final l10n = _settingsService.l10n;
+
+    String? resolvedName = customName;
+    if (resolvedName == null) {
+      final rawName = File(path).uri.pathSegments.isNotEmpty
+          ? File(path).uri.pathSegments.last
+          : path;
+      final sharedMatch = RegExp(r'^shared_video_\d+_(.+)$')
+          .firstMatch(rawName);
+      resolvedName = sharedMatch != null ? sharedMatch.group(1) : rawName;
+    }
+
     setState(() {
       _isLoading = true;
       _loadingMessage = l10n.t('loading_analyzing');
@@ -130,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final info = await TransformerService.getVideoInfo(
         path,
-        customName: customName,
+        customName: resolvedName,
       );
       if (!mounted) return;
       final defaultCodec = VideoCodec.fromName(
