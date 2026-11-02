@@ -403,24 +403,43 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
             children: [
               Expanded(
                 child: _buildTimeBadge(
+                  key: const Key('trim_start_badge'),
                   theme: theme,
                   label: l10n.t('trim_start'),
                   time: _formatTime(_startSeconds),
                   icon: Icons.skip_previous_rounded,
+                  onTap: () {
+                    setState(() {
+                      _startSeconds = math.min(
+                        _currentPositionSeconds,
+                        math.max(0.0, _endSeconds - 0.5),
+                      );
+                    });
+                  },
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildTimeBadge(
+                  key: const Key('trim_end_badge'),
                   theme: theme,
                   label: l10n.t('trim_end'),
                   time: _formatTime(_endSeconds),
                   icon: Icons.skip_next_rounded,
+                  onTap: () {
+                    setState(() {
+                      _endSeconds = math.max(
+                        _currentPositionSeconds,
+                        math.min(_maxDurationSeconds, _startSeconds + 0.5),
+                      );
+                    });
+                  },
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildTimeBadge(
+                  key: const Key('trim_new_duration_badge'),
                   theme: theme,
                   label: l10n.t('trim_new_duration'),
                   time: _formatTime(durationTrimmed),
@@ -441,62 +460,72 @@ class _TrimPreviewScreenState extends State<TrimPreviewScreen> {
     required String time,
     required IconData icon,
     bool isHighlighted = false,
+    VoidCallback? onTap,
+    Key? key,
   }) {
     final primary = theme.colorScheme.primary;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      decoration: BoxDecoration(
-        color: isHighlighted
-            ? primary.withAlpha(25)
-            : theme.colorScheme.surface.withAlpha(120),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: key,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isHighlighted
-              ? primary.withAlpha(90)
-              : theme.dividerColor.withAlpha(80),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          decoration: BoxDecoration(
+            color: isHighlighted
+                ? primary.withAlpha(25)
+                : theme.colorScheme.surface.withAlpha(120),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isHighlighted
+                  ? primary.withAlpha(90)
+                  : theme.dividerColor.withAlpha(80),
+              width: 1,
+            ),
+          ),
+          child: Column(
             children: [
-              Icon(
-                icon,
-                size: 13,
-                color: isHighlighted
-                    ? primary
-                    : theme.colorScheme.onSurface.withAlpha(160),
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 13,
                     color: isHighlighted
                         ? primary
                         : theme.colorScheme.onSurface.withAlpha(160),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w500,
+                        color: isHighlighted
+                            ? primary
+                            : theme.colorScheme.onSurface.withAlpha(160),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                time,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isHighlighted ? primary : theme.colorScheme.onSurface,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            time,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: isHighlighted ? primary : theme.colorScheme.onSurface,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -567,7 +596,7 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
     return ratio * widget.maxDuration;
   }
 
-  void _handlePointerDown(Offset localPosition, double width) {
+  void _handleDragStart(Offset localPosition, double width) {
     if (width <= 0 || widget.maxDuration <= 0) return;
     final dx = localPosition.dx;
     final dy = localPosition.dy;
@@ -579,60 +608,28 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
     const topY = 14.0;
 
     // 1. Direct hit on top needle head pin
-    if (dy <= topY + 8 && (dx - playheadPx).abs() <= 24.0) {
+    if (dy <= topY + 10 && (dx - playheadPx).abs() <= 28.0) {
       _dragTarget = _TimelineDragTarget.playhead;
-      final t = _pxToSeconds(dx, width);
-      widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
-      return;
     }
-
-    // 2. Playhead is on or very close to start handle
-    if ((playheadPx - startPx).abs() <= 16.0) {
-      if (dx < startPx - 2.0) {
-        // User explicitly touched the handle ear on the left
-        _dragTarget = _TimelineDragTarget.startHandle;
-      } else {
-        // User touched on/near the playhead line or to the right inside the video track
-        _dragTarget = _TimelineDragTarget.playhead;
-        final t = _pxToSeconds(dx, width);
-        widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
-      }
-      return;
-    }
-
-    // 3. Playhead is on or very close to end handle
-    if ((playheadPx - endPx).abs() <= 16.0) {
-      if (dx > endPx + 2.0) {
-        // User touched the handle ear on the right
-        _dragTarget = _TimelineDragTarget.endHandle;
-      } else {
-        _dragTarget = _TimelineDragTarget.playhead;
-        final t = _pxToSeconds(dx, width);
-        widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
-      }
-      return;
-    }
-
-    // 4. Playhead is separated from handles
-    final distPlayhead = (dx - playheadPx).abs();
-    final distStart = (dx - startPx).abs();
-    final distEnd = (dx - endPx).abs();
-
-    if (distPlayhead <= 18.0 &&
-        distPlayhead < distStart &&
-        distPlayhead < distEnd) {
+    // 2. Direct hit on the long timestamp line (Playhead ALWAYS takes priority!)
+    else if ((dx - playheadPx).abs() <= 20.0) {
       _dragTarget = _TimelineDragTarget.playhead;
-      final t = _pxToSeconds(dx, width);
-      widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
-    } else if (distStart <= 22.0 && distStart < distEnd) {
+    }
+    // 3. Explicit grab on the start handle when playhead is not at that position
+    else if ((dx - startPx).abs() <= 22.0 &&
+        (dx - startPx).abs() < (dx - endPx).abs()) {
       _dragTarget = _TimelineDragTarget.startHandle;
-    } else if (distEnd <= 22.0) {
-      _dragTarget = _TimelineDragTarget.endHandle;
-    } else {
-      _dragTarget = _TimelineDragTarget.playhead;
-      final t = _pxToSeconds(dx, width);
-      widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
     }
+    // 4. Explicit grab on the end handle when playhead is not at that position
+    else if ((dx - endPx).abs() <= 22.0) {
+      _dragTarget = _TimelineDragTarget.endHandle;
+    }
+    // 5. Dragging elsewhere on the timeline track scrubs the playhead
+    else {
+      _dragTarget = _TimelineDragTarget.playhead;
+    }
+
+    _handlePointerMove(localPosition, width);
   }
 
   void _handlePointerMove(Offset localPosition, double width) {
@@ -658,15 +655,12 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
         widget.onSeek(newEnd);
         break;
       case _TimelineDragTarget.playhead:
+        // ONLY seeks the playhead. NEVER touches start/end boundary!
         widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
         break;
       case _TimelineDragTarget.none:
         break;
     }
-  }
-
-  void _handlePointerUp() {
-    _dragTarget = _TimelineDragTarget.none;
   }
 
   @override
@@ -676,20 +670,22 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
         final width = constraints.maxWidth;
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onHorizontalDragDown: (details) =>
-              _handlePointerDown(details.localPosition, width),
-          onHorizontalDragStart: (details) {
-            if (_dragTarget == _TimelineDragTarget.none) {
-              _handlePointerDown(details.localPosition, width);
-            }
+          onTapDown: (details) {
+            if (width <= 0 || widget.maxDuration <= 0) return;
+            final t = _pxToSeconds(details.localPosition.dx, width);
+            // Tapping anywhere on the timeline track ONLY seeks the playhead!
+            widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
           },
+          onHorizontalDragStart: (details) =>
+              _handleDragStart(details.localPosition, width),
           onHorizontalDragUpdate: (details) =>
               _handlePointerMove(details.localPosition, width),
-          onHorizontalDragEnd: (_) => _handlePointerUp(),
-          onHorizontalDragCancel: _handlePointerUp,
-          onTapDown: (details) =>
-              _handlePointerDown(details.localPosition, width),
-          onTapUp: (_) => _handlePointerUp(),
+          onHorizontalDragEnd: (_) {
+            _dragTarget = _TimelineDragTarget.none;
+          },
+          onHorizontalDragCancel: () {
+            _dragTarget = _TimelineDragTarget.none;
+          },
           child: CustomPaint(
             size: Size(width, 68),
             painter: _TimelineTrackPainter(

@@ -3,6 +3,7 @@
 
 package com.phantek.lyra.vega
 
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -14,8 +15,11 @@ import android.media.MediaMetadataRetriever
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.provider.OpenableColumns
 import androidx.media3.common.C
 import androidx.media3.common.Effect
@@ -101,6 +105,7 @@ class MainActivity : FlutterActivity() {
                     result.success(pendingSharedVideoPath)
                     pendingSharedVideoPath = null
                 }
+                "resolveMediaDetails" -> handleResolveMediaDetails(call, result)
                 else -> result.notImplemented()
             }
         }
@@ -114,6 +119,35 @@ class MainActivity : FlutterActivity() {
         handleShareIntent(intent)
     }
 
+    private fun handleResolveMediaDetails(call: MethodCall, result: MethodChannel.Result) {
+        val uriStr = call.argument<String>("uri")
+        val filePath = call.argument<String>("filePath")
+        if (uriStr.isNullOrEmpty() && filePath.isNullOrEmpty()) {
+            result.error("INVALID_ARGS", "uri or filePath is required", null)
+            return
+        }
+        Executors.newSingleThreadExecutor().execute {
+            try {
+                val uri = if (!uriStr.isNullOrEmpty()) {
+                    Uri.parse(uriStr)
+                } else {
+                    Uri.fromFile(File(filePath!!))
+                }
+                val details = resolveMediaDetails(applicationContext, uri, filePath)
+                mainHandler.post { result.success(details) }
+            } catch (e: Exception) {
+                mainHandler.post {
+                    result.success(
+                        mapOf(
+                            "fileName" to null,
+                            "realPath" to null
+                        )
+                    )
+                }
+            }
+        }
+    }
+
     private fun handleShareIntent(intent: Intent?) {
         if (intent == null) return
         val action = intent.action
@@ -123,7 +157,6 @@ class MainActivity : FlutterActivity() {
         val isView = Intent.ACTION_VIEW == action
 
         if (!isSend && !isView) return
-        if (type == null || !type.startsWith("video/")) return
 
         val uri: Uri? = if (isSend) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -137,6 +170,13 @@ class MainActivity : FlutterActivity() {
         }
 
         if (uri == null) return
+
+        val isVideoType = type?.startsWith("video/") == true ||
+            type == "*/*" ||
+            type == "application/octet-stream" ||
+            try { contentResolver.getType(uri)?.startsWith("video/") == true } catch (_: Exception) { false }
+
+        if (!isVideoType) return
 
         Executors.newSingleThreadExecutor().execute {
             try {
@@ -158,12 +198,23 @@ class MainActivity : FlutterActivity() {
 
     private fun resolveUriToPath(uri: Uri): String? {
         return try {
-            if (uri.scheme == "file" || uri.scheme == null) {
+            val details = resolveMediaDetails(applicationContext, uri)
+            val directPath = details["realPath"] as? String
+            if (!directPath.isNullOrEmpty()) {
+                val directFile = File(directPath)
+                if (directFile.exists() && directFile.canRead()) {
+                    return directFile.absolutePath
+                }
+            }
+
+            if (uri.scheme == "file" || uri.scheme.isNullOrEmpty()) {
                 val p = uri.path ?: return null
                 val f = File(p)
-                if (f.exists()) f.absolutePath else null
-            } else {
-                var displayName: String? = null
+                if (f.exists() && f.canRead()) return f.absolutePath
+            }
+
+            var displayName = details["fileName"] as? String
+            if (displayName.isNullOrBlank()) {
                 if (uri.scheme == "content") {
                     contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
                         if (cursor.moveToFirst()) {
@@ -174,22 +225,168 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                 }
-                if (displayName.isNullOrBlank()) {
-                    displayName = uri.lastPathSegment ?: "shared_video.mp4"
+            }
+            if (displayName.isNullOrBlank()) {
+                displayName = uri.lastPathSegment ?: "shared_video"
+            }
+
+            if (!displayName!!.contains(".")) {
+                val mimeType = try { contentResolver.getType(uri) } catch (_: Exception) { null }
+                val ext = when (mimeType) {
+                    "video/mp4" -> ".mp4"
+                    "video/x-matroska" -> ".mkv"
+                    "video/quicktime" -> ".mov"
+                    "video/webm" -> ".webm"
+                    "video/3gpp" -> ".3gp"
+                    "video/avi", "video/x-msvideo" -> ".avi"
+                    else -> ".mp4"
                 }
-                val sanitized = displayName.replace(Regex("[^a-zA-Z0-9._-]"), "_")
-                val targetFile = File(cacheDir, "shared_video_${System.currentTimeMillis()}_$sanitized")
-                contentResolver.openInputStream(uri)?.use { input ->
-                    FileOutputStream(targetFile).use { output ->
-                        input.copyTo(output)
-                    }
+                displayName += ext
+            }
+
+            val sanitized = displayName!!.replace(Regex("[^a-zA-Z0-9._-]"), "_")
+            val targetDir = File(cacheDir, "shared_incoming")
+            if (!targetDir.exists()) {
+                targetDir.mkdirs()
+            }
+            val targetFile = File(targetDir, "shared_video_${System.currentTimeMillis()}_$sanitized")
+            contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(targetFile).use { output ->
+                    input.copyTo(output)
                 }
+            }
+            if (targetFile.exists() && targetFile.length() > 0) {
                 targetFile.absolutePath
+            } else {
+                null
             }
         } catch (e: Exception) {
             e.printStackTrace()
             null
         }
+    }
+
+    private fun resolveMediaDetails(context: Context, uri: Uri, fallbackPath: String? = null): Map<String, Any?> {
+        var resolvedName: String? = null
+        var resolvedRealPath: String? = null
+
+        if (uri.scheme == "file" || uri.scheme.isNullOrEmpty()) {
+            val p = uri.path ?: fallbackPath
+            if (!p.isNullOrEmpty()) {
+                val f = File(p)
+                if (f.exists()) {
+                    resolvedName = f.name
+                    if (f.canRead()) {
+                        resolvedRealPath = f.absolutePath
+                    }
+                }
+            }
+        } else if (uri.scheme == "content") {
+            var queryUri = uri
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && DocumentsContract.isDocumentUri(context, uri)) {
+                try {
+                    val docId = DocumentsContract.getDocumentId(uri)
+                    if (docId != null) {
+                        val authority = uri.authority
+                        if (authority == "com.android.externalstorage.documents" || docId.startsWith("primary:", ignoreCase = true)) {
+                            val parts = docId.split(":")
+                            val relPath = if (parts.size > 1) parts[1] else ""
+                            if (relPath.isNotEmpty()) {
+                                val nameFromRel = File(relPath).name
+                                if (nameFromRel.isNotEmpty()) {
+                                    resolvedName = nameFromRel
+                                }
+                                @Suppress("DEPRECATION")
+                                val storageDir = Environment.getExternalStorageDirectory()
+                                val primaryFile = File(storageDir, relPath)
+                                if (primaryFile.exists()) {
+                                    resolvedName = primaryFile.name
+                                    if (primaryFile.canRead()) {
+                                        resolvedRealPath = primaryFile.absolutePath
+                                    }
+                                }
+                            }
+                        } else if (authority == "com.android.providers.media.documents" || docId.startsWith("video:", ignoreCase = true)) {
+                            val parts = docId.split(":")
+                            val idStr = parts.lastOrNull()
+                            val id = idStr?.toLongOrNull()
+                            if (id != null) {
+                                queryUri = ContentUris.withAppendedId(
+                                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                                    id
+                                )
+                            }
+                        }
+                    }
+                } catch (_: Exception) {}
+            }
+
+            try {
+                val projection = arrayOf(
+                    MediaStore.MediaColumns.DATA,
+                    OpenableColumns.DISPLAY_NAME
+                )
+                context.contentResolver.query(queryUri, projection, null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val dataIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATA)
+                        if (dataIndex != -1) {
+                            val dataPath = cursor.getString(dataIndex)
+                            if (!dataPath.isNullOrEmpty()) {
+                                val f = File(dataPath)
+                                if (f.exists()) {
+                                    resolvedName = f.name
+                                    if (f.canRead()) {
+                                        resolvedRealPath = f.absolutePath
+                                    }
+                                }
+                            }
+                        }
+                        if (resolvedName.isNullOrEmpty()) {
+                            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                            if (nameIndex != -1) {
+                                val dn = cursor.getString(nameIndex)
+                                if (!dn.isNullOrEmpty()) {
+                                    resolvedName = dn
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {}
+
+            if (resolvedRealPath == null && !fallbackPath.isNullOrEmpty()) {
+                val f = File(fallbackPath)
+                if (f.exists() && f.canRead()) {
+                    if (resolvedName.isNullOrEmpty()) {
+                        resolvedName = f.name
+                    }
+                }
+            }
+
+            if (resolvedName.isNullOrEmpty()) {
+                resolvedName = uri.lastPathSegment
+            }
+
+            if (resolvedName != null && !resolvedName.contains(".")) {
+                val mimeType = try { context.contentResolver.getType(uri) } catch (_: Exception) { null }
+                val ext = when (mimeType) {
+                    "video/mp4" -> ".mp4"
+                    "video/x-matroska" -> ".mkv"
+                    "video/quicktime" -> ".mov"
+                    "video/webm" -> ".webm"
+                    "video/3gpp" -> ".3gp"
+                    "video/avi", "video/x-msvideo" -> ".avi"
+                    else -> ".mp4"
+                }
+                resolvedName += ext
+            }
+        }
+
+        return mapOf(
+            "fileName" to resolvedName,
+            "realPath" to resolvedRealPath
+        )
     }
 
     private fun handleGetVideoInfo(call: MethodCall, result: MethodChannel.Result) {

@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../models/app_settings.dart';
 import '../services/device_spec_helper.dart';
+import '../services/license_service.dart';
 import '../services/localization_service.dart';
 import '../services/settings_service.dart';
 import '../widgets/app_glass_card.dart';
@@ -1507,6 +1508,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showAppLicensePage(BuildContext context, ThemeData theme) {
+    LicenseService.registerCustomLicenses();
     showLicensePage(
       context: context,
       applicationName: 'Phantek - Video Toolkit Vega',

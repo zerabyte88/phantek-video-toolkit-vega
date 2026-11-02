@@ -45,6 +45,38 @@ class CacheManagerService {
     return '$bytes B';
   }
 
+  /// Returns true if [entity] represents a recently created/modified shared incoming
+  /// video file or directory (within the last 5 minutes).
+  bool isRecentSharedFile(FileSystemEntity entity, {DateTime? now}) {
+    final path = entity.path.replaceAll('\\', '/');
+    final pathLower = path.toLowerCase();
+    final fileName = entity.uri.pathSegments.isNotEmpty
+        ? entity.uri.pathSegments.where((s) => s.isNotEmpty).lastOrNull ?? ''
+        : path.split('/').last;
+    final fileNameLower = fileName.toLowerCase();
+
+    final isSharedVideo = fileNameLower.startsWith('shared_video_');
+    final isSharedIncoming =
+        pathLower.contains('/shared_incoming') ||
+        fileNameLower == 'shared_incoming';
+
+    if (!isSharedVideo && !isSharedIncoming) {
+      return false;
+    }
+
+    try {
+      final stat = entity.statSync();
+      final currentTime = now ?? DateTime.now();
+      const fiveMinutes = Duration(minutes: 5);
+      if (currentTime.difference(stat.modified).abs() < fiveMinutes ||
+          currentTime.difference(stat.changed).abs() < fiveMinutes) {
+        return true;
+      }
+    } catch (_) {}
+
+    return false;
+  }
+
   /// Cleans cache files and optionally a specific input file.
   Future<int> clearAllCache({String? specificInputPath}) async {
     int bytesFreed = 0;
@@ -73,26 +105,77 @@ class CacheManagerService {
       debugPrint('FilePicker.clearTemporaryFiles error: $e');
     }
 
-    // Internal cache files
-    try {
-      final tempDir = await getTemporaryDirectory();
-      if (await tempDir.exists()) {
-        final entities = tempDir.listSync(followLinks: false);
+    Future<int> clearDirectory(Directory dir) async {
+      int freed = 0;
+      try {
+        if (!await dir.exists()) return 0;
+        final entities = dir.listSync(followLinks: false);
         for (final entity in entities) {
           try {
+            if (isRecentSharedFile(entity)) {
+              continue;
+            }
             if (entity is File) {
               final len = await entity.length();
               await entity.delete();
               bytesFreed += len;
+              freed += len;
             } else if (entity is Directory) {
-              bytesFreed += await _getDirSize(entity);
-              await entity.delete(recursive: true);
+              final dirName = entity.uri.pathSegments.isNotEmpty
+                  ? entity.uri.pathSegments
+                            .where((s) => s.isNotEmpty)
+                            .lastOrNull ??
+                        ''
+                  : '';
+              if (dirName.toLowerCase() == 'shared_incoming') {
+                final subEntities = entity.listSync(followLinks: false);
+                for (final sub in subEntities) {
+                  if (sub is File && !isRecentSharedFile(sub)) {
+                    try {
+                      final len = await sub.length();
+                      await sub.delete();
+                      bytesFreed += len;
+                      freed += len;
+                    } catch (_) {}
+                  }
+                }
+              } else {
+                var hasRecent = false;
+                try {
+                  final subEntities = entity.listSync(
+                    recursive: true,
+                    followLinks: false,
+                  );
+                  for (final sub in subEntities) {
+                    if (isRecentSharedFile(sub)) {
+                      hasRecent = true;
+                      break;
+                    }
+                  }
+                } catch (_) {}
+
+                if (!hasRecent) {
+                  final dirSize = await _getDirSize(entity);
+                  await entity.delete(recursive: true);
+                  bytesFreed += dirSize;
+                  freed += dirSize;
+                }
+              }
             }
           } catch (e) {
             debugPrint('Error deleting ${entity.path}: $e');
           }
         }
+      } catch (e) {
+        debugPrint('Error clearing dir ${dir.path}: $e');
       }
+      return freed;
+    }
+
+    // Internal cache files
+    try {
+      final tempDir = await getTemporaryDirectory();
+      await clearDirectory(tempDir);
     } catch (e) {
       debugPrint('Error clearing tempDir: $e');
     }
@@ -102,21 +185,7 @@ class CacheManagerService {
       final extCacheDirs = await getExternalCacheDirectories();
       if (extCacheDirs != null) {
         for (final dir in extCacheDirs) {
-          if (await dir.exists()) {
-            final entities = dir.listSync(followLinks: false);
-            for (final entity in entities) {
-              try {
-                if (entity is File) {
-                  final len = await entity.length();
-                  await entity.delete();
-                  bytesFreed += len;
-                } else if (entity is Directory) {
-                  bytesFreed += await _getDirSize(entity);
-                  await entity.delete(recursive: true);
-                }
-              } catch (_) {}
-            }
-          }
+          await clearDirectory(dir);
         }
       }
     } catch (e) {
@@ -143,6 +212,8 @@ class CacheManagerService {
 
     bool shouldPurgeFile(FileSystemEntity entity) {
       if (entity is! File) return false;
+      if (isRecentSharedFile(entity)) return false;
+
       final fileName = entity.uri.pathSegments.isNotEmpty
           ? entity.uri.pathSegments.last.toLowerCase()
           : '';

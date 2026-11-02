@@ -83,6 +83,66 @@ class TransformerService {
     _handlerInitialized = true;
   }
 
+  @visibleForTesting
+  static Future<Map<String, String?>?> Function({
+    required String uri,
+    String? fallbackPath,
+  })? mockResolveMediaDetails;
+
+  /// Resolves the real file name and direct readable file path for a media URI
+  /// querying Android MediaStore, DocumentsContract, and native content resolver.
+  static Future<Map<String, String?>?> resolveMediaDetails({
+    required String uri,
+    String? fallbackPath,
+  }) async {
+    if (mockResolveMediaDetails != null) {
+      return mockResolveMediaDetails!(
+        uri: uri,
+        fallbackPath: fallbackPath,
+      );
+    }
+
+    if (!Platform.isAndroid) {
+      String? fileName;
+      String? realPath = fallbackPath;
+      if (fallbackPath != null && fallbackPath.isNotEmpty) {
+        fileName = File(fallbackPath).uri.pathSegments.isNotEmpty
+            ? File(fallbackPath).uri.pathSegments.last
+            : fallbackPath;
+      } else {
+        final parsedUri = Uri.tryParse(uri);
+        if (parsedUri != null && parsedUri.pathSegments.isNotEmpty) {
+          fileName = parsedUri.pathSegments.last;
+          if (parsedUri.scheme == 'file') {
+            realPath = parsedUri.toFilePath();
+          }
+        }
+      }
+      return {
+        'fileName': fileName,
+        'realPath': realPath,
+      };
+    }
+
+    try {
+      final res = await _channel.invokeMapMethod<String, dynamic>(
+        'resolveMediaDetails',
+        {
+          'uri': uri,
+          'filePath': fallbackPath,
+        },
+      );
+      if (res == null) return null;
+      return {
+        'fileName': res['fileName'] as String?,
+        'realPath': res['realPath'] as String?,
+      };
+    } catch (e) {
+      debugPrint('TransformerService.resolveMediaDetails error: $e');
+      return null;
+    }
+  }
+
   /// Extracts a video thumbnail frame using native MediaMetadataRetriever.
   static Future<Uint8List?> getVideoThumbnail(String filePath) async {
     if (!Platform.isAndroid) return null;
@@ -105,7 +165,7 @@ class TransformerService {
   }) async {
     try {
       final file = File(filePath);
-      if (!await file.exists()) return null;
+      if (!file.existsSync()) return null;
 
       final resolvedFileName =
           customName ??
@@ -115,7 +175,7 @@ class TransformerService {
 
       if (!Platform.isAndroid) {
         // Fallback for non-Android environments (tests, desktop)
-        final fileSize = await file.length();
+        final fileSize = file.existsSync() ? file.lengthSync() : 0;
         return VideoInfo(
           filePath: filePath,
           fileName: resolvedFileName,

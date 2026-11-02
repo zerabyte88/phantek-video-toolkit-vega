@@ -1312,7 +1312,9 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           : 'VIDEO';
       final srcAudio = widget.videoInfo.audioCodec?.toUpperCase() ?? 'AUDIO';
       final audioFmt = widget.encodingOptions.audioFormat.name.toUpperCase();
-      final bitrate = widget.encodingOptions.audioExtractBitrateKbps <= 0
+      final bitrate = (widget.encodingOptions.audioFormat == AudioFormat.mp3 ||
+              widget.encodingOptions.audioFormat == AudioFormat.wav ||
+              widget.encodingOptions.audioExtractBitrateKbps <= 0)
           ? l10n.t('audio_copy')
           : '${widget.encodingOptions.audioExtractBitrateKbps} kbps';
 

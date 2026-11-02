@@ -6,11 +6,13 @@ import 'package:flutter/services.dart';
 
 import 'screens/home_screen.dart';
 import 'services/foreground_service.dart';
+import 'services/license_service.dart';
 import 'services/settings_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  LicenseService.registerCustomLicenses();
   await SettingsService().init();
   await ForegroundServiceManager().init();
 

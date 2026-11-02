@@ -137,8 +137,15 @@ class AudioExtractorCard extends StatelessWidget {
                   selected: isSelected,
                   onSelected: (selected) {
                     if (selected) {
+                      final isCopyOnly =
+                          fmt == AudioFormat.mp3 || fmt == AudioFormat.wav;
                       onOptionsChanged(
-                        encodingOptions.copyWith(audioFormat: fmt),
+                        encodingOptions.copyWith(
+                          audioFormat: fmt,
+                          audioExtractBitrateKbps: isCopyOnly
+                              ? 0
+                              : encodingOptions.audioExtractBitrateKbps,
+                        ),
                       );
                     }
                   },
@@ -152,104 +159,125 @@ class AudioExtractorCard extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Audio bitrate
-          if (encodingOptions.audioFormat != AudioFormat.wav) ...[
-            Row(
-              children: [
-                Icon(
-                  Icons.speed_rounded,
-                  size: 16,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  l10n.t('audio_bitrate'),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Center(
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 8,
-                runSpacing: 8,
+          Builder(
+            builder: (context) {
+              final isCopyOnly =
+                  encodingOptions.audioFormat == AudioFormat.mp3 ||
+                  encodingOptions.audioFormat == AudioFormat.wav;
+              final isCopySelected =
+                  isCopyOnly || encodingOptions.audioExtractBitrateKbps == 0;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ChoiceChip(
-                    showCheckmark: false,
-                    selectedColor: theme.colorScheme.primary,
-                    backgroundColor: theme.colorScheme.surface,
-                    side: BorderSide(
-                      color: encodingOptions.audioExtractBitrateKbps == 0
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.outline,
-                      width: encodingOptions.audioExtractBitrateKbps == 0
-                          ? 1.2
-                          : 1.0,
-                    ),
-                    label: Text(
-                      l10n.t('audio_copy'),
-                      style: TextStyle(
-                        fontWeight: encodingOptions.audioExtractBitrateKbps == 0
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                        color: encodingOptions.audioExtractBitrateKbps == 0
-                            ? Colors.white
-                            : theme.colorScheme.onSurface,
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.speed_rounded,
+                        size: 16,
+                        color: theme.colorScheme.primary,
                       ),
-                    ),
-                    selected: encodingOptions.audioExtractBitrateKbps == 0,
-                    onSelected: (selected) {
-                      if (selected) {
-                        onOptionsChanged(
-                          encodingOptions.copyWith(audioExtractBitrateKbps: 0),
-                        );
-                      }
-                    },
-                  ),
-                  ...[64, 128, 192, 256, 320].map((kbps) {
-                    final isSelected =
-                        encodingOptions.audioExtractBitrateKbps == kbps;
-                    return ChoiceChip(
-                      showCheckmark: false,
-                      selectedColor: theme.colorScheme.primary,
-                      backgroundColor: theme.colorScheme.surface,
-                      side: BorderSide(
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outline,
-                        width: isSelected ? 1.2 : 1.0,
-                      ),
-                      label: Text(
-                        '$kbps kbps',
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.t('audio_bitrate'),
                         style: TextStyle(
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.w500,
-                          color: isSelected
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        if (selected) {
-                          onOptionsChanged(
-                            encodingOptions.copyWith(
-                              audioExtractBitrateKbps: kbps,
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Center(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          showCheckmark: false,
+                          selectedColor: theme.colorScheme.primary,
+                          backgroundColor: theme.colorScheme.surface,
+                          side: BorderSide(
+                            color: isCopySelected
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.outline,
+                            width: isCopySelected ? 1.2 : 1.0,
+                          ),
+                          label: Text(
+                            l10n.t('audio_copy'),
+                            style: TextStyle(
+                              fontWeight: isCopySelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: isCopySelected
+                                  ? Colors.white
+                                  : theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          selected: isCopySelected,
+                          onSelected: (selected) {
+                            if (selected) {
+                              onOptionsChanged(
+                                encodingOptions.copyWith(
+                                  audioExtractBitrateKbps: 0,
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                        ...[64, 128, 192, 256, 320].map((kbps) {
+                          final isSelected =
+                              !isCopyOnly &&
+                              encodingOptions.audioExtractBitrateKbps == kbps;
+                          return Opacity(
+                            opacity: isCopyOnly ? 0.38 : 1.0,
+                            child: IgnorePointer(
+                              ignoring: isCopyOnly,
+                              child: ChoiceChip(
+                                showCheckmark: false,
+                                selectedColor: theme.colorScheme.primary,
+                                backgroundColor: theme.colorScheme.surface,
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.outline,
+                                  width: isSelected ? 1.2 : 1.0,
+                                ),
+                                label: Text(
+                                  '$kbps kbps',
+                                  style: TextStyle(
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                                selected: isSelected,
+                                onSelected: isCopyOnly
+                                    ? null
+                                    : (selected) {
+                                        if (selected) {
+                                          onOptionsChanged(
+                                            encodingOptions.copyWith(
+                                              audioExtractBitrateKbps: kbps,
+                                            ),
+                                          );
+                                        }
+                                      },
+                              ),
                             ),
                           );
-                        }
-                      },
-                    );
-                  }),
+                        }),
+                      ],
+                    ),
+                  ),
                 ],
-              ),
-            ),
-          ],
+              );
+            },
+          ),
         ],
       ),
     );

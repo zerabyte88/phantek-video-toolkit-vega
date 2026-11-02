@@ -29,6 +29,18 @@ enum _AppMode { convert, downscale, extractor }
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  /// Extracts clean file name by stripping shared_video prefixes and timestamps.
+  static String extractCleanFileName(String rawPathOrName) {
+    var name = rawPathOrName;
+    if (name.contains('/') || name.contains('\\')) {
+      final sep = name.contains('/') ? '/' : '\\';
+      name = name.split(sep).last;
+    }
+    name = name.replaceFirst(RegExp(r'^shared_video_\d+_'), '');
+    name = name.replaceFirst(RegExp(r'^shared_video_'), '');
+    return name.isNotEmpty ? name : 'video.mp4';
+  }
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -121,13 +133,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final l10n = _settingsService.l10n;
 
     String? resolvedName = customName;
-    if (resolvedName == null) {
+    if (resolvedName != null) {
+      resolvedName = HomeScreen.extractCleanFileName(resolvedName);
+    } else {
       final rawName = File(path).uri.pathSegments.isNotEmpty
           ? File(path).uri.pathSegments.last
           : path;
-      final sharedMatch = RegExp(r'^shared_video_\d+_(.+)$')
-          .firstMatch(rawName);
-      resolvedName = sharedMatch != null ? sharedMatch.group(1) : rawName;
+      resolvedName = HomeScreen.extractCleanFileName(rawName);
     }
 
     setState(() {
@@ -298,12 +310,42 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (!mounted) return;
 
-      if (file != null && file.path != null) {
-        final customName =
-            (file.name.isNotEmpty && !file.name.startsWith('cache_'))
-            ? file.name
-            : null;
-        await _loadVideoFromPath(file.path!, customName: customName);
+      if (file != null) {
+        String? customName;
+        String? effectivePath = file.path;
+
+        try {
+          final details = await TransformerService.resolveMediaDetails(
+            uri: file.uri.toString(),
+            fallbackPath: file.path,
+          );
+          if (details != null) {
+            final resolvedName = details['fileName'];
+            if (resolvedName != null && resolvedName.isNotEmpty) {
+              customName = resolvedName;
+            }
+            final realPath = details['realPath'];
+            if (realPath != null && realPath.isNotEmpty) {
+              if (await File(realPath).exists()) {
+                effectivePath = realPath;
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('Error resolving media details: $e');
+        }
+
+        if (customName == null || customName.isEmpty) {
+          customName = (file.name.isNotEmpty && !file.name.startsWith('cache_'))
+              ? file.name
+              : null;
+        }
+
+        if (effectivePath != null && effectivePath.isNotEmpty) {
+          await _loadVideoFromPath(effectivePath, customName: customName);
+        } else {
+          setState(() => _isLoading = false);
+        }
       } else {
         setState(() => _isLoading = false);
       }
@@ -381,40 +423,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         );
       },
-    );
-  }
-
-  void _resetOptions() {
-    setState(() {
-      final defaultPreset = SpeedPreset.fromEncodingPreset(
-        _settingsService.settings.encodingPreset,
-      );
-      final defaultCodec = VideoCodec.fromName(
-        _settingsService.settings.defaultVideoCodec,
-      );
-      _encodingOptions = EncodingOptions(
-        speedPreset: defaultPreset,
-        crfValue: defaultPreset.defaultCrf,
-        codec: defaultCodec,
-        container: VideoContainer.mp4,
-        videoAudioBitrateKbps: _settingsService.settings.audioBitrateKbps,
-      );
-      if (_videoInfo != null) {
-        final resolutions = _getResolutionsForMode(_selectedMode, _videoInfo);
-        if (resolutions.isNotEmpty) {
-          _selectedResolution = resolutions.first;
-        }
-      }
-    });
-    _settingsService.saveEncodingOptions(_encodingOptions);
-
-    final l10n = _settingsService.l10n;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.t('options_reset_success')),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
     );
   }
 
@@ -660,12 +668,6 @@ class _HomeScreenState extends State<HomeScreen> {
         title: AnimatedFlameTitle(title: l10n.t('app_title')),
         centerTitle: true,
         actions: [
-          if (_videoInfo != null && !_isLoading)
-            IconButton(
-              onPressed: _resetOptions,
-              icon: const Icon(Icons.refresh_rounded),
-              tooltip: l10n.t('reset_options'),
-            ),
           IconButton(
             onPressed: () => Navigator.of(
               context,
@@ -735,24 +737,12 @@ class _HomeScreenState extends State<HomeScreen> {
   // Empty state
 
   Widget _buildEmptyState(ThemeData theme, AppLocalizations l10n) {
-    return Align(
-      alignment: Alignment.topCenter,
+    return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Mode selector
-              _buildSegmentedModeBar(theme, l10n),
-
-              const SizedBox(height: 16),
-
-              // Media import box
-              _buildImportCard(theme, l10n),
-            ],
-          ),
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: _buildImportCard(theme, l10n),
         ),
       ),
     );
@@ -838,7 +828,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return AppGlassCard(
       onTap: _pickVideo,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
       border: Border.all(
         color: theme.colorScheme.outline.withAlpha(isDark ? 35 : 55),
         width: 1.0,
@@ -846,8 +836,8 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         children: [
           Container(
-            width: 68,
-            height: 68,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
               color: theme.colorScheme.primary.withAlpha(20),
               shape: BoxShape.circle,
@@ -857,38 +847,77 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             child: Icon(
-              Icons.file_upload_outlined,
+              Icons.video_file_outlined,
               size: 32,
               color: theme.colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
             l10n.t('pick_video'),
             style: TextStyle(
-              fontSize: 16.5,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : theme.colorScheme.onSurface,
+              color: theme.colorScheme.onSurface,
               letterSpacing: -0.2,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             l10n.t('supported_formats_hint'),
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12,
-              color: theme.colorScheme.onSurface.withAlpha(140),
+              fontSize: 13,
+              height: 1.4,
+              color: theme.colorScheme.onSurface.withAlpha(150),
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withAlpha(16),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: theme.colorScheme.primary.withAlpha(40),
+                width: 1.0,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.bolt_rounded,
+                  size: 14,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    'Media3 Hardware Acceleration',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.primary,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: _pickVideo,
-            icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
+            icon: const Icon(Icons.movie_creation_outlined, size: 18),
             label: Text(l10n.t('pick_video')),
             style: FilledButton.styleFrom(
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 28,
+                vertical: 14,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

@@ -3,6 +3,7 @@
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,15 +12,18 @@ import 'package:phantek_video_toolkit_vega/models/encoding_options.dart';
 import 'package:phantek_video_toolkit_vega/models/video_info.dart';
 import 'package:phantek_video_toolkit_vega/services/cache_manager_service.dart';
 import 'package:phantek_video_toolkit_vega/services/device_spec_helper.dart';
+import 'package:phantek_video_toolkit_vega/services/license_service.dart';
 import 'package:phantek_video_toolkit_vega/services/transformer_service.dart';
 import 'package:phantek_video_toolkit_vega/services/localization_service.dart';
 import 'package:phantek_video_toolkit_vega/services/media_scanner_service.dart';
+import 'package:phantek_video_toolkit_vega/screens/home_screen.dart';
 import 'package:phantek_video_toolkit_vega/screens/settings_screen.dart';
 import 'package:phantek_video_toolkit_vega/screens/trim_preview_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:phantek_video_toolkit_vega/services/settings_service.dart';
 import 'package:phantek_video_toolkit_vega/theme/app_theme.dart';
 import 'package:phantek_video_toolkit_vega/widgets/animated_flame_title.dart';
+import 'package:phantek_video_toolkit_vega/widgets/audio_extractor_card.dart';
 import 'package:phantek_video_toolkit_vega/widgets/conversion_options_card.dart';
 import 'package:phantek_video_toolkit_vega/widgets/theme_animated_background.dart';
 import 'package:phantek_video_toolkit_vega/widgets/video_info_card.dart';
@@ -4196,7 +4200,91 @@ void main() {
       );
 
       testWidgets(
-        'Dragging start handle ear moves the video start trim boundary',
+        'Tapping trim_start badge snaps start trim boundary to current preview frame',
+        (tester) async {
+          tester.view.physicalSize = const Size(1080, 2400);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+
+          const video = VideoInfo(
+            filePath: '/test/sample_trim.mp4',
+            fileName: 'sample_trim.mp4',
+            width: 1920,
+            height: 1080,
+            durationSeconds: 100.0,
+            bitrate: 5000000,
+            fps: 30.0,
+            codec: 'h264',
+            fileSizeBytes: 15000000,
+          );
+
+          EncodingOptions? returnedOptions;
+
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppTheme.getTheme('oled_snowfall'),
+              home: Builder(
+                builder: (ctx) => Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () async {
+                      returnedOptions = await Navigator.of(ctx)
+                          .push<EncodingOptions>(
+                            MaterialPageRoute(
+                              builder: (_) => const TrimPreviewScreen(
+                                videoInfo: video,
+                                targetResolution: VideoResolution(
+                                  label: '1080p',
+                                  width: 1920,
+                                  height: 1080,
+                                ),
+                                encodingOptions: EncodingOptions(),
+                                appSettings: AppSettings(),
+                                isAudioExtraction: false,
+                              ),
+                            ),
+                          );
+                    },
+                    child: const Text('Open Trim Screen Badge'),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.text('Open Trim Screen Badge'));
+          await tester.pumpAndSettle();
+
+          final scrubberFinder = find.byWidgetPredicate(
+            (w) => w is CustomPaint && w.size.height == 68,
+          );
+          expect(scrubberFinder, findsOneWidget);
+
+          final scrubberTopLeft = tester.getTopLeft(scrubberFinder);
+
+          // Tap timeline track at mid-point to advance playhead
+          await tester.tapAt(scrubberTopLeft + const Offset(200.0, 30.0));
+          await tester.pumpAndSettle();
+
+          // Tap trim_start badge
+          final trimStartBadge = find.byKey(const Key('trim_start_badge'));
+          expect(trimStartBadge, findsOneWidget);
+          await tester.tap(trimStartBadge);
+          await tester.pumpAndSettle();
+
+          // Tap proceed button
+          await tester.tap(find.byKey(const Key('trim_proceed_button')));
+          await tester.pumpAndSettle();
+
+          expect(returnedOptions, isNotNull);
+          // Start boundary MUST have snapped to the playhead position (> 0)
+          expect(returnedOptions!.trimStartMs, greaterThan(0));
+        },
+      );
+
+      testWidgets(
+        'Dragging start handle moves the video start trim boundary',
         (tester) async {
           tester.view.physicalSize = const Size(1080, 2400);
           tester.view.devicePixelRatio = 1.0;
@@ -4259,9 +4347,12 @@ void main() {
 
           final scrubberTopLeft = tester.getTopLeft(scrubberFinder);
 
-          // Left handle is drawn within [2.0, 14.0].
-          // Touch at dx = 6.0 (< startPx - 2.0 = 12.0)
-          final handleEarTouch = scrubberTopLeft + const Offset(6.0, 30.0);
+          // Advance playhead needle forward so it no longer sits directly on top of start handle
+          await tester.tapAt(scrubberTopLeft + const Offset(200.0, 30.0));
+          await tester.pumpAndSettle();
+
+          // Touch and drag the start handle ear at startPx (14.0)
+          final handleEarTouch = scrubberTopLeft + const Offset(14.0, 30.0);
           await tester.dragFrom(handleEarTouch, const Offset(80.0, 0.0));
           await tester.pumpAndSettle();
 
@@ -4892,6 +4983,250 @@ void main() {
           expect(tester.widget<Opacity>(opacityFinder).opacity, equals(0.38));
         },
       );
+    });
+
+    group('LicenseRegistry AndroidX Media3 tests', () {
+      test('AndroidX Media3 licenses are registered in LicenseRegistry', () async {
+        LicenseService.registerCustomLicenses();
+        final entries = await LicenseRegistry.licenses.toList();
+        final media3Entries = entries
+            .where((e) => e.packages.contains('androidx.media3'))
+            .toList();
+        expect(media3Entries, isNotEmpty);
+        final media3 = media3Entries.first;
+        expect(
+          media3.packages,
+          containsAll(<String>[
+            'androidx.media3',
+            'androidx.media3:media3-transformer',
+            'androidx.media3:media3-effect',
+            'androidx.media3:media3-common',
+            'androidx.media3:media3-exoplayer',
+            'androidx.media3:media3-muxer',
+          ]),
+        );
+        final fullText = media3.paragraphs.map((p) => p.text).join('\n');
+        expect(fullText, contains('AndroidX Media3'));
+        expect(fullText, contains('The Android Open Source Project'));
+        expect(fullText, contains('Apache License'));
+      });
+    });
+
+    group('AudioExtractorCard MP3 bitrate tests', () {
+      testWidgets('MP3 format greys out custom bitrate chips and selects copy', (tester) async {
+        const video = VideoInfo(
+          filePath: '/dummy/test.mp4',
+          fileName: 'test.mp4',
+          durationSeconds: 60,
+          width: 1920,
+          height: 1080,
+          bitrate: 5000000,
+          fps: 30,
+          codec: 'h264',
+          fileSizeBytes: 1024000,
+          hasAudio: true,
+          audioCodec: 'mp3',
+        );
+
+        EncodingOptions options = const EncodingOptions(
+          audioFormat: AudioFormat.mp3,
+        );
+        final l10n = AppLocalizations('id');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (context, setState) {
+                  return AudioExtractorCard(
+                    sourceVideo: video,
+                    encodingOptions: options,
+                    l10n: l10n,
+                    onOptionsChanged: (newOpts) {
+                      setState(() {
+                        options = newOpts;
+                      });
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // 64 kbps chip should be inside an Opacity of 0.38 and IgnorePointer(ignoring: true)
+        final chipFinder = find.widgetWithText(ChoiceChip, '64 kbps');
+        expect(chipFinder, findsOneWidget);
+
+        final opacityFinder = find.ancestor(
+          of: chipFinder,
+          matching: find.byType(Opacity),
+        );
+        expect(tester.widget<Opacity>(opacityFinder.first).opacity, equals(0.38));
+
+        final ignorePointerFinder = find.ancestor(
+          of: chipFinder,
+          matching: find.byType(IgnorePointer),
+        );
+        expect(tester.widget<IgnorePointer>(ignorePointerFinder.first).ignoring, isTrue);
+
+        // Switching to M4A removes the greyed out state
+        final m4aFinder = find.widgetWithText(ChoiceChip, 'M4A');
+        await tester.tap(m4aFinder);
+        await tester.pumpAndSettle();
+
+        expect(options.audioFormat, equals(AudioFormat.m4a));
+        expect(tester.widget<Opacity>(opacityFinder.first).opacity, equals(1.0));
+        expect(tester.widget<IgnorePointer>(ignorePointerFinder.first).ignoring, isFalse);
+
+        // Switching to WAV also shows bitrate buttons, selects copy, and greys out custom bitrates
+        final wavFinder = find.widgetWithText(ChoiceChip, 'WAV');
+        await tester.tap(wavFinder);
+        await tester.pumpAndSettle();
+
+        expect(options.audioFormat, equals(AudioFormat.wav));
+        expect(options.audioExtractBitrateKbps, equals(0));
+        expect(tester.widget<Opacity>(opacityFinder.first).opacity, equals(0.38));
+        expect(tester.widget<IgnorePointer>(ignorePointerFinder.first).ignoring, isTrue);
+      });
+    });
+
+    group('Video Naming and Shared Video Resolution tests', () {
+      late Directory tempDir;
+
+      setUp(() {
+        tempDir = Directory.systemTemp.createTempSync('shared_video_test_');
+      });
+
+      tearDown(() {
+        TransformerService.mockResolveMediaDetails = null;
+        if (tempDir.existsSync()) {
+          try {
+            tempDir.deleteSync(recursive: true);
+          } catch (_) {}
+        }
+      });
+
+      test('CacheManagerService isRecentSharedFile identifies recent vs expired shared files', () async {
+        final cacheManager = CacheManagerService();
+        final now = DateTime.now();
+
+        final recentFile = File('${tempDir.path}/shared_video_1720000000000_sample.mp4');
+        recentFile.createSync();
+
+        final sharedIncomingDir = Directory('${tempDir.path}/shared_incoming');
+        sharedIncomingDir.createSync();
+        final recentInIncoming = File('${sharedIncomingDir.path}/video_clip.mp4');
+        recentInIncoming.createSync();
+
+        final normalTempFile = File('${tempDir.path}/temp_cache_data.tmp');
+        normalTempFile.createSync();
+
+        // Recent files (created now) should be protected
+        expect(cacheManager.isRecentSharedFile(recentFile, now: now), isTrue);
+        expect(cacheManager.isRecentSharedFile(recentInIncoming, now: now), isTrue);
+        expect(cacheManager.isRecentSharedFile(sharedIncomingDir, now: now), isTrue);
+        expect(cacheManager.isRecentSharedFile(normalTempFile, now: now), isFalse);
+
+        // Simulating a file older than 5 minutes (e.g. 6 minutes ago)
+        final sixMinutesLater = now.add(const Duration(minutes: 6));
+        expect(cacheManager.isRecentSharedFile(recentFile, now: sixMinutesLater), isFalse);
+        expect(cacheManager.isRecentSharedFile(recentInIncoming, now: sixMinutesLater), isFalse);
+      });
+
+      test('HomeScreen.extractCleanFileName strips shared_video prefix and timestamp correctly', () {
+        expect(
+          HomeScreen.extractCleanFileName('shared_video_1720000000000_video_touring_23062026.mp4'),
+          equals('video_touring_23062026.mp4'),
+        );
+        expect(
+          HomeScreen.extractCleanFileName('shared_video_holiday_trip.mp4'),
+          equals('holiday_trip.mp4'),
+        );
+        expect(
+          HomeScreen.extractCleanFileName('/cache/shared_incoming/shared_video_123456_camera_roll.mp4'),
+          equals('camera_roll.mp4'),
+        );
+        expect(
+          HomeScreen.extractCleanFileName('C:\\temp\\shared_video_99999_summer.mov'),
+          equals('summer.mov'),
+        );
+        expect(
+          HomeScreen.extractCleanFileName('regular_video.mp4'),
+          equals('regular_video.mp4'),
+        );
+      });
+
+      test('TransformerService.resolveMediaDetails non-Android fallback extracts file name and path', () async {
+        final testFile = File('${tempDir.path}/test_touring_2026.mp4');
+        testFile.createSync();
+
+        final result = await TransformerService.resolveMediaDetails(
+          uri: testFile.uri.toString(),
+          fallbackPath: testFile.path,
+        );
+
+        expect(result, isNotNull);
+        expect(result!['fileName'], equals('test_touring_2026.mp4'));
+        expect(result['realPath'], equals(testFile.path));
+      });
+
+      test('TransformerService.resolveMediaDetails respects mockResolveMediaDetails override', () async {
+        TransformerService.mockResolveMediaDetails = ({required uri, fallbackPath}) async {
+          return {
+            'fileName': 'custom_resolved_video.mp4',
+            'realPath': '/storage/emulated/0/Movies/custom_resolved_video.mp4',
+          };
+        };
+
+        final result = await TransformerService.resolveMediaDetails(
+          uri: 'content://media/external/video/media/9999',
+          fallbackPath: '/cache/file_picker/temp.mp4',
+        );
+
+        expect(result, isNotNull);
+        expect(result!['fileName'], equals('custom_resolved_video.mp4'));
+        expect(result['realPath'], equals('/storage/emulated/0/Movies/custom_resolved_video.mp4'));
+      });
+
+      testWidgets('HomeScreen loads shared video and displays real cleaned file name in VideoInfoCard', (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final sharedVideoFile = File('${tempDir.path}/shared_video_1720000000000_video_touring_23062026.mp4');
+        sharedVideoFile.writeAsStringSync('dummy content');
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(
+          const MethodChannel('com.phantek.lyra.vega/transformer'),
+          (MethodCall methodCall) async {
+            if (methodCall.method == 'getInitialSharedVideo') {
+              return sharedVideoFile.path;
+            }
+            if (methodCall.method == 'getVideoInfo') {
+              return null;
+            }
+            if (methodCall.method == 'getVideoThumbnail') {
+              return null;
+            }
+            return null;
+          },
+        );
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: HomeScreen(),
+          ),
+        );
+
+        await tester.runAsync(() async {
+          await Future.delayed(const Duration(milliseconds: 300));
+        });
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(find.text('video_touring_23062026.mp4'), findsOneWidget);
+        expect(find.textContaining('shared_video_1720000000000_'), findsNothing);
+      });
     });
   });
 }

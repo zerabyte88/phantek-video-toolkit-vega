@@ -27,7 +27,7 @@
 - **Hardware Transcoding** : Encode H.264 (`video/avc`) and H.265 (`video/hevc`) via device SoC hardware encoders.
 - **Resolution Downscaling** : Scale 4K/2K down to 1080p, 720p, 480p, or 360p with OpenGL aspect-ratio preservation and even-pixel alignment.
 - **Rate Control** : Constant Quality (CQ/VBR) or target bitrate (1-35 Mbps) with framerate clamping (24-60 FPS).
-- **Audio Extraction** : Extract audio streams to M4A/AAC, MP3 (64-320 kbps), or uncompressed 16-bit PCM WAV, with direct bitstream copy when formats match.
+- **Audio Extraction** : Extract audio streams to M4A/AAC (64-320 kbps or direct copy), MP3 (direct bitstream copy from source), or uncompressed 16-bit PCM WAV.
 - **Foreground Execution** : Android Foreground Service with CPU `WakeLock` and crash-recovery job markers to prevent background termination.
 - **Real-Time Telemetry** : Live encoding progress, elapsed/remaining time, storage I/O rate, and device thermal status.
 - **AMOLED Themes** : 6 visual themes (*AMOLED Pure*, *Midnight*, *Snowfall*, *Sakura*, *Light*, *Clean Light*).
@@ -44,8 +44,8 @@
 | **Video** | `.mp4` | H.264 (`video/avc`), H.265 (`video/hevc`) | Hardware accelerated, `+faststart` |
 | **Video** | `.mkv` | H.264 (`video/avc`), H.265 (`video/hevc`) | Matroska container |
 | **Video** | `.mov` | H.264 (`video/avc`), H.265 (`video/hevc`) | QuickTime container |
-| **Audio** | `.m4a` | AAC (`audio/mp4a-latm`) | Hardware accelerated (64-320 kbps) |
-| **Audio** | `.mp3` | MP3 (`audio/mpeg`) | 64-320 kbps |
+| **Audio** | `.m4a` | AAC (`audio/mp4a-latm`) | Hardware accelerated (64-320 kbps or Copy) |
+| **Audio** | `.mp3` | MP3 (`audio/mpeg`) | Direct stream copy (matches source bitrate) |
 | **Audio** | `.wav` | PCM (`audio/raw`) | 16-bit linear uncompressed PCM |
 
 </div>
@@ -59,7 +59,7 @@
 | Layer | Package / Tool | Role |
 | :---: | :---: | :---: |
 | **Framework** | Flutter (Dart SDK `^3.13`) | Core UI and state management |
-| **Media Engine** | AndroidX Media3 (`1.5.1`) | Hardware `Transformer`, `MediaCodec`, and `Muxer` pipeline |
+| **Media Engine** | AndroidX Media3 (`1.11.1`) | Hardware `Transformer`, `MediaCodec`, and `Muxer` pipeline |
 | **Background** | `flutter_foreground_task`, `wakelock_plus` | Foreground service execution and CPU wake lock |
 | **Hardware Info** | `device_info_plus` | SoC, GPU, and thermal hardware detection |
 | **Storage** | `shared_preferences`, `file_picker` | Local settings persistence and media file selection |
