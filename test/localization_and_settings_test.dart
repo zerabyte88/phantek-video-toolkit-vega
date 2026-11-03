@@ -2299,6 +2299,11 @@ void main() {
           isTrue,
           reason: 'badge_static missing in $code',
         );
+        expect(
+          l10n.t('badge_live').isNotEmpty,
+          isTrue,
+          reason: 'badge_live missing in $code',
+        );
       }
     });
 
@@ -5015,6 +5020,25 @@ void main() {
         expect(fullText, contains('AndroidX Media3'));
         expect(fullText, contains('The Android Open Source Project'));
         expect(fullText, contains('Apache License'));
+
+        final coroutinesEntries = entries
+            .where((e) => e.packages.contains('kotlinx.coroutines'))
+            .toList();
+        expect(coroutinesEntries, isNotEmpty);
+        final coroutines = coroutinesEntries.first;
+        expect(
+          coroutines.packages,
+          containsAll(<String>[
+            'kotlinx.coroutines',
+            'kotlinx-coroutines-core',
+            'kotlinx-coroutines-android',
+          ]),
+        );
+        final coroutinesText =
+            coroutines.paragraphs.map((p) => p.text).join('\n');
+        expect(coroutinesText, contains('Kotlin Coroutines'));
+        expect(coroutinesText, contains('JetBrains s.r.o.'));
+        expect(coroutinesText, contains('Apache License'));
       });
     });
 

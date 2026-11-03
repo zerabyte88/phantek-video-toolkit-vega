@@ -293,6 +293,10 @@ void main() {
     testWidgets(
       'ProcessingScreen interpolates smooth decimal progress between updates',
       (WidgetTester tester) async {
+        DateTime fakeNow = DateTime(2026, 1, 1, 12, 0, 0);
+        ProcessingScreen.now = () => fakeNow;
+        addTearDown(() => ProcessingScreen.now = DateTime.now);
+
         void Function(double, String, [int?])? progressCallback;
         final completer = Completer<String?>();
 
@@ -336,16 +340,9 @@ void main() {
         await tester.pump(const Duration(milliseconds: 50));
         expect(progressCallback, isNotNull);
 
-        // Task updates progress to 20.0%
-        progressCallback!(0.20, 'Size: 1 MB', 1000000);
-        await tester.pump(); // Start TweenAnimationBuilder interpolation from 0.0 to 0.20
-
-        // Advance 150ms (25% of 600ms linear tween -> ~0.050 / 5.0%)
-        await tester.pump(const Duration(milliseconds: 150));
-        expect(find.text('5.0%'), findsOneWidget);
-
-        // Advance another 150ms (50% of 600ms linear tween -> ~0.100 / 10.0%)
-        await tester.pump(const Duration(milliseconds: 150));
+        // Task updates progress to 10.0%
+        progressCallback!(0.10, 'Size: 1 MB', 1000000);
+        await tester.pump();
         expect(find.text('10.0%'), findsOneWidget);
 
         // Verify active progress ring color matches the percentage text color during interpolation
@@ -364,19 +361,15 @@ void main() {
         expect(painter.secondaryColor, equals(text10.style?.color));
         expect(painter.progress, closeTo(0.10, 0.01));
 
-        // Advance another 150ms (75% of 600ms linear tween -> ~0.150 / 15.0%)
-        await tester.pump(const Duration(milliseconds: 150));
-        expect(find.text('15.0%'), findsOneWidget);
-
-        // Advance another 150ms (100% of 600ms linear tween -> ~0.200 / 20.0%)
-        await tester.pump(const Duration(milliseconds: 150));
-        expect(find.text('20.0%'), findsOneWidget);
-
-        // Verify fine-grained decimal increment without integer jumping (0.204 -> 20.4%)
-        progressCallback!(0.204, 'Size: 1.1 MB', 1100000);
+        // Advance fake time by 600ms (measuredMs = 1200ms -> subFraction ~0.37 -> ~10.4%)
+        fakeNow = fakeNow.add(const Duration(milliseconds: 600));
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 600));
-        expect(find.text('20.4%'), findsOneWidget);
+        expect(find.text('10.4%'), findsOneWidget);
+
+        // Advance fake time by another 1200ms (subFraction ~0.74 -> ~10.7%)
+        fakeNow = fakeNow.add(const Duration(milliseconds: 1200));
+        await tester.pump();
+        expect(find.text('10.7%'), findsOneWidget);
 
         // Complete the process successfully
         final tempFile = File('${Directory.systemTemp.path}/test_output.mp4')
@@ -837,7 +830,7 @@ void main() {
         progressCallback!(0.55, 'Size: 512 KB', 524288);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 600));
-        expect(find.text('55.0%'), findsOneWidget);
+        expect(find.textContaining('55.'), findsOneWidget);
 
         final activePaintFinder = find.byWidgetPredicate(
           (widget) =>

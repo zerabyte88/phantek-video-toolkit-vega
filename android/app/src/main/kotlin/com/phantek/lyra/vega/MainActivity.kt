@@ -1309,17 +1309,10 @@ class MainActivity : FlutterActivity() {
     /**
      * Polls progress on the application Looper (main Looper).
      * Transformer strictly requires getProgress to be called on its application thread.
-     * Since Media3's ProgressHolder.progress is an integer (0..100), we interpolate
-     * sub-percent progress (0.1% steps) between integer ticks based on measured pace.
      */
     private fun startProgressPolling(transformer: Transformer, outputPath: String) {
         stopProgressPolling()
         val progressHolder = ProgressHolder()
-        val startTimeMs = System.currentTimeMillis()
-        var lastRawInt = 0
-        var lastStepTimeMs = startTimeMs
-        var msPerPercent = 1200.0
-        var displayedProgress = 0.0
 
         val runnable = object : Runnable {
             override fun run() {
@@ -1327,41 +1320,19 @@ class MainActivity : FlutterActivity() {
                 try {
                     val state = transformer.getProgress(progressHolder)
                     if (state == Transformer.PROGRESS_STATE_AVAILABLE) {
-                        val now = System.currentTimeMillis()
-                        val rawInt = progressHolder.progress.coerceIn(0, 100)
-                        if (rawInt > lastRawInt) {
-                            val totalElapsed = (now - startTimeMs).coerceAtLeast(100L)
-                            msPerPercent = (totalElapsed.toDouble() / rawInt).coerceIn(150.0, 15000.0)
-                            lastRawInt = rawInt
-                            lastStepTimeMs = now
-                        }
-
-                        val stepElapsed = (now - lastStepTimeMs).coerceAtLeast(0L)
-                        val subFraction = if (rawInt < 100) {
-                            0.92 * (1.0 - Math.exp(-stepElapsed.toDouble() / msPerPercent))
-                        } else {
-                            0.0
-                        }
-                        val targetRatio = ((rawInt + subFraction) / 100.0).coerceIn(0.0, 0.999)
-
-                        if (targetRatio > displayedProgress) {
-                            val delta = targetRatio - displayedProgress
-                            val step = Math.max(0.001, delta * 0.35)
-                            displayedProgress = (displayedProgress + step).coerceAtMost(targetRatio)
-                        }
-
+                        val progressRatio = (progressHolder.progress / 100.0).coerceIn(0.0, 1.0)
                         val currentBytes = try { File(outputPath).length() } catch (_: Exception) { 0L }
-                        sendProgress(displayedProgress, currentBytes)
+                        sendProgress(progressRatio, currentBytes)
                     }
                 } catch (_: Exception) {}
 
                 if (!isCancelled && activeTransformer == transformer) {
-                    mainHandler.postDelayed(this, 100)
+                    mainHandler.postDelayed(this, 500)
                 }
             }
         }
         progressRunnable = runnable
-        mainHandler.postDelayed(runnable, 100)
+        mainHandler.postDelayed(runnable, 500)
     }
 
     private fun stopProgressPolling() {

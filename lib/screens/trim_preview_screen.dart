@@ -579,7 +579,6 @@ class _TimelineScrubber extends StatefulWidget {
 
 class _TimelineScrubberState extends State<_TimelineScrubber> {
   static const double _horizontalPadding = 14.0;
-  static const double _minPlayheadGapPx = 18.0;
 
   _TimelineDragTarget _dragTarget = _TimelineDragTarget.none;
 
@@ -595,26 +594,6 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
     if (trackW <= 0 || widget.maxDuration <= 0) return 0.0;
     final ratio = ((px - _horizontalPadding) / trackW).clamp(0.0, 1.0);
     return ratio * widget.maxDuration;
-  }
-
-  double _gapSeconds(double width, double startSec, double endSec) {
-    final trackW = width - (_horizontalPadding * 2);
-    if (trackW <= 0 || widget.maxDuration <= 0) return 0.0;
-    final rawGap = (_minPlayheadGapPx / trackW) * widget.maxDuration;
-    final maxAllowedGap = math.max(0.0, (endSec - startSec) * 0.45);
-    return math.min(rawGap, maxAllowedGap);
-  }
-
-  double _minPlayheadSeconds(double width, {double? startOverride}) {
-    final s = startOverride ?? widget.startSeconds;
-    final gap = _gapSeconds(width, s, widget.endSeconds);
-    return (s + gap).clamp(0.0, widget.maxDuration).toDouble();
-  }
-
-  double _maxPlayheadSeconds(double width, {double? endOverride}) {
-    final e = endOverride ?? widget.endSeconds;
-    final gap = _gapSeconds(width, widget.startSeconds, e);
-    return (e - gap).clamp(0.0, widget.maxDuration).toDouble();
   }
 
   void _handleDragStart(Offset localPosition, double width) {
@@ -647,7 +626,7 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
         _dragTarget = _TimelineDragTarget.playhead;
       }
     }
-    // 3. Nearest handle disambiguation so start, playhead, and end never conflict
+    // 3. Disambiguate between start, end, and playhead based on touch proximity
     else if (dStart <= 24.0 && dStart <= dPlay && dStart <= dEnd) {
       _dragTarget = _TimelineDragTarget.startHandle;
     } else if (dEnd <= 24.0 && dEnd <= dPlay && dEnd < dStart) {
@@ -675,10 +654,9 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
             .clamp(0.0, math.max(0.0, widget.endSeconds - 0.5))
             .toDouble();
         widget.onStartChanged(newStart);
-        // Only push playhead along when the start trim line reaches/passes the preview line
-        final minPlayhead = _minPlayheadSeconds(width, startOverride: newStart);
-        if (widget.currentPosition < minPlayhead) {
-          widget.onSeek(minPlayhead);
+        // Only push playhead forward if start trim handle moves past current playhead
+        if (widget.currentPosition < newStart) {
+          widget.onSeek(newStart);
         }
         break;
       case _TimelineDragTarget.endHandle:
@@ -689,18 +667,16 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
             )
             .toDouble();
         widget.onEndChanged(newEnd);
-        // Only push playhead along when the end trim line reaches/passes the preview line
-        final maxPlayhead = _maxPlayheadSeconds(width, endOverride: newEnd);
-        if (widget.currentPosition > maxPlayhead) {
-          widget.onSeek(maxPlayhead);
+        // Only push playhead backward if end trim handle moves past current playhead
+        if (widget.currentPosition > newEnd) {
+          widget.onSeek(newEnd);
         }
         break;
       case _TimelineDragTarget.playhead:
-        // Scrubs the playhead within the active trim range while keeping a small
-        // clearance from the start/end handles so the 3 lines never overlap.
-        final minPlayhead = _minPlayheadSeconds(width);
-        final maxPlayhead = _maxPlayheadSeconds(width);
-        widget.onSeek(t.clamp(minPlayhead, maxPlayhead).toDouble());
+        // Playhead can scrub freely across the entire trimmed window down to exact start (e.g. 0.0s)
+        widget.onSeek(
+          t.clamp(widget.startSeconds, widget.endSeconds).toDouble(),
+        );
         break;
       case _TimelineDragTarget.none:
         break;
@@ -725,10 +701,8 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
                 (dx - (endPx + 4.0)).abs() <= 18.0) {
               return;
             }
-            final minPlayhead = _minPlayheadSeconds(width);
-            final maxPlayhead = _maxPlayheadSeconds(width);
             final t = _pxToSeconds(dx, width)
-                .clamp(minPlayhead, maxPlayhead)
+                .clamp(widget.startSeconds, widget.endSeconds)
                 .toDouble();
             widget.onSeek(t);
           },

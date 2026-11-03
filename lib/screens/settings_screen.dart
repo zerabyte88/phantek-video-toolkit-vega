@@ -24,8 +24,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.3.7';
-  String _buildNumber = '23007';
+  String _appVersion = 'v2.3.8';
+  String _buildNumber = '23008';
   double? _dragCardOpacity;
 
   @override
@@ -54,14 +54,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '23007';
+              : '23008';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.3.7';
-          _buildNumber = '23007';
+          _appVersion = 'v2.3.8';
+          _buildNumber = '23008';
         });
       }
     }
@@ -760,7 +760,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         'desc': l10n.t('theme_oled_snowfall_desc'),
         'icon': Icons.ac_unit_rounded,
         'accent': const Color(0xFF38BDF8),
-        'badge': 'AMOLED',
+        'badge': l10n.t('badge_live'),
       },
       {
         'id': 'light',
@@ -768,7 +768,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         'desc': l10n.t('theme_light_desc'),
         'icon': Icons.light_mode_rounded,
         'accent': const Color(0xFFFBBF24),
-        'badge': 'LIGHT',
+        'badge': l10n.t('badge_live'),
       },
       {
         'id': 'oled_midnight',
@@ -776,7 +776,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         'desc': l10n.t('theme_oled_midnight_desc'),
         'icon': Icons.nightlight_round,
         'accent': const Color(0xFFA78BFA),
-        'badge': 'AMOLED',
+        'badge': l10n.t('badge_live'),
       },
       {
         'id': 'oled_sakura',
@@ -784,7 +784,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         'desc': l10n.t('theme_oled_sakura_desc'),
         'icon': Icons.local_florist_rounded,
         'accent': const Color(0xFFF472B6),
-        'badge': 'AMOLED',
+        'badge': l10n.t('badge_live'),
       },
     ];
 

@@ -21,7 +21,7 @@ class AppTheme {
         return buildOledTheme(
           cardOpacity: cardOpacity,
           primary: midnightAccent,
-          onPrimary: Colors.black,
+          onPrimary: Colors.white,
         );
       case 'oled_pure':
       case 'pure_oled':
@@ -42,7 +42,7 @@ class AppTheme {
         return buildDarkTheme(
           cardOpacity: cardOpacity,
           primary: snowfallAccent,
-          onPrimary: Colors.black,
+          onPrimary: Colors.white,
         );
     }
   }
