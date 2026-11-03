@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 // Copyright (C) 2026 zerabyte88
 
 import 'package:flutter/material.dart';
@@ -511,7 +511,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             children: [
               Text(
                 l10n.t('advanced_warning_desc'),
-                textAlign: TextAlign.left,
+                textAlign: TextAlign.justify,
                 style: TextStyle(
                   fontSize: 13,
                   height: 1.4,
@@ -1039,7 +1039,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
           fontFeatures: const [FontFeature.tabularFigures()],
           color: !isEnabled
               ? theme.colorScheme.onSurface.withAlpha(80)
-              : (isSelected ? Colors.white : theme.colorScheme.onSurface),
+              : (isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface),
         ),
       ),
       selected: isSelected,

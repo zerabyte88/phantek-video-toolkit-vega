@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 // Copyright (C) 2026 zerabyte88
 
 import 'package:flutter/material.dart';
@@ -7,24 +7,43 @@ class AppTheme {
   static const _primaryColor = Color(0xFF2563EB);
   static const _secondaryColor = Color(0xFF0E7C86);
 
+  /// Button/accent colors of the animated themes, matching their cards in Settings.
+  static const snowfallAccent = Color(0xFF38BDF8);
+  static const midnightAccent = Color(0xFFA78BFA);
+  static const daylightAccent = Color(0xFFFBBF24);
+
   static ThemeData getTheme(String mode, {double cardOpacity = 1.0}) {
     switch (mode) {
       case 'oled_sakura':
       case 'sakura':
         return buildSakuraTheme(cardOpacity: cardOpacity);
+      case 'oled_midnight':
+        return buildOledTheme(
+          cardOpacity: cardOpacity,
+          primary: midnightAccent,
+          onPrimary: Colors.black,
+        );
       case 'oled_pure':
       case 'pure_oled':
-      case 'oled_midnight':
       case 'oled':
         return buildOledTheme(cardOpacity: cardOpacity);
+      case 'light':
+        return buildLightTheme(
+          cardOpacity: cardOpacity,
+          primary: daylightAccent,
+          onPrimary: Colors.black,
+        );
       case 'light_clean':
       case 'clean_light':
-      case 'light':
         return buildLightTheme(cardOpacity: cardOpacity);
       case 'oled_snowfall':
       case 'dark':
       default:
-        return buildDarkTheme(cardOpacity: cardOpacity);
+        return buildDarkTheme(
+          cardOpacity: cardOpacity,
+          primary: snowfallAccent,
+          onPrimary: Colors.black,
+        );
     }
   }
 
@@ -193,7 +212,11 @@ class AppTheme {
   static ThemeData get darkTheme => buildDarkTheme();
 
   /// Snowfall theme builder
-  static ThemeData buildDarkTheme({double cardOpacity = 1.0}) {
+  static ThemeData buildDarkTheme({
+    double cardOpacity = 1.0,
+    Color primary = _primaryColor,
+    Color onPrimary = Colors.white,
+  }) {
     const scaffoldBg = Colors.black;
     const surfaceBg = Color(0xFF0D1830);
     const outlineColor = Color(0xFF1F3254);
@@ -210,8 +233,8 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.dark(
-        primary: _primaryColor,
-        onPrimary: Colors.white,
+        primary: primary,
+        onPrimary: onPrimary,
         secondary: _secondaryColor,
         surface: effectiveSurface,
         onSurface: textPrimary,
@@ -242,8 +265,8 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _primaryColor,
-          foregroundColor: Colors.white,
+          backgroundColor: primary,
+          foregroundColor: onPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -269,51 +292,51 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: const Color(0xFF0D1830),
-        selectedColor: _primaryColor,
+        selectedColor: primary,
         labelStyle: const TextStyle(
           color: textPrimary,
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
-        secondaryLabelStyle: const TextStyle(
-          color: Colors.white,
+        secondaryLabelStyle: TextStyle(
+          color: onPrimary,
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         side: const BorderSide(color: outlineColor, width: 1.0),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        checkmarkColor: Colors.white,
+        checkmarkColor: onPrimary,
         showCheckmark: false,
       ),
       sliderTheme: SliderThemeData(
-        activeTrackColor: _primaryColor,
-        inactiveTrackColor: _primaryColor.withAlpha(35),
-        thumbColor: _primaryColor,
-        overlayColor: _primaryColor.withAlpha(25),
-        valueIndicatorColor: _primaryColor,
-        valueIndicatorTextStyle: const TextStyle(
-          color: Colors.white,
+        activeTrackColor: primary,
+        inactiveTrackColor: primary.withAlpha(35),
+        thumbColor: primary,
+        overlayColor: primary.withAlpha(25),
+        valueIndicatorColor: primary,
+        valueIndicatorTextStyle: TextStyle(
+          color: onPrimary,
           fontWeight: FontWeight.w600,
         ),
         trackHeight: 4,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
       ),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: _primaryColor,
-        circularTrackColor: Color(0xFF1F3254),
-        linearTrackColor: Color(0xFF1F3254),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: primary,
+        circularTrackColor: const Color(0xFF1F3254),
+        linearTrackColor: const Color(0xFF1F3254),
       ),
       dividerTheme: const DividerThemeData(color: outlineColor, thickness: 1),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected)
-              ? Colors.white
+              ? onPrimary
               : const Color(0xFF64748B),
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected)
-              ? _primaryColor
+              ? primary
               : const Color(0xFF1F3254),
         ),
       ),
@@ -352,7 +375,11 @@ class AppTheme {
   static ThemeData get oledTheme => buildOledTheme();
 
   /// Pure OLED theme builder
-  static ThemeData buildOledTheme({double cardOpacity = 1.0}) {
+  static ThemeData buildOledTheme({
+    double cardOpacity = 1.0,
+    Color primary = _primaryColor,
+    Color onPrimary = Colors.white,
+  }) {
     const scaffoldBg = Colors.black;
     const surfaceBg = Color(0xFF111620);
     const outlineColor = Color(0xFF283042);
@@ -369,8 +396,8 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.dark(
-        primary: _primaryColor,
-        onPrimary: Colors.white,
+        primary: primary,
+        onPrimary: onPrimary,
         secondary: _secondaryColor,
         surface: effectiveSurface,
         onSurface: textPrimary,
@@ -401,8 +428,8 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _primaryColor,
-          foregroundColor: Colors.white,
+          backgroundColor: primary,
+          foregroundColor: onPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -428,51 +455,51 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: surfaceBg,
-        selectedColor: _primaryColor,
+        selectedColor: primary,
         labelStyle: const TextStyle(
           color: textPrimary,
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
-        secondaryLabelStyle: const TextStyle(
-          color: Colors.white,
+        secondaryLabelStyle: TextStyle(
+          color: onPrimary,
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         side: const BorderSide(color: outlineColor, width: 1.0),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        checkmarkColor: Colors.white,
+        checkmarkColor: onPrimary,
         showCheckmark: false,
       ),
       sliderTheme: SliderThemeData(
-        activeTrackColor: _primaryColor,
-        inactiveTrackColor: _primaryColor.withAlpha(35),
-        thumbColor: _primaryColor,
-        overlayColor: _primaryColor.withAlpha(25),
-        valueIndicatorColor: _primaryColor,
-        valueIndicatorTextStyle: const TextStyle(
-          color: Colors.white,
+        activeTrackColor: primary,
+        inactiveTrackColor: primary.withAlpha(35),
+        thumbColor: primary,
+        overlayColor: primary.withAlpha(25),
+        valueIndicatorColor: primary,
+        valueIndicatorTextStyle: TextStyle(
+          color: onPrimary,
           fontWeight: FontWeight.w600,
         ),
         trackHeight: 4,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
       ),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: _primaryColor,
-        circularTrackColor: Color(0xFF283042),
-        linearTrackColor: Color(0xFF283042),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: primary,
+        circularTrackColor: const Color(0xFF283042),
+        linearTrackColor: const Color(0xFF283042),
       ),
       dividerTheme: const DividerThemeData(color: outlineColor, thickness: 1),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected)
-              ? Colors.white
+              ? onPrimary
               : const Color(0xFF71717A),
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected)
-              ? _primaryColor
+              ? primary
               : const Color(0xFF283042),
         ),
       ),
@@ -511,7 +538,11 @@ class AppTheme {
   static ThemeData get lightTheme => buildLightTheme();
 
   /// Light theme builder
-  static ThemeData buildLightTheme({double cardOpacity = 1.0}) {
+  static ThemeData buildLightTheme({
+    double cardOpacity = 1.0,
+    Color primary = _primaryColor,
+    Color onPrimary = Colors.white,
+  }) {
     const scaffoldBg = Color(0xFFEDF2FA);
     const surfaceBg = Color(0xFFFFFFFF);
     const outlineColor = Color(0xFFD5DEEE);
@@ -528,7 +559,8 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: ColorScheme.light(
-        primary: _primaryColor,
+        primary: primary,
+        onPrimary: onPrimary,
         secondary: _secondaryColor,
         surface: effectiveSurface,
         onSurface: textPrimary,
@@ -559,8 +591,8 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _primaryColor,
-          foregroundColor: Colors.white,
+          backgroundColor: primary,
+          foregroundColor: onPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -586,57 +618,57 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: const Color(0xFFE6EDF8),
-        selectedColor: _primaryColor,
+        selectedColor: primary,
         labelStyle: const TextStyle(
           color: textPrimary,
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
-        secondaryLabelStyle: const TextStyle(
-          color: Colors.white,
+        secondaryLabelStyle: TextStyle(
+          color: onPrimary,
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         side: const BorderSide(color: outlineColor, width: 1.0),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        checkmarkColor: Colors.white,
+        checkmarkColor: onPrimary,
         showCheckmark: false,
       ),
       sliderTheme: SliderThemeData(
-        activeTrackColor: _primaryColor,
-        inactiveTrackColor: _primaryColor.withAlpha(30),
-        thumbColor: _primaryColor,
-        overlayColor: _primaryColor.withAlpha(20),
-        valueIndicatorColor: _primaryColor,
-        valueIndicatorTextStyle: const TextStyle(
-          color: Colors.white,
+        activeTrackColor: primary,
+        inactiveTrackColor: primary.withAlpha(30),
+        thumbColor: primary,
+        overlayColor: primary.withAlpha(20),
+        valueIndicatorColor: primary,
+        valueIndicatorTextStyle: TextStyle(
+          color: onPrimary,
           fontWeight: FontWeight.w600,
         ),
         trackHeight: 4,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
       ),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: _primaryColor,
-        circularTrackColor: Color(0xFFD5DEEE),
-        linearTrackColor: Color(0xFFD5DEEE),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: primary,
+        circularTrackColor: const Color(0xFFD5DEEE),
+        linearTrackColor: const Color(0xFFD5DEEE),
       ),
       dividerTheme: const DividerThemeData(color: outlineColor, thickness: 1),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected)
-              ? Colors.white
+              ? onPrimary
               : const Color(0xFF94A3B8),
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected)
-              ? _primaryColor
+              ? primary
               : const Color(0xFFD5DEEE),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: const Color(0xFF0F172A),
-        contentTextStyle: const TextStyle(color: Colors.white, fontSize: 14),
+        contentTextStyle: const TextStyle(color: Color(0xFFFFFFFF), fontSize: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
       ),

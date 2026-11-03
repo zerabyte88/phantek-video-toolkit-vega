@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 // Copyright (C) 2026 zerabyte88
 
 import 'package:flutter/material.dart';
@@ -22,8 +22,22 @@ class AudioExtractorCard extends StatelessWidget {
     required this.l10n,
   });
 
+  /// The device only has AAC/PCM encoders, so MP3 is a stream copy and is
+  /// only possible when the source audio is already MP3.
+  bool get _sourceIsMp3 {
+    final codec = sourceVideo.audioCodec?.toLowerCase() ?? '';
+    return codec.contains('mpeg') || codec.contains('mp3');
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (encodingOptions.audioFormat == AudioFormat.mp3 && !_sourceIsMp3) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        onOptionsChanged(
+          encodingOptions.copyWith(audioFormat: AudioFormat.m4a),
+        );
+      });
+    }
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final dividerColor = theme.colorScheme.onSurface.withAlpha(
@@ -110,7 +124,9 @@ class AudioExtractorCard extends StatelessWidget {
               alignment: WrapAlignment.center,
               spacing: 8,
               runSpacing: 8,
-              children: AudioFormat.values.map((fmt) {
+              children: AudioFormat.values
+                  .where((fmt) => fmt != AudioFormat.mp3 || _sourceIsMp3)
+                  .map((fmt) {
                 final isSelected = encodingOptions.audioFormat == fmt;
                 return ChoiceChip(
                   showCheckmark: false,
@@ -140,7 +156,7 @@ class AudioExtractorCard extends StatelessWidget {
                           : FontWeight.w500,
                       letterSpacing: 0,
                       color: isSelected
-                          ? Colors.white
+                          ? theme.colorScheme.onPrimary
                           : theme.colorScheme.onSurface,
                     ),
                   ),
@@ -224,7 +240,7 @@ class AudioExtractorCard extends StatelessWidget {
                                   : FontWeight.w500,
                               letterSpacing: 0,
                               color: isCopySelected
-                                  ? Colors.white
+                                  ? theme.colorScheme.onPrimary
                                   : theme.colorScheme.onSurface,
                             ),
                           ),
@@ -278,7 +294,7 @@ class AudioExtractorCard extends StatelessWidget {
                                       FontFeature.tabularFigures(),
                                     ],
                                     color: isSelected
-                                        ? Colors.white
+                                        ? theme.colorScheme.onPrimary
                                         : theme.colorScheme.onSurface,
                                   ),
                                 ),

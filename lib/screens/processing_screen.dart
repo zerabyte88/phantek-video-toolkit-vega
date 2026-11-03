@@ -92,7 +92,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   );
   final List<double> _storageHistory = List<double>.generate(
     _historySampleCount,
-    (_) => 0.02,
+    (_) => 0.24,
     growable: true,
   );
   int _prevSizeBytes = 0;
@@ -199,7 +199,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     _memoryHistory.clear();
     _memoryHistory.addAll(List.filled(_historySampleCount, 0.08));
     _storageHistory.clear();
-    _storageHistory.addAll(List.filled(_historySampleCount, 0.02));
+    _storageHistory.addAll(List.filled(_historySampleCount, 0.24));
 
     await ForegroundServiceManager().requestPermissions();
 
@@ -297,7 +297,9 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           _memoryHistory.removeAt(0);
         }
 
-        final ioNorm = _isProcessing ? (ioMb / 8.0).clamp(0.08, 1.0) : 0.02;
+        final ioNorm = _isProcessing
+            ? (0.24 + (ioMb / 8.0) * 0.66).clamp(0.26, 0.95)
+            : 0.20;
         _storageHistory.add(ioNorm);
         if (_storageHistory.length > _historySampleCount) {
           _storageHistory.removeAt(0);
@@ -459,7 +461,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         _isProcessing = false;
         _storageIoRateMb = 0.0;
         _thermalHistory.fillRange(0, _historySampleCount, 0.25);
-        _storageHistory.fillRange(0, _historySampleCount, 0.02);
+        _storageHistory.fillRange(0, _historySampleCount, 0.20);
         if (result != null) {
           _isSuccess = true;
           _outputPath = result;
@@ -467,7 +469,9 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           _statusText = l10n.t('proc_completed');
         } else {
           _isSuccess = false;
-          _statusText = l10n.t('proc_failed');
+          _statusText = widget.isAudioExtraction
+              ? l10n.t('proc_audio_failed')
+              : l10n.t('proc_failed');
         }
       });
 
@@ -644,6 +648,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     Color crest,
     Color basin,
     Color track,
+    Color btn,
     Color btnFg,
   })
   _getThemePalette() {
@@ -655,7 +660,8 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           crest: const Color(0xFFFBBF24),
           basin: const Color(0xFFFFFBEB),
           track: const Color(0xFFFDE68A),
-          btnFg: Colors.white,
+          btn: const Color(0xFFFBBF24),
+          btnFg: Colors.black,
         );
       case 'oled_midnight':
       case 'oled':
@@ -665,6 +671,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           crest: const Color(0xFFC4B5FD),
           basin: const Color(0xFF0C081C),
           track: const Color(0xFF2B1F4A),
+          btn: const Color(0xFFA78BFA),
           btnFg: Colors.black,
         );
       case 'oled_sakura':
@@ -675,6 +682,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           crest: const Color(0xFFFBCFE8),
           basin: const Color(0xFF160912),
           track: const Color(0xFF3D172B),
+          btn: const Color(0xFFF472B6),
           btnFg: Colors.black,
         );
       case 'oled_pure':
@@ -685,7 +693,8 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           crest: const Color(0xFF93C5FD),
           basin: const Color(0xFF050912),
           track: const Color(0xFF1E293B),
-          btnFg: Colors.black,
+          btn: const Color(0xFF2563EB),
+          btnFg: Colors.white,
         );
       case 'light_clean':
       case 'clean_light':
@@ -695,6 +704,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           crest: const Color(0xFF7DD3FC),
           basin: const Color(0xFFF0F9FF),
           track: const Color(0xFFBAE6FD),
+          btn: const Color(0xFF2563EB),
           btnFg: Colors.white,
         );
       case 'oled_snowfall':
@@ -706,6 +716,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           crest: const Color(0xFF67E8F9),
           basin: const Color(0xFF060E1F),
           track: const Color(0xFF1E3254),
+          btn: const Color(0xFF38BDF8),
           btnFg: Colors.black,
         );
     }
@@ -796,9 +807,60 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     );
   }
 
+  List<Shadow> _buildTextOutlineShadows(Color outlineColor) {
+    return [
+      Shadow(
+        offset: const Offset(-1.6, -1.6),
+        blurRadius: 1.2,
+        color: outlineColor,
+      ),
+      Shadow(
+        offset: const Offset(1.6, -1.6),
+        blurRadius: 1.2,
+        color: outlineColor,
+      ),
+      Shadow(
+        offset: const Offset(1.6, 1.6),
+        blurRadius: 1.2,
+        color: outlineColor,
+      ),
+      Shadow(
+        offset: const Offset(-1.6, 1.6),
+        blurRadius: 1.2,
+        color: outlineColor,
+      ),
+      Shadow(
+        offset: const Offset(0, -2.0),
+        blurRadius: 1.2,
+        color: outlineColor,
+      ),
+      Shadow(
+        offset: const Offset(0, 2.0),
+        blurRadius: 1.2,
+        color: outlineColor,
+      ),
+      Shadow(
+        offset: const Offset(-2.0, 0),
+        blurRadius: 1.2,
+        color: outlineColor,
+      ),
+      Shadow(
+        offset: const Offset(2.0, 0),
+        blurRadius: 1.2,
+        color: outlineColor,
+      ),
+      Shadow(
+        offset: const Offset(0, 2.0),
+        blurRadius: 6.0,
+        color: outlineColor.withAlpha(220),
+      ),
+    ];
+  }
+
   Widget _buildProgressSection(ThemeData theme, l10n) {
     final isDark = theme.brightness == Brightness.dark;
     final palette = _getThemePalette();
+    final textOutlineShadows = _buildTextOutlineShadows(palette.basin);
     final progressPrimary = _isProcessing
         ? palette.primary
         : (_isSuccess ? const Color(0xFF4CC38A) : const Color(0xFFE5484D));
@@ -850,77 +912,67 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                         );
                       },
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: palette.basin.withAlpha(isDark ? 215 : 232),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: progressPrimary.withAlpha(isDark ? 55 : 65),
-                          width: 1.0,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (_isProcessing) ...[
-                            Text(
-                              _formatPercentage(animatedProgress),
-                              style: TextStyle(
-                                fontSize: 34,
-                                fontWeight: FontWeight.w600,
-                                color: progressPrimary,
-                                letterSpacing: -0.5,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            ),
-                            if (_speedText.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                _speedText,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w400,
-                                  color: theme.colorScheme.onSurface.withAlpha(
-                                    140,
-                                  ),
-                                  letterSpacing: 0,
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures(),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ] else ...[
-                            Icon(
-                              _isSuccess
-                                  ? Icons.check_circle_rounded
-                                  : Icons.error_rounded,
-                              size: 40,
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_isProcessing) ...[
+                          Text(
+                            _formatPercentage(animatedProgress),
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.w700,
                               color: progressPrimary,
+                              letterSpacing: -0.5,
+                              shadows: textOutlineShadows,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
+                          ),
+                          if (_speedText.isNotEmpty) ...[
                             const SizedBox(height: 4),
                             Text(
-                              _isSuccess ? _formatPercentage(1.0) : 'Error',
+                              _speedText,
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: progressPrimary,
+                                color: theme.colorScheme.onSurface.withAlpha(
+                                  190,
+                                ),
                                 letterSpacing: 0,
+                                shadows: textOutlineShadows,
                                 fontFeatures: const [
                                   FontFeature.tabularFigures(),
                                 ],
                               ),
                             ),
                           ],
+                        ] else ...[
+                          Icon(
+                            _isSuccess
+                                ? Icons.check_circle_rounded
+                                : Icons.error_rounded,
+                            size: 40,
+                            color: progressPrimary,
+                            shadows: textOutlineShadows,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _isSuccess ? _formatPercentage(1.0) : 'Error',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: progressPrimary,
+                              letterSpacing: 0,
+                              shadows: textOutlineShadows,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
                         ],
-                      ),
+                      ],
                     ),
                   ],
                 ),
@@ -1173,35 +1225,51 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             ],
           ),
           const SizedBox(height: 8),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-                letterSpacing: 0,
-                fontFeatures: const [FontFeature.tabularFigures()],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                      letterSpacing: 0,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subValue ?? ' ',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: theme.colorScheme.onSurface.withAlpha(115),
-              letterSpacing: 0,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+              if (subValue != null && subValue.trim().isNotEmpty) ...[
+                const SizedBox(width: 6),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      subValue,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: theme.colorScheme.onSurface.withAlpha(115),
+                        letterSpacing: 0,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                      maxLines: 1,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           if (history != null && graphColor != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             _WindowsTaskGraph(
               history: history,
               color: graphColor,
@@ -1683,7 +1751,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
               icon: const Icon(Icons.folder_open_outlined, size: 18),
               label: Text(l10n.t('proc_open_file')),
               style: ElevatedButton.styleFrom(
-                backgroundColor: palette.primary,
+                backgroundColor: palette.btn,
                 foregroundColor: palette.btnFg,
                 padding: const EdgeInsets.symmetric(vertical: 13),
                 shape: RoundedRectangleBorder(
@@ -1844,7 +1912,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                         : l10n.t('proc_retry'),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: palette.primary,
+                    backgroundColor: palette.btn,
                     foregroundColor: palette.btnFg,
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
@@ -2461,7 +2529,8 @@ class _DualRingProgressPainter extends CustomPainter {
       final waveFactor = (isProcessing && isLit)
           ? (0.68 +
                 0.32 *
-                    (0.5 + 0.5 * math.sin((safeAnim * 2 * math.pi) - (i * 0.5))))
+                    (0.5 +
+                        0.5 * math.sin((safeAnim * 2 * math.pi) - (i * 0.5))))
           : 0.80;
       final barH = (size.height * baseRatio * waveFactor).clamp(
         minBarH,

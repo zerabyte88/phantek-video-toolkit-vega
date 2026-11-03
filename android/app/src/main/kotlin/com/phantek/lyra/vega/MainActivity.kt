@@ -32,8 +32,10 @@ import androidx.media3.common.C
 import androidx.media3.common.Effect
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.util.Clock
 import androidx.media3.effect.Presentation
 import androidx.media3.transformer.Composition
+import androidx.media3.transformer.DefaultAssetLoaderFactory
 import androidx.media3.transformer.DefaultEncoderFactory
 import androidx.media3.transformer.DefaultDecoderFactory
 import androidx.media3.transformer.EditedMediaItem
@@ -1045,8 +1047,22 @@ class MainActivity : FlutterActivity() {
             encoderFactoryBuilder.setRequestedVideoEncoderSettings(videoSettingsBuilder.build())
             val encoderFactory = encoderFactoryBuilder.build()
 
+            // Allow falling back to another (e.g. software) decoder when the
+            // preferred hardware decoder rejects the stream, common with 4K HEVC.
+            val decoderFactory = DefaultDecoderFactory.Builder(applicationContext)
+                .setEnableDecoderFallback(true)
+                .build()
+
             // C.TIME_UNSET prevents sample timeouts and timestamp gaps on long/TS media
             val transformerBuilder = Transformer.Builder(applicationContext)
+                .setAssetLoaderFactory(
+                    DefaultAssetLoaderFactory(
+                        applicationContext,
+                        decoderFactory,
+                        Clock.DEFAULT,
+                        null as android.media.metrics.LogSessionId?
+                    )
+                )
                 .setVideoMimeType(targetVideoMime)
                 .setAudioMimeType(MimeTypes.AUDIO_AAC)
                 .setEncoderFactory(encoderFactory)
@@ -1076,8 +1092,9 @@ class MainActivity : FlutterActivity() {
                     activeTranscodeResult = null
                     val err = exportException.localizedMessage ?: "Transcoding failed"
                     val causeMsg = exportException.cause?.localizedMessage ?: exportException.cause?.message
-                    val fullErr = if (!causeMsg.isNullOrBlank() && causeMsg != err) "$err ($causeMsg)" else err
-                    sendLog("Hardware transcoding error [${exportException.errorCodeName}]: $fullErr")
+                    val fullErr = (if (!causeMsg.isNullOrBlank() && causeMsg != err) "$err ($causeMsg)" else err) +
+                        " [${exportException.errorCodeName}]"
+                    sendLog("Hardware transcoding error: $fullErr")
                     cleanupOutput(outputPath)
                     mainHandler.post {
                         res?.error("TRANSCODE_FAILED", fullErr, null)

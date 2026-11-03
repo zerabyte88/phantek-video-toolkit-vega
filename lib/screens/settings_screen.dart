@@ -24,8 +24,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.3.5';
-  String _buildNumber = '23005';
+  String _appVersion = 'v2.3.6';
+  String _buildNumber = '23006';
   double? _dragCardOpacity;
 
   @override
@@ -54,14 +54,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '23005';
+              : '23006';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.3.5';
-          _buildNumber = '23005';
+          _appVersion = 'v2.3.6';
+          _buildNumber = '23006';
         });
       }
     }
@@ -693,18 +693,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(
+                                          Icon(
                                             Icons.check_rounded,
                                             size: 13,
-                                            color: Colors.white,
+                                            color: theme.colorScheme.onPrimary,
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
                                             l10n.t('active_language_badge'),
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 10.5,
                                               fontWeight: FontWeight.w600,
-                                              color: Colors.white,
+                                              color: theme.colorScheme.onPrimary,
                                             ),
                                           ),
                                         ],
@@ -734,7 +734,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
     AppSettings settings,
     AppLocalizations l10n,
   ) {
-    final themes = [
+    final staticThemes = [
+      {
+        'id': 'oled_pure',
+        'title': l10n.t('theme_oled_pure'),
+        'desc': l10n.t('theme_oled_pure_desc'),
+        'icon': Icons.brightness_2_outlined,
+        'accent': const Color(0xFF60A5FA),
+        'badge': l10n.t('badge_static'),
+      },
+      {
+        'id': 'light_clean',
+        'title': l10n.t('theme_light_clean'),
+        'desc': l10n.t('theme_light_clean_desc'),
+        'icon': Icons.wb_sunny_outlined,
+        'accent': const Color(0xFF0EA5E9),
+        'badge': l10n.t('badge_static'),
+      },
+    ];
+
+    final animatedThemes = [
       {
         'id': 'oled_snowfall',
         'title': l10n.t('theme_oled_snowfall'),
@@ -767,130 +786,208 @@ class _SettingsScreenState extends State<SettingsScreen> {
         'accent': const Color(0xFFF472B6),
         'badge': 'AMOLED',
       },
-      {
-        'id': 'oled_pure',
-        'title': l10n.t('theme_oled_pure'),
-        'desc': l10n.t('theme_oled_pure_desc'),
-        'icon': Icons.brightness_2_outlined,
-        'accent': const Color(0xFF60A5FA),
-        'badge': l10n.t('badge_static'),
-      },
-      {
-        'id': 'light_clean',
-        'title': l10n.t('theme_light_clean'),
-        'desc': l10n.t('theme_light_clean_desc'),
-        'icon': Icons.wb_sunny_outlined,
-        'accent': const Color(0xFF0EA5E9),
-        'badge': l10n.t('badge_static'),
-      },
     ];
 
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        mainAxisExtent: 80,
-      ),
-      itemCount: themes.length,
-      itemBuilder: (context, index) {
-        final item = themes[index];
-        final id = item['id'] as String;
-        final isSelected = settings.themeMode == id;
-        final accent = item['accent'] as Color;
-        final badge = item['badge'] as String?;
-
-        return Material(
-          color: isSelected
-              ? accent.withAlpha(25)
-              : theme.colorScheme.surfaceContainerHighest.withAlpha(35),
-          borderRadius: BorderRadius.circular(12),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () {
-              _settingsService.setThemeMode(id);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected
-                      ? accent
-                      : theme.colorScheme.outline.withAlpha(30),
-                  width: isSelected ? 1.6 : 1.0,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            for (int i = 0; i < staticThemes.length; i++) ...[
+              if (i > 0) const SizedBox(width: 8),
+              Expanded(
+                child: _buildThemeCard(
+                  item: staticThemes[i],
+                  isSelected: settings.themeMode == staticThemes[i]['id'],
+                  theme: theme,
+                  isCompact: false,
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    item['icon'] as IconData,
-                    size: 20,
-                    color: isSelected ? accent : theme.colorScheme.onSurface,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.center,
-                          child: Text(
-                            item['title'] as String,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w600,
-                              color: isSelected
-                                  ? accent
-                                  : theme.colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                        if (badge != null) ...[
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: accent.withAlpha(20),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                color: accent.withAlpha(120),
-                                width: 1.0,
-                              ),
-                            ),
-                            child: Text(
-                              badge,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: accent,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            for (int i = 0; i < animatedThemes.length; i++) ...[
+              if (i > 0) const SizedBox(width: 6),
+              Expanded(
+                child: _buildThemeCard(
+                  item: animatedThemes[i],
+                  isSelected: settings.themeMode == animatedThemes[i]['id'],
+                  theme: theme,
+                  isCompact: true,
+                ),
               ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildThemeCard({
+    required Map<String, dynamic> item,
+    required bool isSelected,
+    required ThemeData theme,
+    required bool isCompact,
+  }) {
+    final id = item['id'] as String;
+    final accent = item['accent'] as Color;
+    final badge = item['badge'] as String?;
+    final icon = item['icon'] as IconData;
+    final title = item['title'] as String;
+
+    return Material(
+      color: isSelected
+          ? accent.withAlpha(25)
+          : theme.colorScheme.surfaceContainerHighest.withAlpha(35),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          _settingsService.setThemeMode(id);
+        },
+        child: Container(
+          height: isCompact ? 80 : 68,
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 4 : 10,
+            vertical: isCompact ? 4 : 6,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? accent
+                  : theme.colorScheme.outline.withAlpha(30),
+              width: isSelected ? 1.6 : 1.0,
             ),
           ),
-        );
-      },
+          child: isCompact
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      icon,
+                      size: 20,
+                      color: isSelected ? accent : theme.colorScheme.onSurface,
+                    ),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.center,
+                      child: Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w600,
+                          color: isSelected
+                              ? accent
+                              : theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    if (badge != null) ...[
+                      const SizedBox(height: 3),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: accent.withAlpha(20),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: accent.withAlpha(120),
+                            width: 1.0,
+                          ),
+                        ),
+                        child: Text(
+                          badge,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: accent,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                )
+              : Row(
+                  children: [
+                    Icon(
+                      icon,
+                      size: 20,
+                      color: isSelected ? accent : theme.colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.center,
+                            child: Text(
+                              title,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                                color: isSelected
+                                    ? accent
+                                    : theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          if (badge != null) ...[
+                            const SizedBox(height: 3),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: accent.withAlpha(20),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: accent.withAlpha(120),
+                                  width: 1.0,
+                                ),
+                              ),
+                              child: Text(
+                                badge,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: accent,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
     );
   }
 
@@ -1687,7 +1784,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           fontWeight: selected && enabled ? FontWeight.w600 : FontWeight.w500,
           color: !enabled
               ? theme.colorScheme.onSurface.withAlpha(80)
-              : (selected ? Colors.white : theme.colorScheme.onSurface),
+              : (selected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface),
         ),
       ),
       onSelected: enabled && onSelected != null ? (_) => onSelected() : null,

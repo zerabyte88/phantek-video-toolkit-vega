@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 // Copyright (C) 2026 zerabyte88
 
 import 'dart:io';
@@ -1101,7 +1101,7 @@ class _SegmentItem extends StatelessWidget {
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 letterSpacing: 0,
                 color: isSelected
-                    ? Colors.white
+                    ? theme.colorScheme.onPrimary
                     : theme.colorScheme.onSurface.withAlpha(165),
               ),
               maxLines: 1,
