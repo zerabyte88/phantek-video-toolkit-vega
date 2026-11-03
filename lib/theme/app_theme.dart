@@ -31,7 +31,7 @@ class AppTheme {
         return buildLightTheme(
           cardOpacity: cardOpacity,
           primary: daylightAccent,
-          onPrimary: Colors.black,
+          onPrimary: Colors.white,
         );
       case 'light_clean':
       case 'clean_light':

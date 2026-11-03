@@ -5004,6 +5004,11 @@ void main() {
             'androidx.media3:media3-common',
             'androidx.media3:media3-exoplayer',
             'androidx.media3:media3-muxer',
+            'androidx.media3:media3-container',
+            'androidx.media3:media3-datasource',
+            'androidx.media3:media3-decoder',
+            'androidx.media3:media3-extractor',
+            'androidx.media3:media3-database',
           ]),
         );
         final fullText = media3.paragraphs.map((p) => p.text).join('\n');

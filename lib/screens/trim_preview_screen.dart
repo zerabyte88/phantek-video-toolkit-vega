@@ -579,6 +579,7 @@ class _TimelineScrubber extends StatefulWidget {
 
 class _TimelineScrubberState extends State<_TimelineScrubber> {
   static const double _horizontalPadding = 14.0;
+  static const double _minPlayheadGapPx = 18.0;
 
   _TimelineDragTarget _dragTarget = _TimelineDragTarget.none;
 
@@ -596,6 +597,26 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
     return ratio * widget.maxDuration;
   }
 
+  double _gapSeconds(double width, double startSec, double endSec) {
+    final trackW = width - (_horizontalPadding * 2);
+    if (trackW <= 0 || widget.maxDuration <= 0) return 0.0;
+    final rawGap = (_minPlayheadGapPx / trackW) * widget.maxDuration;
+    final maxAllowedGap = math.max(0.0, (endSec - startSec) * 0.45);
+    return math.min(rawGap, maxAllowedGap);
+  }
+
+  double _minPlayheadSeconds(double width, {double? startOverride}) {
+    final s = startOverride ?? widget.startSeconds;
+    final gap = _gapSeconds(width, s, widget.endSeconds);
+    return (s + gap).clamp(0.0, widget.maxDuration).toDouble();
+  }
+
+  double _maxPlayheadSeconds(double width, {double? endOverride}) {
+    final e = endOverride ?? widget.endSeconds;
+    final gap = _gapSeconds(width, widget.startSeconds, e);
+    return (e - gap).clamp(0.0, widget.maxDuration).toDouble();
+  }
+
   void _handleDragStart(Offset localPosition, double width) {
     if (width <= 0 || widget.maxDuration <= 0) return;
     final dx = localPosition.dx;
@@ -606,26 +627,38 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
     final playheadPx = _secondsToPx(widget.currentPosition, width);
 
     const topY = 14.0;
+    final startCenterPx = startPx - 4.0;
+    final endCenterPx = endPx + 4.0;
+
+    final dStart = (dx - startCenterPx).abs();
+    final dEnd = (dx - endCenterPx).abs();
+    final dPlay = (dx - playheadPx).abs();
 
     // 1. Direct hit on top needle head pin
-    if (dy <= topY + 10 && (dx - playheadPx).abs() <= 28.0) {
+    if (dy <= topY + 8 && dPlay <= 24.0) {
       _dragTarget = _TimelineDragTarget.playhead;
     }
-    // 2. Direct hit on the long timestamp line (Playhead ALWAYS takes priority!)
-    else if ((dx - playheadPx).abs() <= 20.0) {
-      _dragTarget = _TimelineDragTarget.playhead;
+    // 2. Initial state where playhead and start handle are both at 0.0:
+    // touching left of startPx grabs startHandle; touching at/right of startPx grabs playhead.
+    else if ((playheadPx - startPx).abs() <= 4.0 && dStart <= 22.0) {
+      if (dx < startPx - 2.0) {
+        _dragTarget = _TimelineDragTarget.startHandle;
+      } else {
+        _dragTarget = _TimelineDragTarget.playhead;
+      }
     }
-    // 3. Explicit grab on the start handle when playhead is not at that position
-    else if ((dx - startPx).abs() <= 22.0 &&
-        (dx - startPx).abs() < (dx - endPx).abs()) {
+    // 3. Nearest handle disambiguation so start, playhead, and end never conflict
+    else if (dStart <= 24.0 && dStart <= dPlay && dStart <= dEnd) {
       _dragTarget = _TimelineDragTarget.startHandle;
-    }
-    // 4. Explicit grab on the end handle when playhead is not at that position
-    else if ((dx - endPx).abs() <= 22.0) {
+    } else if (dEnd <= 24.0 && dEnd <= dPlay && dEnd < dStart) {
       _dragTarget = _TimelineDragTarget.endHandle;
-    }
-    // 5. Dragging elsewhere on the timeline track scrubs the playhead
-    else {
+    } else if (dPlay <= 20.0) {
+      _dragTarget = _TimelineDragTarget.playhead;
+    } else if (dStart <= 24.0) {
+      _dragTarget = _TimelineDragTarget.startHandle;
+    } else if (dEnd <= 24.0) {
+      _dragTarget = _TimelineDragTarget.endHandle;
+    } else {
       _dragTarget = _TimelineDragTarget.playhead;
     }
 
@@ -642,7 +675,11 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
             .clamp(0.0, math.max(0.0, widget.endSeconds - 0.5))
             .toDouble();
         widget.onStartChanged(newStart);
-        widget.onSeek(newStart);
+        // Only push playhead along when the start trim line reaches/passes the preview line
+        final minPlayhead = _minPlayheadSeconds(width, startOverride: newStart);
+        if (widget.currentPosition < minPlayhead) {
+          widget.onSeek(minPlayhead);
+        }
         break;
       case _TimelineDragTarget.endHandle:
         final newEnd = t
@@ -652,11 +689,18 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
             )
             .toDouble();
         widget.onEndChanged(newEnd);
-        widget.onSeek(newEnd);
+        // Only push playhead along when the end trim line reaches/passes the preview line
+        final maxPlayhead = _maxPlayheadSeconds(width, endOverride: newEnd);
+        if (widget.currentPosition > maxPlayhead) {
+          widget.onSeek(maxPlayhead);
+        }
         break;
       case _TimelineDragTarget.playhead:
-        // ONLY seeks the playhead. NEVER touches start/end boundary!
-        widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
+        // Scrubs the playhead within the active trim range while keeping a small
+        // clearance from the start/end handles so the 3 lines never overlap.
+        final minPlayhead = _minPlayheadSeconds(width);
+        final maxPlayhead = _maxPlayheadSeconds(width);
+        widget.onSeek(t.clamp(minPlayhead, maxPlayhead).toDouble());
         break;
       case _TimelineDragTarget.none:
         break;
@@ -670,11 +714,23 @@ class _TimelineScrubberState extends State<_TimelineScrubber> {
         final width = constraints.maxWidth;
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTapDown: (details) {
+          onTapUp: (details) {
             if (width <= 0 || widget.maxDuration <= 0) return;
-            final t = _pxToSeconds(details.localPosition.dx, width);
-            // Tapping anywhere on the timeline track ONLY seeks the playhead!
-            widget.onSeek(t.clamp(0.0, widget.maxDuration).toDouble());
+            final dx = details.localPosition.dx;
+            final startPx = _secondsToPx(widget.startSeconds, width);
+            final endPx = _secondsToPx(widget.endSeconds, width);
+            // Ignore taps on the start or end handle ears so touching a trim
+            // handle never teleports the preview line onto that handle.
+            if ((dx - (startPx - 4.0)).abs() <= 18.0 ||
+                (dx - (endPx + 4.0)).abs() <= 18.0) {
+              return;
+            }
+            final minPlayhead = _minPlayheadSeconds(width);
+            final maxPlayhead = _maxPlayheadSeconds(width);
+            final t = _pxToSeconds(dx, width)
+                .clamp(minPlayhead, maxPlayhead)
+                .toDouble();
+            widget.onSeek(t);
           },
           onHorizontalDragStart: (details) =>
               _handleDragStart(details.localPosition, width),

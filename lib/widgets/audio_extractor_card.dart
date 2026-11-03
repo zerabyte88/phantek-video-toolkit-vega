@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 // Copyright (C) 2026 zerabyte88
 
 import 'package:flutter/material.dart';
@@ -124,14 +124,16 @@ class AudioExtractorCard extends StatelessWidget {
               alignment: WrapAlignment.center,
               spacing: 8,
               runSpacing: 8,
-              children: AudioFormat.values
-                  .where((fmt) => fmt != AudioFormat.mp3 || _sourceIsMp3)
-                  .map((fmt) {
-                final isSelected = encodingOptions.audioFormat == fmt;
+              children: AudioFormat.values.map((fmt) {
+                final isEnabled = fmt != AudioFormat.mp3 || _sourceIsMp3;
+                final isSelected =
+                    isEnabled && encodingOptions.audioFormat == fmt;
                 return ChoiceChip(
                   showCheckmark: false,
                   selectedColor: theme.colorScheme.primary,
-                  backgroundColor: theme.colorScheme.surface,
+                  backgroundColor: !isEnabled
+                      ? theme.colorScheme.surface.withAlpha(isDark ? 50 : 80)
+                      : theme.colorScheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -141,9 +143,13 @@ class AudioExtractorCard extends StatelessWidget {
                   ),
                   visualDensity: VisualDensity.compact,
                   side: BorderSide(
-                    color: isSelected
-                        ? theme.colorScheme.primary
-                        : chipBorderColor,
+                    color: !isEnabled
+                        ? theme.colorScheme.onSurface.withAlpha(
+                            isDark ? 15 : 20,
+                          )
+                        : (isSelected
+                              ? theme.colorScheme.primary
+                              : chipBorderColor),
                     width: 1.0,
                   ),
                   label: Text(
@@ -155,26 +161,31 @@ class AudioExtractorCard extends StatelessWidget {
                           ? FontWeight.w600
                           : FontWeight.w500,
                       letterSpacing: 0,
-                      color: isSelected
-                          ? theme.colorScheme.onPrimary
-                          : theme.colorScheme.onSurface,
+                      color: !isEnabled
+                          ? theme.colorScheme.onSurface.withAlpha(75)
+                          : (isSelected
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.onSurface),
                     ),
                   ),
                   selected: isSelected,
-                  onSelected: (selected) {
-                    if (selected) {
-                      final isCopyOnly =
-                          fmt == AudioFormat.mp3 || fmt == AudioFormat.wav;
-                      onOptionsChanged(
-                        encodingOptions.copyWith(
-                          audioFormat: fmt,
-                          audioExtractBitrateKbps: isCopyOnly
-                              ? 0
-                              : encodingOptions.audioExtractBitrateKbps,
-                        ),
-                      );
-                    }
-                  },
+                  onSelected: isEnabled
+                      ? (selected) {
+                          if (selected) {
+                            final isCopyOnly =
+                                fmt == AudioFormat.mp3 ||
+                                fmt == AudioFormat.wav;
+                            onOptionsChanged(
+                              encodingOptions.copyWith(
+                                audioFormat: fmt,
+                                audioExtractBitrateKbps: isCopyOnly
+                                    ? 0
+                                    : encodingOptions.audioExtractBitrateKbps,
+                              ),
+                            );
+                          }
+                        }
+                      : null,
                 );
               }).toList(),
             ),

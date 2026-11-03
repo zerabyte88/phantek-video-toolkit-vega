@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 // Copyright (C) 2026 zerabyte88
 
 import 'dart:io';
@@ -745,7 +745,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildEmptyState(ThemeData theme, AppLocalizations l10n) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bottomOpticalOffset = constraints.maxHeight > 360 ? 28.0 : 0.0;
+        final bottomOpticalOffset = constraints.maxHeight > 360 ? 64.0 : 0.0;
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: ConstrainedBox(

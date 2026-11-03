@@ -661,7 +661,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           basin: const Color(0xFFFFFBEB),
           track: const Color(0xFFFDE68A),
           btn: const Color(0xFFFBBF24),
-          btnFg: Colors.black,
+          btnFg: Colors.white,
         );
       case 'oled_midnight':
       case 'oled':
@@ -808,51 +808,47 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   }
 
   List<Shadow> _buildTextOutlineShadows(Color outlineColor) {
+    final stroke = outlineColor.withAlpha(235);
     return [
       Shadow(
-        offset: const Offset(-1.6, -1.6),
-        blurRadius: 1.2,
-        color: outlineColor,
+        offset: const Offset(-0.7, -0.7),
+        blurRadius: 0.4,
+        color: stroke,
       ),
       Shadow(
-        offset: const Offset(1.6, -1.6),
-        blurRadius: 1.2,
-        color: outlineColor,
+        offset: const Offset(0.7, -0.7),
+        blurRadius: 0.4,
+        color: stroke,
       ),
       Shadow(
-        offset: const Offset(1.6, 1.6),
-        blurRadius: 1.2,
-        color: outlineColor,
+        offset: const Offset(0.7, 0.7),
+        blurRadius: 0.4,
+        color: stroke,
       ),
       Shadow(
-        offset: const Offset(-1.6, 1.6),
-        blurRadius: 1.2,
-        color: outlineColor,
+        offset: const Offset(-0.7, 0.7),
+        blurRadius: 0.4,
+        color: stroke,
       ),
       Shadow(
-        offset: const Offset(0, -2.0),
-        blurRadius: 1.2,
-        color: outlineColor,
+        offset: const Offset(0, -0.9),
+        blurRadius: 0.4,
+        color: stroke,
       ),
       Shadow(
-        offset: const Offset(0, 2.0),
-        blurRadius: 1.2,
-        color: outlineColor,
+        offset: const Offset(0, 0.9),
+        blurRadius: 0.4,
+        color: stroke,
       ),
       Shadow(
-        offset: const Offset(-2.0, 0),
-        blurRadius: 1.2,
-        color: outlineColor,
+        offset: const Offset(-0.9, 0),
+        blurRadius: 0.4,
+        color: stroke,
       ),
       Shadow(
-        offset: const Offset(2.0, 0),
-        blurRadius: 1.2,
-        color: outlineColor,
-      ),
-      Shadow(
-        offset: const Offset(0, 2.0),
-        blurRadius: 6.0,
-        color: outlineColor.withAlpha(220),
+        offset: const Offset(0.9, 0),
+        blurRadius: 0.4,
+        color: stroke,
       ),
     ];
   }
@@ -1227,10 +1223,9 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Flexible(
+              Expanded(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
@@ -1239,31 +1234,38 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
+                      height: 1.0,
                       color: theme.colorScheme.onSurface,
                       letterSpacing: 0,
                       fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                    strutStyle: const StrutStyle(
+                      fontSize: 15,
+                      height: 1.0,
+                      forceStrutHeight: true,
                     ),
                   ),
                 ),
               ),
               if (subValue != null && subValue.trim().isNotEmpty) ...[
                 const SizedBox(width: 6),
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      subValue,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: theme.colorScheme.onSurface.withAlpha(115),
-                        letterSpacing: 0,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                      maxLines: 1,
-                    ),
+                Text(
+                  subValue,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    height: 1.0,
+                    color: theme.colorScheme.onSurface.withAlpha(115),
+                    letterSpacing: 0,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
+                  strutStyle: const StrutStyle(
+                    fontSize: 12,
+                    height: 1.0,
+                    forceStrutHeight: true,
+                  ),
+                  maxLines: 1,
                 ),
               ],
             ],
