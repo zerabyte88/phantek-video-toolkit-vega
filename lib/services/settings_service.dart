@@ -204,6 +204,7 @@ class SettingsService extends ChangeNotifier {
     _savedEncodingOptions = options;
     _settings = _settings.copyWith(
       encodingPreset: options.speedPreset.encodingPresetName,
+      defaultVideoCodec: options.codec.name,
     );
     notifyListeners();
     try {

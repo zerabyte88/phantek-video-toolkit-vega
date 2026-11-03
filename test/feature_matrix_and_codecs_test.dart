@@ -3,12 +3,15 @@
 
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:phantek_video_toolkit_vega/models/app_settings.dart';
 import 'package:phantek_video_toolkit_vega/models/encoding_options.dart';
 import 'package:phantek_video_toolkit_vega/models/video_info.dart';
+import 'package:phantek_video_toolkit_vega/services/localization_service.dart';
 import 'package:phantek_video_toolkit_vega/services/transformer_service.dart';
+import 'package:phantek_video_toolkit_vega/widgets/conversion_options_card.dart';
 
 void main() {
   group('1. Convert Feature & Video Codec Tests', () {
@@ -523,6 +526,108 @@ void main() {
           854 == sourceVideo.width && 480 == sourceVideo.height;
       final isStreamCopyDownscale = isDownscaleRes && isH264 && isSameFps;
       expect(isStreamCopyDownscale, isFalse);
+    });
+
+    test('H.265 / HEVC codec is preserved across container changes', () {
+      const initial = EncodingOptions(
+        codec: VideoCodec.hevc,
+        container: VideoContainer.mp4,
+      );
+      final mkvOptions = initial.copyWith(container: VideoContainer.mkv);
+      expect(mkvOptions.codec, equals(VideoCodec.hevc));
+      expect(mkvOptions.container, equals(VideoContainer.mkv));
+
+      final movOptions = mkvOptions.copyWith(container: VideoContainer.mov);
+      expect(movOptions.codec, equals(VideoCodec.hevc));
+      expect(movOptions.container, equals(VideoContainer.mov));
+    });
+
+    testWidgets('ConversionOptionsCard maintains H.265 codec when container is switched', (tester) async {
+      const testVideo = VideoInfo(
+        filePath: '/storage/sample.mp4',
+        fileName: 'sample.mp4',
+        width: 1920,
+        height: 1080,
+        durationSeconds: 60,
+        bitrate: 5000000,
+        fps: 30,
+        codec: 'h264',
+        fileSizeBytes: 30000000,
+        hasAudio: true,
+        audioCodec: 'aac',
+      );
+      EncodingOptions currentOptions = const EncodingOptions(
+        codec: VideoCodec.hevc,
+        container: VideoContainer.mp4,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return ConversionOptionsCard(
+                    sourceVideo: testVideo,
+                    resolutions: const [
+                      VideoResolution(label: 'Original', width: 3840, height: 2160),
+                    ],
+                    selectedResolution: const VideoResolution(label: 'Original', width: 3840, height: 2160),
+                    encodingOptions: currentOptions,
+                    onResolutionChanged: (_) {},
+                    onOptionsChanged: (opts) {
+                      setState(() {
+                        currentOptions = opts;
+                      });
+                    },
+                    l10n: AppLocalizations('en'),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Verify initial state is HEVC
+      expect(currentOptions.codec, equals(VideoCodec.hevc));
+
+      // Tap MKV container chip
+      final mkvChip = find.byKey(const Key('container_chip_mkv'));
+      expect(mkvChip, findsOneWidget);
+      await tester.tap(mkvChip);
+      await tester.pumpAndSettle();
+
+      // Ensure codec remained HEVC and container changed to MKV
+      expect(currentOptions.container, equals(VideoContainer.mkv));
+      expect(currentOptions.codec, equals(VideoCodec.hevc));
+
+      // Expand advanced section to access codec selector
+      final advancedToggle = find.byKey(const Key('advanced_options_toggle'));
+      expect(advancedToggle, findsOneWidget);
+      await tester.tap(advancedToggle);
+      await tester.pumpAndSettle();
+
+      // If warning dialog appeared, tap yes button
+      final yesBtn = find.byKey(const Key('advanced_warning_yes_button'));
+      if (yesBtn.evaluate().isNotEmpty) {
+        await tester.tap(yesBtn);
+        await tester.pumpAndSettle();
+      }
+
+      // Tap H.264 codec chip
+      final h264Chip = find.byKey(const Key('codec_chip_h264'));
+      expect(h264Chip, findsOneWidget);
+      await tester.tap(h264Chip);
+      await tester.pumpAndSettle();
+      expect(currentOptions.codec, equals(VideoCodec.h264));
+
+      // Tap H.265 codec chip
+      final hevcChip = find.byKey(const Key('codec_chip_hevc'));
+      expect(hevcChip, findsOneWidget);
+      await tester.tap(hevcChip);
+      await tester.pumpAndSettle();
+      expect(currentOptions.codec, equals(VideoCodec.hevc));
     });
   });
 }

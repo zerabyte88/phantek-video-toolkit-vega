@@ -80,9 +80,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _settingsService.addListener(_onSettingsChanged);
     CacheManagerService().clearAllCache();
     CacheManagerService().autoPurgeTempFiles();
-    TransformerService.setSharedVideoCallback((path) {
-      if (mounted) _loadVideoFromPath(path);
-    });
+    TransformerService.setSharedVideoCallback(
+      null,
+      onSharedWithName: (path, fileName) {
+        if (mounted) _loadVideoFromPath(path, customName: fileName);
+      },
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _checkCrashedJob();
       final sharedPath = await TransformerService.getInitialSharedVideo();
@@ -156,13 +159,13 @@ class _HomeScreenState extends State<HomeScreen> {
         customName: resolvedName,
       );
       if (!mounted) return;
-      final defaultCodec = VideoCodec.fromName(
-        _settingsService.settings.defaultVideoCodec,
-      );
+      final preferredCodec =
+          _settingsService.savedEncodingOptions?.codec ??
+          VideoCodec.fromName(_settingsService.settings.defaultVideoCodec);
       setState(() {
         _isLoading = false;
         _videoInfo = info;
-        _encodingOptions = _encodingOptions.copyWith(codec: defaultCodec);
+        _encodingOptions = _encodingOptions.copyWith(codec: preferredCodec);
         if (info != null) {
           final resolutions = _getResolutionsForMode(_selectedMode, info);
           if (resolutions.isNotEmpty) {
@@ -306,6 +309,18 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
+      if (TransformerService.canPickVideoNatively) {
+        final picked = await TransformerService.pickVideo();
+        if (!mounted) return;
+        final pickedPath = picked?['path'];
+        if (pickedPath != null && pickedPath.isNotEmpty) {
+          await _loadVideoFromPath(pickedPath, customName: picked?['fileName']);
+        } else {
+          setState(() => _isLoading = false);
+        }
+        return;
+      }
+
       final file = await FilePicker.pickFile(type: FileType.video);
 
       if (!mounted) return;
@@ -478,13 +493,6 @@ class _HomeScreenState extends State<HomeScreen> {
       if (resolutions.isNotEmpty) {
         _selectedResolution = resolutions.first;
       }
-      if (mode != _AppMode.convert) {
-        final defaultCodec =
-            _settingsService.settings.defaultVideoCodec == 'hevc'
-            ? VideoCodec.hevc
-            : VideoCodec.h264;
-        _encodingOptions = _encodingOptions.copyWith(codec: defaultCodec);
-      }
     });
   }
 
@@ -508,12 +516,7 @@ class _HomeScreenState extends State<HomeScreen> {
           height: _videoInfo!.height,
         );
 
-    final defaultCodec = _settingsService.settings.defaultVideoCodec == 'hevc'
-        ? VideoCodec.hevc
-        : VideoCodec.h264;
-    EncodingOptions options = _selectedMode == _AppMode.convert
-        ? _encodingOptions
-        : _encodingOptions.copyWith(codec: defaultCodec);
+    final EncodingOptions options = _encodingOptions;
 
     final isSource4K = _videoInfo!.is4K;
     final isTarget4K =
@@ -738,10 +741,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildEmptyState(ThemeData theme, AppLocalizations l10n) {
     return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: _buildImportCard(theme, l10n),
         ),
       ),
@@ -872,52 +875,13 @@ class _HomeScreenState extends State<HomeScreen> {
               color: theme.colorScheme.onSurface.withAlpha(150),
             ),
           ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha(16),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: theme.colorScheme.primary.withAlpha(40),
-                width: 1.0,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.bolt_rounded,
-                  size: 14,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    'Media3 Hardware Acceleration',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: theme.colorScheme.primary,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: _pickVideo,
             icon: const Icon(Icons.movie_creation_outlined, size: 18),
             label: Text(l10n.t('pick_video')),
             style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 28,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

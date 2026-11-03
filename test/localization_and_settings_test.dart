@@ -3921,6 +3921,7 @@ void main() {
 
         await service.saveEncodingOptions(custom);
         expect(service.savedEncodingOptions, equals(custom));
+        expect(service.settings.defaultVideoCodec, equals('hevc'));
 
         // Re-initialize SettingsService to verify persistence from SharedPreferences
         await service.init();
@@ -5101,6 +5102,7 @@ void main() {
 
       tearDown(() {
         TransformerService.mockResolveMediaDetails = null;
+        TransformerService.mockPickVideo = null;
         if (tempDir.existsSync()) {
           try {
             tempDir.deleteSync(recursive: true);
@@ -5226,6 +5228,72 @@ void main() {
 
         expect(find.text('video_touring_23062026.mp4'), findsOneWidget);
         expect(find.textContaining('shared_video_1720000000000_'), findsNothing);
+      });
+
+      testWidgets('HomeScreen pickVideo uses resolved real fileName instead of synthetic picker ID (e.g. 239500.ts)', (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final syntheticFile = File('${tempDir.path}/239500.ts');
+        syntheticFile.writeAsStringSync('dummy video content');
+
+        TransformerService.mockPickVideo = () async {
+          return {
+            'path': syntheticFile.path,
+            'fileName': 'video_touring_23062026.mp4',
+            'uri': 'content://com.android.providers.media.documents/document/video%3A239500',
+          };
+        };
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: HomeScreen(),
+          ),
+        );
+        await tester.pump();
+
+        // Tap the pick video button on empty state
+        final selectIcon = find.byIcon(Icons.movie_creation_outlined);
+        expect(selectIcon, findsOneWidget);
+        await tester.tap(selectIcon);
+        await tester.runAsync(() async {
+          await Future.delayed(const Duration(milliseconds: 200));
+        });
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(find.text('video_touring_23062026.mp4'), findsOneWidget);
+        expect(find.text('239500.ts'), findsNothing);
+      });
+
+      testWidgets('onSharedVideoReceived with fileName displays real video name in VideoInfoCard', (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final syntheticFile = File('${tempDir.path}/239500.ts');
+        syntheticFile.writeAsStringSync('dummy video content');
+
+        const channel = MethodChannel('com.phantek.lyra.vega/transformer');
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: HomeScreen(),
+          ),
+        );
+        await tester.pump();
+
+        final call = MethodCall('onSharedVideoReceived', {
+          'path': syntheticFile.path,
+          'fileName': 'video_touring_23062026.mp4',
+        });
+        final byteData = channel.codec.encodeMethodCall(call);
+        await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .handlePlatformMessage(channel.name, byteData, (_) {});
+
+        await tester.runAsync(() async {
+          await Future.delayed(const Duration(milliseconds: 200));
+        });
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(find.text('video_touring_23062026.mp4'), findsOneWidget);
+        expect(find.text('239500.ts'), findsNothing);
       });
     });
   });

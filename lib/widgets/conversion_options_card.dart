@@ -349,6 +349,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             children: VideoContainer.values.map((format) {
               final isSelected = widget.encodingOptions.container == format;
               return _buildChoiceChip(
+                chipKey: Key('container_chip_${format.name}'),
                 label: '${format.displayName} (.${format.extension})',
                 isSelected: isSelected,
                 onSelected: (selected) {
@@ -356,7 +357,6 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                     widget.onOptionsChanged(
                       widget.encodingOptions.copyWith(
                         container: format,
-                        codec: VideoCodec.h264,
                       ),
                     );
                   }
@@ -643,6 +643,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             runSpacing: 6,
             children: [
               _buildChoiceChip(
+                chipKey: const Key('codec_chip_h264'),
                 label: 'H.264 / AVC',
                 isSelected: widget.encodingOptions.codec == VideoCodec.h264,
                 onSelected: (selected) {
@@ -654,6 +655,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                 },
               ),
               _buildChoiceChip(
+                chipKey: const Key('codec_chip_hevc'),
                 label: 'H.265 / HEVC',
                 isSelected: widget.encodingOptions.codec == VideoCodec.hevc,
                 onSelected: (selected) {

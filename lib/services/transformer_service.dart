@@ -24,11 +24,17 @@ class TransformerService {
   _activeProgressCallback;
   static void Function(String log)? _activeLogCallback;
   static void Function(String path)? _onSharedVideoCallback;
+  static void Function(String path, String? fileName)?
+  _onSharedVideoWithNameCallback;
   static bool _handlerInitialized = false;
 
-  static void setSharedVideoCallback(void Function(String path)? callback) {
+  static void setSharedVideoCallback(
+    void Function(String path)? callback, {
+    void Function(String path, String? fileName)? onSharedWithName,
+  }) {
     _ensureMethodCallHandler();
     _onSharedVideoCallback = callback;
+    _onSharedVideoWithNameCallback = onSharedWithName;
   }
 
   static Future<String?> getInitialSharedVideo() async {
@@ -68,14 +74,20 @@ class TransformerService {
           break;
         case 'onSharedVideoReceived':
           String? path;
+          String? fileName;
           if (call.arguments is String) {
             path = call.arguments as String;
           } else if (call.arguments is Map) {
             final map = call.arguments as Map;
             path = map['path'] as String?;
+            fileName = map['fileName'] as String?;
           }
           if (path != null && path.isNotEmpty) {
-            _onSharedVideoCallback?.call(path);
+            if (_onSharedVideoWithNameCallback != null) {
+              _onSharedVideoWithNameCallback?.call(path, fileName);
+            } else {
+              _onSharedVideoCallback?.call(path);
+            }
           }
           break;
       }
@@ -84,10 +96,42 @@ class TransformerService {
   }
 
   @visibleForTesting
+  static Future<Map<String, String?>?> Function()? mockPickVideo;
+
+  /// Whether native Android video picking (or a test mock) is active.
+  static bool get canPickVideoNatively =>
+      Platform.isAndroid || mockPickVideo != null;
+
+  /// Launches the native Android document picker (`ACTION_OPEN_DOCUMENT`) with
+  /// runtime media permission handling, returning the resolved path, real file
+  /// name, and source URI without Photo Picker filename redaction.
+  static Future<Map<String, String?>?> pickVideo() async {
+    if (mockPickVideo != null) {
+      return await mockPickVideo!();
+    }
+    if (!Platform.isAndroid) {
+      return null;
+    }
+    try {
+      final res = await _channel.invokeMapMethod<String, dynamic>('pickVideo');
+      if (res == null) return null;
+      return {
+        'path': res['path'] as String?,
+        'fileName': res['fileName'] as String?,
+        'uri': res['uri'] as String?,
+      };
+    } catch (e) {
+      debugPrint('TransformerService.pickVideo error: $e');
+      return null;
+    }
+  }
+
+  @visibleForTesting
   static Future<Map<String, String?>?> Function({
     required String uri,
     String? fallbackPath,
-  })? mockResolveMediaDetails;
+  })?
+  mockResolveMediaDetails;
 
   /// Resolves the real file name and direct readable file path for a media URI
   /// querying Android MediaStore, DocumentsContract, and native content resolver.
@@ -96,10 +140,7 @@ class TransformerService {
     String? fallbackPath,
   }) async {
     if (mockResolveMediaDetails != null) {
-      return mockResolveMediaDetails!(
-        uri: uri,
-        fallbackPath: fallbackPath,
-      );
+      return mockResolveMediaDetails!(uri: uri, fallbackPath: fallbackPath);
     }
 
     if (!Platform.isAndroid) {
@@ -118,19 +159,13 @@ class TransformerService {
           }
         }
       }
-      return {
-        'fileName': fileName,
-        'realPath': realPath,
-      };
+      return {'fileName': fileName, 'realPath': realPath};
     }
 
     try {
       final res = await _channel.invokeMapMethod<String, dynamic>(
         'resolveMediaDetails',
-        {
-          'uri': uri,
-          'filePath': fallbackPath,
-        },
+        {'uri': uri, 'filePath': fallbackPath},
       );
       if (res == null) return null;
       return {
