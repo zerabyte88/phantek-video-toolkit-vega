@@ -60,7 +60,7 @@ class TransformerService {
                 : '${(sizeBytes / 1024).toStringAsFixed(0)} KB';
             _activeProgressCallback?.call(
               progress,
-              'Size: $sizeStr | HW Accel',
+              'Size: $sizeStr',
               sizeBytes,
             );
           }

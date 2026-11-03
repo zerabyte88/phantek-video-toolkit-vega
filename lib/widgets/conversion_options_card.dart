@@ -313,14 +313,17 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
         if (_isAdvancedExpanded) ...[
           const SizedBox(height: 8),
           Center(
-            child: Text(
-              l10n.t('preset_disabled_by_advanced'),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                letterSpacing: 0,
-                color: theme.colorScheme.onSurface.withAlpha(140),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                l10n.t('preset_disabled_by_advanced'),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0,
+                  color: theme.colorScheme.onSurface.withAlpha(140),
+                ),
               ),
             ),
           ),
@@ -508,9 +511,10 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             children: [
               Text(
                 l10n.t('advanced_warning_desc'),
+                textAlign: TextAlign.left,
                 style: TextStyle(
-                  fontSize: 13.5,
-                  height: 1.45,
+                  fontSize: 13,
+                  height: 1.4,
                   letterSpacing: 0,
                   color: theme.colorScheme.onSurface.withAlpha(190),
                 ),
@@ -656,16 +660,19 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
         ),
         const SizedBox(height: 8),
         Center(
-          child: Text(
-            widget.encodingOptions.codec == VideoCodec.hevc
-                ? l10n.t('desc_hevc')
-                : l10n.t('desc_h264'),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.4,
-              letterSpacing: 0,
-              color: theme.colorScheme.onSurface.withAlpha(150),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              widget.encodingOptions.codec == VideoCodec.hevc
+                  ? l10n.t('desc_hevc')
+                  : l10n.t('desc_h264'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.4,
+                letterSpacing: 0,
+                color: theme.colorScheme.onSurface.withAlpha(150),
+              ),
             ),
           ),
         ),
@@ -752,16 +759,19 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
         ),
         const SizedBox(height: 8),
         Center(
-          child: Text(
-            widget.encodingOptions.rateControlMode == RateControlMode.crf
-                ? l10n.t('desc_crf')
-                : l10n.t('desc_bitrate'),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.4,
-              letterSpacing: 0,
-              color: theme.colorScheme.onSurface.withAlpha(150),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              widget.encodingOptions.rateControlMode == RateControlMode.crf
+                  ? l10n.t('desc_crf')
+                  : l10n.t('desc_bitrate'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.4,
+                letterSpacing: 0,
+                color: theme.colorScheme.onSurface.withAlpha(150),
+              ),
             ),
           ),
         ),

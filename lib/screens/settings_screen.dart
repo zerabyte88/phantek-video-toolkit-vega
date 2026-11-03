@@ -24,8 +24,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.3.1';
-  String _buildNumber = '23001';
+  String _appVersion = 'v2.3.5';
+  String _buildNumber = '23005';
   double? _dragCardOpacity;
 
   @override
@@ -54,14 +54,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '23001';
+              : '23005';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.3.1';
-          _buildNumber = '23001';
+          _appVersion = 'v2.3.5';
+          _buildNumber = '23005';
         });
       }
     }
@@ -349,27 +349,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // Reset defaults
               Center(
-                child: OutlinedButton.icon(
-                  onPressed: () => _confirmResetDefaults(context),
-                  icon: const Icon(Icons.restart_alt_rounded, size: 18),
-                  label: Text(
-                    l10n.t('settings_reset_default'),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFEF4444),
-                    side: BorderSide(
-                      color: const Color(0xFFEF4444).withAlpha(120),
+                child: () {
+                  final effectiveOpacity =
+                      (_dragCardOpacity ?? settings.cardOpacity).clamp(
+                        0.5,
+                        1.0,
+                      );
+                  final resetBtnBg = effectiveOpacity < 1.0
+                      ? theme.colorScheme.surface.withAlpha(
+                          (255 * effectiveOpacity).round().clamp(0, 255),
+                        )
+                      : theme.colorScheme.surface;
+                  return OutlinedButton.icon(
+                    onPressed: () => _confirmResetDefaults(context),
+                    icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                    label: Text(
+                      l10n.t('settings_reset_default'),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 14,
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: resetBtnBg,
+                      foregroundColor: const Color(0xFFEF4444),
+                      side: BorderSide(
+                        color: const Color(0xFFEF4444).withAlpha(120),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
+                  );
+                }(),
               ),
             ],
           ),

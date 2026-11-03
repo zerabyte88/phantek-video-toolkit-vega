@@ -1015,31 +1015,43 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 12),
 
               // Change video
-              OutlinedButton(
-                onPressed: _pickVideo,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(0, 48),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  side: BorderSide(
-                    color: theme.colorScheme.onSurface.withAlpha(
-                      isDark ? 28 : 36,
+              () {
+                final cardOpacity = _settingsService.settings.cardOpacity.clamp(
+                  0.5,
+                  1.0,
+                );
+                final buttonBg = cardOpacity < 1.0
+                    ? theme.colorScheme.surface.withAlpha(
+                        (255 * cardOpacity).round().clamp(0, 255),
+                      )
+                    : theme.colorScheme.surface;
+                return OutlinedButton(
+                  onPressed: _pickVideo,
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: buttonBg,
+                    minimumSize: const Size(0, 48),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: BorderSide(
+                      color: theme.colorScheme.outline.withAlpha(
+                        isDark ? 80 : 110,
+                      ),
+                      width: 1.0,
                     ),
-                    width: 1.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  child: Text(
+                    l10n.t('change_video'),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.onSurface.withAlpha(210),
+                      letterSpacing: 0,
+                    ),
                   ),
-                ),
-                child: Text(
-                  l10n.t('change_video'),
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: theme.colorScheme.onSurface.withAlpha(210),
-                    letterSpacing: 0,
-                  ),
-                ),
-              ),
+                );
+              }(),
             ],
           ),
         ),

@@ -650,6 +650,224 @@ void main() {
         await tester.pump(const Duration(seconds: 5));
       },
     );
+
+    testWidgets(
+      'Video mode uses Liquid Orb painter with 6 distinct theme primary colors',
+      (WidgetTester tester) async {
+        final completer = Completer<String?>();
+        TransformerService.mockProcessVideo =
+            ({
+              required sourceVideo,
+              required targetResolution,
+              encodingOptions = const EncodingOptions(),
+              appSettings = const AppSettings(),
+              required onProgress,
+              required onLog,
+            }) async {
+              return completer.future;
+            };
+
+        addTearDown(() {
+          TransformerService.mockProcessVideo = null;
+        });
+
+        final seenPrimaries = <Color>{};
+        const themes = [
+          'oled_snowfall',
+          'light',
+          'oled_midnight',
+          'oled_sakura',
+          'oled_pure',
+          'light_clean',
+        ];
+
+        for (final themeMode in themes) {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: ProcessingScreen(
+                videoInfo: testVideo,
+                targetResolution: testResolution,
+                encodingOptions: const EncodingOptions(),
+                appSettings: AppSettings(themeMode: themeMode),
+                isAudioExtraction: false,
+              ),
+            ),
+          );
+          await tester.pump();
+
+          final customPaintFinder = find.byWidgetPredicate(
+            (widget) =>
+                widget is CustomPaint &&
+                widget.painter.runtimeType.toString() ==
+                    '_DualRingProgressPainter',
+          );
+          expect(customPaintFinder, findsOneWidget);
+
+          final dynamic painter = tester
+              .widget<CustomPaint>(customPaintFinder)
+              .painter;
+          expect(painter.isWaveform, isFalse);
+
+          final percentageTextWidget = tester
+              .widgetList<Text>(find.text('0.0%'))
+              .firstWhere((w) => w.style?.fontSize == 34);
+          expect(painter.color, equals(percentageTextWidget.style?.color));
+          expect(
+            painter.secondaryColor,
+            equals(percentageTextWidget.style?.color),
+          );
+          seenPrimaries.add(painter.color as Color);
+
+          final recorder = ui.PictureRecorder();
+          final canvas = Canvas(recorder);
+          expect(
+            () => painter.paint(canvas, const Size(176, 176)),
+            returnsNormally,
+          );
+          expect(
+            () => painter.paint(canvas, const Size(20, 20)),
+            returnsNormally,
+          );
+          expect(
+            () => painter.paint(canvas, const Size(0, 0)),
+            returnsNormally,
+          );
+        }
+
+        expect(seenPrimaries.length, equals(6));
+
+        completer.complete(null);
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
+
+    testWidgets(
+      'Audio extraction mode uses Waveform painter across all 6 themes and paints constrained sizes safely',
+      (WidgetTester tester) async {
+        void Function(double, String, [int?])? progressCallback;
+        final completer = Completer<String?>();
+        TransformerService.mockExtractAudio =
+            ({
+              required sourceVideo,
+              required audioFormat,
+              audioBitrateKbps = 192,
+              appSettings = const AppSettings(),
+              encodingOptions = const EncodingOptions(),
+              required onProgress,
+              required onLog,
+            }) async {
+              progressCallback = onProgress;
+              return completer.future;
+            };
+
+        addTearDown(() {
+          TransformerService.mockExtractAudio = null;
+        });
+
+        final seenPrimaries = <Color>{};
+        const themes = [
+          'oled_snowfall',
+          'light',
+          'oled_midnight',
+          'oled_sakura',
+          'oled_pure',
+          'light_clean',
+        ];
+
+        for (final themeMode in themes) {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: ProcessingScreen(
+                videoInfo: testVideo,
+                targetResolution: testResolution,
+                encodingOptions: const EncodingOptions(),
+                appSettings: AppSettings(themeMode: themeMode),
+                isAudioExtraction: true,
+              ),
+            ),
+          );
+          await tester.pump();
+
+          final customPaintFinder = find.byWidgetPredicate(
+            (widget) =>
+                widget is CustomPaint &&
+                widget.painter.runtimeType.toString() ==
+                    '_DualRingProgressPainter',
+          );
+          expect(customPaintFinder, findsOneWidget);
+
+          final dynamic painter = tester
+              .widget<CustomPaint>(customPaintFinder)
+              .painter;
+          expect(painter.isWaveform, isTrue);
+
+          final percentageTextWidget = tester
+              .widgetList<Text>(find.text('0.0%'))
+              .firstWhere((w) => w.style?.fontSize == 34);
+          expect(painter.color, equals(percentageTextWidget.style?.color));
+          expect(
+            painter.secondaryColor,
+            equals(percentageTextWidget.style?.color),
+          );
+          seenPrimaries.add(painter.color as Color);
+
+          final recorder = ui.PictureRecorder();
+          final canvas = Canvas(recorder);
+          expect(
+            () => painter.paint(canvas, const Size(300, 92)),
+            returnsNormally,
+          );
+          expect(
+            () => painter.paint(canvas, const Size(20, 20)),
+            returnsNormally,
+          );
+          expect(
+            () => painter.paint(canvas, const Size(0, 0)),
+            returnsNormally,
+          );
+        }
+
+        expect(seenPrimaries.length, equals(6));
+
+        await tester.pump(const Duration(milliseconds: 50));
+        await tester.pump(const Duration(milliseconds: 50));
+        expect(progressCallback, isNotNull);
+
+        progressCallback!(0.55, 'Size: 512 KB', 524288);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(find.text('55.0%'), findsOneWidget);
+
+        final activePaintFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is CustomPaint &&
+              widget.painter.runtimeType.toString() ==
+                  '_DualRingProgressPainter',
+        );
+        final dynamic activePainter = tester
+            .widget<CustomPaint>(activePaintFinder)
+            .painter;
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        expect(
+          () => activePainter.paint(canvas, const Size(300, 92)),
+          returnsNormally,
+        );
+        expect(
+          () => activePainter.paint(canvas, const Size(20, 20)),
+          returnsNormally,
+        );
+        expect(
+          () => activePainter.paint(canvas, const Size(0, 0)),
+          returnsNormally,
+        );
+
+        completer.complete(null);
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
   });
 
   group('R6: Android Share Intent Filter & Shared Video Receiving', () {
