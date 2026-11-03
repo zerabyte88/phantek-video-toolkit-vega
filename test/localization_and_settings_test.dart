@@ -2267,7 +2267,7 @@ void main() {
       expect(lightClean.brightness, equals(Brightness.light));
       expect(
         lightClean.scaffoldBackgroundColor,
-        equals(const Color(0xFFF8FAFC)),
+        equals(const Color(0xFFEDF2FA)),
       );
     });
 
@@ -5251,9 +5251,9 @@ void main() {
         await tester.pump();
 
         // Tap the pick video button on empty state
-        final selectIcon = find.byIcon(Icons.movie_creation_outlined);
-        expect(selectIcon, findsOneWidget);
-        await tester.tap(selectIcon);
+        final selectButton = find.byType(FilledButton);
+        expect(selectButton, findsOneWidget);
+        await tester.tap(selectButton);
         await tester.runAsync(() async {
           await Future.delayed(const Duration(milliseconds: 200));
         });

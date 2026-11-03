@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static const _primaryColor = Color(0xFF2563EB);
-  static const _secondaryColor = Color(0xFF0284C7);
+  static const _secondaryColor = Color(0xFF0E7C86);
 
   static ThemeData getTheme(String mode, {double cardOpacity = 1.0}) {
     switch (mode) {
@@ -195,8 +195,8 @@ class AppTheme {
   /// Snowfall theme builder
   static ThemeData buildDarkTheme({double cardOpacity = 1.0}) {
     const scaffoldBg = Colors.black;
-    const surfaceBg = Color(0xFF0C1322);
-    const outlineColor = Color(0xFF1E293B);
+    const surfaceBg = Color(0xFF0D1830);
+    const outlineColor = Color(0xFF1F3254);
     const textPrimary = Color(0xFFF8FAFC);
     const textSecondary = Color(0xFF94A3B8);
 
@@ -216,7 +216,7 @@ class AppTheme {
         surface: effectiveSurface,
         onSurface: textPrimary,
         outline: outlineColor,
-        outlineVariant: const Color(0xFF1E293B),
+        outlineVariant: const Color(0xFF1F3254),
       ),
       scaffoldBackgroundColor: scaffoldBg,
       appBarTheme: const AppBarTheme(
@@ -268,7 +268,7 @@ class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: const Color(0xFF0C1322),
+        backgroundColor: const Color(0xFF0D1830),
         selectedColor: _primaryColor,
         labelStyle: const TextStyle(
           color: textPrimary,
@@ -301,8 +301,8 @@ class AppTheme {
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: _primaryColor,
-        circularTrackColor: Color(0xFF1E293B),
-        linearTrackColor: Color(0xFF1E293B),
+        circularTrackColor: Color(0xFF1F3254),
+        linearTrackColor: Color(0xFF1F3254),
       ),
       dividerTheme: const DividerThemeData(color: outlineColor, thickness: 1),
       switchTheme: SwitchThemeData(
@@ -314,11 +314,11 @@ class AppTheme {
         trackColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected)
               ? _primaryColor
-              : const Color(0xFF1E293B),
+              : const Color(0xFF1F3254),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: const Color(0xFF0C1322),
+        backgroundColor: const Color(0xFF0D1830),
         contentTextStyle: const TextStyle(color: textPrimary, fontSize: 14),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -354,8 +354,8 @@ class AppTheme {
   /// Pure OLED theme builder
   static ThemeData buildOledTheme({double cardOpacity = 1.0}) {
     const scaffoldBg = Colors.black;
-    const surfaceBg = Color(0xFF121214);
-    const outlineColor = Color(0xFF27272A);
+    const surfaceBg = Color(0xFF111620);
+    const outlineColor = Color(0xFF283042);
     const textPrimary = Color(0xFFFAFAFA);
     const textSecondary = Color(0xFFA1A1AA);
 
@@ -460,8 +460,8 @@ class AppTheme {
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: _primaryColor,
-        circularTrackColor: Color(0xFF27272A),
-        linearTrackColor: Color(0xFF27272A),
+        circularTrackColor: Color(0xFF283042),
+        linearTrackColor: Color(0xFF283042),
       ),
       dividerTheme: const DividerThemeData(color: outlineColor, thickness: 1),
       switchTheme: SwitchThemeData(
@@ -473,7 +473,7 @@ class AppTheme {
         trackColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected)
               ? _primaryColor
-              : const Color(0xFF27272A),
+              : const Color(0xFF283042),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
@@ -512,9 +512,9 @@ class AppTheme {
 
   /// Light theme builder
   static ThemeData buildLightTheme({double cardOpacity = 1.0}) {
-    const scaffoldBg = Color(0xFFF8FAFC);
+    const scaffoldBg = Color(0xFFEDF2FA);
     const surfaceBg = Color(0xFFFFFFFF);
-    const outlineColor = Color(0xFFE2E8F0);
+    const outlineColor = Color(0xFFD5DEEE);
     const textPrimary = Color(0xFF0F172A);
     const textSecondary = Color(0xFF475569);
 
@@ -533,7 +533,7 @@ class AppTheme {
         surface: effectiveSurface,
         onSurface: textPrimary,
         outline: outlineColor,
-        outlineVariant: const Color(0xFFF1F5F9),
+        outlineVariant: const Color(0xFFE6EDF8),
       ),
       scaffoldBackgroundColor: scaffoldBg,
       appBarTheme: const AppBarTheme(
@@ -585,7 +585,7 @@ class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: const Color(0xFFF1F5F9),
+        backgroundColor: const Color(0xFFE6EDF8),
         selectedColor: _primaryColor,
         labelStyle: const TextStyle(
           color: textPrimary,
@@ -618,8 +618,8 @@ class AppTheme {
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: _primaryColor,
-        circularTrackColor: Color(0xFFE2E8F0),
-        linearTrackColor: Color(0xFFE2E8F0),
+        circularTrackColor: Color(0xFFD5DEEE),
+        linearTrackColor: Color(0xFFD5DEEE),
       ),
       dividerTheme: const DividerThemeData(color: outlineColor, thickness: 1),
       switchTheme: SwitchThemeData(
@@ -631,7 +631,7 @@ class AppTheme {
         trackColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected)
               ? _primaryColor
-              : const Color(0xFFE2E8F0),
+              : const Color(0xFFD5DEEE),
         ),
       ),
       snackBarTheme: SnackBarThemeData(

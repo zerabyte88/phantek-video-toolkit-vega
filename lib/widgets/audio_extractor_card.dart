@@ -25,58 +25,65 @@ class AudioExtractorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final dividerColor = theme.colorScheme.onSurface.withAlpha(
+      isDark ? 18 : 24,
+    );
+    final chipBorderColor = theme.colorScheme.onSurface.withAlpha(
+      isDark ? 24 : 32,
+    );
 
     return AppGlassCard(
+      padding: const EdgeInsets.all(16),
+      border: Border.all(
+        color: theme.colorScheme.onSurface.withAlpha(isDark ? 20 : 28),
+        width: 1.0,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header
-          Row(
-            children: [
-              Icon(
-                Icons.audiotrack_rounded,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  l10n.t('audio_options'),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            l10n.t('audio_options'),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+              letterSpacing: 0,
+            ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
           if (!sourceVideo.hasAudio) ...[
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withAlpha(20),
+                color: const Color(0xFFE5484D).withAlpha(isDark ? 20 : 16),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.red.withAlpha(80)),
+                border: Border.all(
+                  color: const Color(0xFFE5484D).withAlpha(80),
+                  width: 1.0,
+                ),
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
                     Icons.volume_off_rounded,
-                    color: Colors.red,
-                    size: 20,
+                    color: Color(0xFFE5484D),
+                    size: 18,
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
+                  const SizedBox(width: 8),
+                  Flexible(
                     child: Text(
                       l10n.t('no_audio_track'),
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.red,
+                        color: Color(0xFFE5484D),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),
@@ -87,23 +94,15 @@ class AudioExtractorCard extends StatelessWidget {
           ],
 
           // Audio format
-          Row(
-            children: [
-              Icon(
-                Icons.album_outlined,
-                size: 16,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                l10n.t('audio_format'),
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ],
+          Text(
+            l10n.t('audio_format'),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
+              color: theme.colorScheme.onSurface.withAlpha(200),
+            ),
           ),
           const SizedBox(height: 10),
           Center(
@@ -117,18 +116,29 @@ class AudioExtractorCard extends StatelessWidget {
                   showCheckmark: false,
                   selectedColor: theme.colorScheme.primary,
                   backgroundColor: theme.colorScheme.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  visualDensity: VisualDensity.compact,
                   side: BorderSide(
                     color: isSelected
                         ? theme.colorScheme.primary
-                        : theme.colorScheme.outline,
-                    width: isSelected ? 1.2 : 1.0,
+                        : chipBorderColor,
+                    width: 1.0,
                   ),
                   label: Text(
                     fmt.displayName,
+                    textAlign: TextAlign.center,
                     style: TextStyle(
+                      fontSize: 12.5,
                       fontWeight: isSelected
                           ? FontWeight.w600
                           : FontWeight.w500,
+                      letterSpacing: 0,
                       color: isSelected
                           ? Colors.white
                           : theme.colorScheme.onSurface,
@@ -155,7 +165,7 @@ class AudioExtractorCard extends StatelessWidget {
           ),
 
           const SizedBox(height: 16),
-          Divider(height: 1, color: theme.dividerColor),
+          Divider(height: 1, color: dividerColor),
           const SizedBox(height: 16),
 
           // Audio bitrate
@@ -167,25 +177,17 @@ class AudioExtractorCard extends StatelessWidget {
               final isCopySelected =
                   isCopyOnly || encodingOptions.audioExtractBitrateKbps == 0;
               return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.speed_rounded,
-                        size: 16,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        l10n.t('audio_bitrate'),
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    l10n.t('audio_bitrate'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0,
+                      color: theme.colorScheme.onSurface.withAlpha(200),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Center(
@@ -198,18 +200,29 @@ class AudioExtractorCard extends StatelessWidget {
                           showCheckmark: false,
                           selectedColor: theme.colorScheme.primary,
                           backgroundColor: theme.colorScheme.surface,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          visualDensity: VisualDensity.compact,
                           side: BorderSide(
                             color: isCopySelected
                                 ? theme.colorScheme.primary
-                                : theme.colorScheme.outline,
-                            width: isCopySelected ? 1.2 : 1.0,
+                                : chipBorderColor,
+                            width: 1.0,
                           ),
                           label: Text(
                             l10n.t('audio_copy'),
+                            textAlign: TextAlign.center,
                             style: TextStyle(
+                              fontSize: 12.5,
                               fontWeight: isCopySelected
                                   ? FontWeight.w600
                                   : FontWeight.w500,
+                              letterSpacing: 0,
                               color: isCopySelected
                                   ? Colors.white
                                   : theme.colorScheme.onSurface,
@@ -238,18 +251,32 @@ class AudioExtractorCard extends StatelessWidget {
                                 showCheckmark: false,
                                 selectedColor: theme.colorScheme.primary,
                                 backgroundColor: theme.colorScheme.surface,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                visualDensity: VisualDensity.compact,
                                 side: BorderSide(
                                   color: isSelected
                                       ? theme.colorScheme.primary
-                                      : theme.colorScheme.outline,
-                                  width: isSelected ? 1.2 : 1.0,
+                                      : chipBorderColor,
+                                  width: 1.0,
                                 ),
                                 label: Text(
                                   '$kbps kbps',
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(
+                                    fontSize: 12.5,
                                     fontWeight: isSelected
                                         ? FontWeight.w600
                                         : FontWeight.w500,
+                                    letterSpacing: 0,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
                                     color: isSelected
                                         ? Colors.white
                                         : theme.colorScheme.onSurface,

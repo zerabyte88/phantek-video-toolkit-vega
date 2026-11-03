@@ -697,15 +697,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildLoadingState(ThemeData theme, AppLocalizations l10n) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
+        padding: const EdgeInsets.fromLTRB(32, 0, 32, 28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: 54,
-              height: 54,
+              width: 48,
+              height: 48,
               child: CircularProgressIndicator(
-                strokeWidth: 3.5,
+                strokeWidth: 3.0,
                 color: theme.colorScheme.primary,
               ),
             ),
@@ -717,17 +717,20 @@ class _HomeScreenState extends State<HomeScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0,
                 color: theme.colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               l10n.t('loading_large_hint'),
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onSurface.withAlpha(140),
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                letterSpacing: 0,
+                color: theme.colorScheme.onSurface.withAlpha(150),
                 height: 1.4,
               ),
             ),
@@ -740,14 +743,28 @@ class _HomeScreenState extends State<HomeScreen> {
   // Empty state
 
   Widget _buildEmptyState(ThemeData theme, AppLocalizations l10n) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 440),
-        child: Padding(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bottomOpticalOffset = constraints.maxHeight > 360 ? 28.0 : 0.0;
+        return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _buildImportCard(theme, l10n),
-        ),
-      ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: 16,
+                  bottom: 16 + bottomOpticalOffset,
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: _buildImportCard(theme, l10n),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -756,28 +773,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Row(
-            children: [
-              Icon(
-                Icons.tune_rounded,
-                size: 14,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                l10n.t('select_mode'),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface.withAlpha(160),
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            l10n.t('select_mode'),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurface.withAlpha(160),
+              letterSpacing: 0,
+            ),
           ),
         ),
         Container(
@@ -786,7 +794,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: theme.colorScheme.outline.withAlpha(isDark ? 35 : 55),
+              color: theme.colorScheme.onSurface.withAlpha(isDark ? 20 : 28),
               width: 1.0,
             ),
           ),
@@ -794,7 +802,6 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Expanded(
                 child: _SegmentItem(
-                  icon: Icons.swap_horiz_rounded,
                   label: l10n.t('mode_convert'),
                   isSelected: _selectedMode == _AppMode.convert,
                   onTap: () => _onModeChanged(_AppMode.convert),
@@ -803,7 +810,6 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 4),
               Expanded(
                 child: _SegmentItem(
-                  icon: Icons.compress_rounded,
                   label: l10n.t('mode_downscale'),
                   isSelected: _selectedMode == _AppMode.downscale,
                   onTap: () => _onModeChanged(_AppMode.downscale),
@@ -812,7 +818,6 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 4),
               Expanded(
                 child: _SegmentItem(
-                  icon: Icons.audiotrack_rounded,
                   label: l10n.t('mode_extractor'),
                   isSelected: _selectedMode == _AppMode.extractor,
                   onTap: () => _onModeChanged(_AppMode.extractor),
@@ -831,61 +836,59 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return AppGlassCard(
       onTap: _pickVideo,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       border: Border.all(
-        color: theme.colorScheme.outline.withAlpha(isDark ? 35 : 55),
+        color: theme.colorScheme.onSurface.withAlpha(isDark ? 22 : 28),
         width: 1.0,
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 64,
-            height: 64,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha(20),
-              shape: BoxShape.circle,
+              color: theme.colorScheme.onSurface.withAlpha(isDark ? 14 : 10),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: theme.colorScheme.primary.withAlpha(45),
-                width: 1.5,
+                color: theme.colorScheme.onSurface.withAlpha(isDark ? 22 : 26),
+                width: 1.0,
               ),
             ),
             child: Icon(
               Icons.video_file_outlined,
-              size: 32,
-              color: theme.colorScheme.primary,
+              size: 24,
+              color: theme.colorScheme.onSurface.withAlpha(210),
             ),
           ),
-          const SizedBox(height: 20),
-          Text(
-            l10n.t('pick_video'),
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Text(
             l10n.t('supported_formats_hint'),
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 13,
-              height: 1.4,
-              color: theme.colorScheme.onSurface.withAlpha(150),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              height: 1.45,
+              letterSpacing: 0,
+              color: theme.colorScheme.onSurface.withAlpha(180),
             ),
           ),
           const SizedBox(height: 24),
-          FilledButton.icon(
+          FilledButton(
             onPressed: _pickVideo,
-            icon: const Icon(Icons.movie_creation_outlined, size: 18),
-            label: Text(l10n.t('pick_video')),
             style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
+            child: Text(l10n.t('pick_video')),
           ),
         ],
       ),
@@ -894,7 +897,45 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Loaded state
 
-  Widget _buildContent(ThemeData theme, AppLocalizations l10n) {
+  /// Each mode carries its own accent so the active task reads at a glance.
+  /// Sakura keeps its own brand color across modes.
+  Color _modeAccent(ThemeData theme) {
+    final mode = _settingsService.settings.themeMode;
+    if (mode == 'sakura' || mode == 'oled_sakura') {
+      return theme.colorScheme.primary;
+    }
+    switch (_selectedMode) {
+      case _AppMode.convert:
+        return theme.colorScheme.primary;
+      case _AppMode.downscale:
+        return theme.colorScheme.secondary;
+      case _AppMode.extractor:
+        return const Color(0xFFC2410C);
+    }
+  }
+
+  Widget _buildContent(ThemeData baseTheme, AppLocalizations l10n) {
+    final accent = _modeAccent(baseTheme);
+    final theme = baseTheme.copyWith(
+      colorScheme: baseTheme.colorScheme.copyWith(primary: accent),
+      sliderTheme: baseTheme.sliderTheme.copyWith(
+        activeTrackColor: accent,
+        inactiveTrackColor: accent.withAlpha(35),
+        thumbColor: accent,
+        overlayColor: accent.withAlpha(25),
+        valueIndicatorColor: accent,
+      ),
+    );
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Theme(data: theme, child: _buildContentBody(theme, l10n, isDark));
+  }
+
+  Widget _buildContentBody(
+    ThemeData theme,
+    AppLocalizations l10n,
+    bool isDark,
+  ) {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
@@ -906,7 +947,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               // Mode switch
               _buildSegmentedModeBar(theme, l10n),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
               // Video info card
               VideoInfoCard(
@@ -914,7 +955,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 thumbnailBytes: _videoThumbnail,
                 onRename: _showRenameDialog,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
               // Options card
               if (_selectedMode == _AppMode.extractor)
@@ -942,10 +983,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   l10n: l10n,
                 ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
               // Start conversion
-              ElevatedButton.icon(
+              FilledButton(
                 onPressed:
                     ((_selectedMode == _AppMode.extractor &&
                             (_videoInfo?.hasAudio ?? true)) ||
@@ -953,37 +994,49 @@ class _HomeScreenState extends State<HomeScreen> {
                             _selectedResolution != null))
                     ? _startProcessing
                     : null,
-                icon: Icon(
-                  _selectedMode == _AppMode.extractor
-                      ? Icons.audiotrack_rounded
-                      : Icons.play_arrow_rounded,
-                  size: 22,
-                ),
-                label: Text(
-                  _selectedMode == _AppMode.extractor
-                      ? l10n.t('start_audio_extraction')
-                      : l10n.t('start_conversion'),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 48),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
+                child: Text(
+                  _selectedMode == _AppMode.extractor
+                      ? l10n.t('start_audio_extraction')
+                      : l10n.t('start_conversion'),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
+                  ),
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
               // Change video
-              OutlinedButton.icon(
+              OutlinedButton(
                 onPressed: _pickVideo,
-                icon: const Icon(Icons.sync_rounded, size: 18),
-                label: Text(l10n.t('change_video')),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  minimumSize: const Size(0, 48),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  side: BorderSide(
+                    color: theme.colorScheme.onSurface.withAlpha(
+                      isDark ? 28 : 36,
+                    ),
+                    width: 1.0,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  l10n.t('change_video'),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colorScheme.onSurface.withAlpha(210),
+                    letterSpacing: 0,
                   ),
                 ),
               ),
@@ -998,13 +1051,11 @@ class _HomeScreenState extends State<HomeScreen> {
 // Segment item widget
 
 class _SegmentItem extends StatelessWidget {
-  final IconData icon;
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _SegmentItem({
-    required this.icon,
     required this.label,
     required this.isSelected,
     required this.onTap,
@@ -1021,50 +1072,28 @@ class _SegmentItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+          curve: const Cubic(0.22, 1, 0.36, 1),
+          constraints: const BoxConstraints(minHeight: 40),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isSelected ? theme.colorScheme.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withAlpha(50),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 15,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                letterSpacing: 0,
                 color: isSelected
                     ? Colors.white
-                    : theme.colorScheme.onSurface.withAlpha(160),
+                    : theme.colorScheme.onSurface.withAlpha(165),
               ),
-              const SizedBox(width: 5),
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
-                      color: isSelected
-                          ? Colors.white
-                          : theme.colorScheme.onSurface.withAlpha(160),
-                    ),
-                    maxLines: 1,
-                  ),
-                ),
-              ),
-            ],
+              maxLines: 1,
+            ),
           ),
         ),
       ),

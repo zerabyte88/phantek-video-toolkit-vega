@@ -945,7 +945,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(width: 4),
               IconButton(
                 icon: const Icon(Icons.restart_alt_rounded, size: 18),
-                tooltip: 'Reset 100%',
+                tooltip: l10n.t('reset'),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 color: theme.colorScheme.primary,

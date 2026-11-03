@@ -25,37 +25,54 @@ class VideoInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = SettingsService().l10n;
+    final dividerColor = theme.colorScheme.onSurface.withAlpha(
+      isDark ? 18 : 24,
+    );
 
     return AppGlassCard(
+      padding: const EdgeInsets.all(16),
+      border: Border.all(
+        color: theme.colorScheme.onSurface.withAlpha(isDark ? 20 : 28),
+        width: 1.0,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(24),
+                  color: theme.colorScheme.onSurface.withAlpha(
+                    isDark ? 14 : 10,
+                  ),
                   borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: theme.colorScheme.onSurface.withAlpha(
+                      isDark ? 20 : 24,
+                    ),
+                    width: 1.0,
+                  ),
                 ),
                 child: thumbnailBytes != null
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(9),
                         child: Image.memory(
                           thumbnailBytes!,
-                          width: 44,
-                          height: 44,
+                          width: 48,
+                          height: 48,
                           fit: BoxFit.cover,
                         ),
                       )
                     : Icon(
                         Icons.movie_outlined,
-                        color: theme.colorScheme.primary,
-                        size: 24,
+                        color: theme.colorScheme.onSurface.withAlpha(190),
+                        size: 22,
                       ),
               ),
               const SizedBox(width: 12),
@@ -72,7 +89,7 @@ class VideoInfoCard extends StatelessWidget {
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: theme.colorScheme.onSurface,
-                              letterSpacing: -0.2,
+                              letterSpacing: 0,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -81,34 +98,34 @@ class VideoInfoCard extends StatelessWidget {
                         if (onRename != null) ...[
                           const SizedBox(width: 4),
                           IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 18),
+                            icon: Icon(
+                              Icons.edit_outlined,
+                              size: 18,
+                              color: theme.colorScheme.onSurface.withAlpha(170),
+                            ),
                             onPressed: onRename,
                             tooltip: l10n.t('rename_tooltip'),
-                            constraints: const BoxConstraints(),
-                            padding: const EdgeInsets.all(4),
+                            constraints: const BoxConstraints(
+                              minWidth: 36,
+                              minHeight: 36,
+                            ),
+                            padding: const EdgeInsets.all(8),
                           ),
                         ],
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        _StatusBadge(
-                          label: videoInfo.resolution,
-                          color: theme.colorScheme.primary,
-                        ),
-                        _StatusBadge(
-                          label: videoInfo.codec.toUpperCase(),
-                          color: theme.colorScheme.secondary,
-                        ),
-                        _StatusBadge(
-                          label: videoInfo.formattedFileSize,
-                          color: theme.colorScheme.onSurface.withAlpha(180),
-                          isNeutral: true,
-                        ),
-                      ],
+                    const SizedBox(height: 4),
+                    Text(
+                      '${videoInfo.resolution}  •  ${videoInfo.codec.toUpperCase()}  •  ${videoInfo.formattedFileSize}',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.onSurface.withAlpha(150),
+                        letterSpacing: 0,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -117,17 +134,21 @@ class VideoInfoCard extends StatelessWidget {
           ),
 
           const SizedBox(height: 16),
-          Divider(height: 1, color: theme.dividerColor),
-          const SizedBox(height: 14),
+          Divider(height: 1, color: dividerColor),
+          const SizedBox(height: 16),
 
           // Metadata grid
-          _buildSpecsGrid(l10n, theme),
+          _buildSpecsGrid(l10n, theme, dividerColor),
         ],
       ),
     );
   }
 
-  Widget _buildSpecsGrid(AppLocalizations l10n, ThemeData theme) {
+  Widget _buildSpecsGrid(
+    AppLocalizations l10n,
+    ThemeData theme,
+    Color dividerColor,
+  ) {
     final items = [
       _SpecItem(
         label: l10n.t('resolution'),
@@ -141,21 +162,25 @@ class VideoInfoCard extends StatelessWidget {
       _SpecItem(label: l10n.t('bitrate'), value: videoInfo.formattedBitrate),
     ];
 
-    return Row(
-      children: items.map((item) {
-        return Expanded(
+    final children = <Widget>[];
+    for (int i = 0; i < items.length; i++) {
+      final item = items[i];
+      children.add(
+        Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               FittedBox(
                 fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
+                alignment: Alignment.center,
                 child: Text(
                   item.label,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 11,
-                    color: theme.colorScheme.onSurface.withAlpha(120),
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurface.withAlpha(140),
                     fontWeight: FontWeight.w500,
+                    letterSpacing: 0,
                   ),
                   maxLines: 1,
                 ),
@@ -163,62 +188,30 @@ class VideoInfoCard extends StatelessWidget {
               const SizedBox(height: 4),
               FittedBox(
                 fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
+                alignment: Alignment.center,
                 child: Text(
                   item.value,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurface,
+                    letterSpacing: 0,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                   maxLines: 1,
                 ),
               ),
             ],
           ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final String label;
-  final Color color;
-  final bool isNeutral;
-
-  const _StatusBadge({
-    required this.label,
-    required this.color,
-    this.isNeutral = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final bg = isNeutral
-        ? (theme.brightness == Brightness.dark
-              ? const Color(0xFF334155)
-              : const Color(0xFFE2E8F0))
-        : color.withAlpha(25);
-    final fg = isNeutral ? theme.colorScheme.onSurface : color;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: fg,
-          letterSpacing: 0.1,
         ),
-      ),
-    );
+      );
+      if (i < items.length - 1) {
+        children.add(Container(width: 1, height: 32, color: dividerColor));
+      }
+    }
+
+    return Row(children: children);
   }
 }
 

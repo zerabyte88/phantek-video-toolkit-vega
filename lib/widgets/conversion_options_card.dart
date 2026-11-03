@@ -119,45 +119,46 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
   Widget build(BuildContext context) {
     super.build(context);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = widget.l10n;
     final is4K = widget.sourceVideo.is4K;
     final isLongDuration = widget.sourceVideo.isLongDuration;
+    final dividerColor = theme.colorScheme.onSurface.withAlpha(
+      isDark ? 18 : 24,
+    );
 
     return AppGlassCard(
+      padding: const EdgeInsets.all(16),
+      border: Border.all(
+        color: theme.colorScheme.onSurface.withAlpha(isDark ? 20 : 28),
+        width: 1.0,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header
-          Row(
-            children: [
-              Icon(
-                Icons.tune_rounded,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  l10n.t('video_options'),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            l10n.t('video_options'),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+              letterSpacing: 0,
+            ),
           ),
           if (is4K || isLongDuration) ...[
             const SizedBox(height: 12),
             Container(
               key: const Key('heavy_process_warning_banner'),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.amber.withAlpha(22),
+                color: const Color(0xFFF59E0B).withAlpha(isDark ? 20 : 16),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.amber.withAlpha(90), width: 1),
+                border: Border.all(
+                  color: const Color(0xFFF59E0B).withAlpha(80),
+                  width: 1.0,
+                ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,11 +167,11 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                     padding: EdgeInsets.only(top: 2),
                     child: Icon(
                       Icons.warning_amber_rounded,
-                      color: Colors.amber,
+                      color: Color(0xFFF59E0B),
                       size: 18,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       is4K && isLongDuration
@@ -185,8 +186,9 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                               },
                             ),
                       style: TextStyle(
-                        fontSize: 12,
-                        height: 1.35,
+                        fontSize: 12.5,
+                        height: 1.4,
+                        letterSpacing: 0,
                         color: theme.colorScheme.onSurface.withAlpha(220),
                         fontWeight: FontWeight.w500,
                       ),
@@ -196,14 +198,10 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
               ),
             ),
           ],
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
           // 1. Target Resolution
-          _buildSectionLabel(
-            icon: Icons.aspect_ratio_rounded,
-            title: l10n.t('target_resolution'),
-            theme: theme,
-          ),
+          _buildSectionLabel(title: l10n.t('target_resolution'), theme: theme),
           const SizedBox(height: 10),
           ...widget.resolutions.map((res) {
             final isSelected = widget.selectedResolution?.label == res.label;
@@ -214,22 +212,22 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             );
           }),
 
-          const SizedBox(height: 16),
-          Divider(height: 1, color: theme.dividerColor),
+          const SizedBox(height: 12),
+          Divider(height: 1, color: dividerColor),
           const SizedBox(height: 16),
 
           // 2. Encoding Speed Preset (Default options)
           _buildEncodingSpeedSelector(theme, l10n),
 
           const SizedBox(height: 16),
-          Divider(height: 1, color: theme.dividerColor),
+          Divider(height: 1, color: dividerColor),
           const SizedBox(height: 16),
 
           // 3. Container format
           _buildContainerFormatSelector(theme, l10n),
 
           const SizedBox(height: 16),
-          Divider(height: 1, color: theme.dividerColor),
+          Divider(height: 1, color: dividerColor),
           const SizedBox(height: 16),
 
           // 4. Advanced Options (Collapsible accordion)
@@ -241,10 +239,9 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
 
   Widget _buildEncodingSpeedSelector(ThemeData theme, AppLocalizations l10n) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _buildSectionLabel(
-          icon: Icons.bolt_rounded,
           title: l10n.t('settings_encoding_preset'),
           theme: theme,
         ),
@@ -257,7 +254,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
               child: Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 8,
-                runSpacing: 6,
+                runSpacing: 8,
                 children: [
                   _buildChoiceChip(
                     chipKey: const Key('preset_chip_fast'),
@@ -314,15 +311,16 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
           ),
         ),
         if (_isAdvancedExpanded) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Center(
             child: Text(
               l10n.t('preset_disabled_by_advanced'),
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 11,
-                color: theme.colorScheme.onSurface.withAlpha(120),
-                fontStyle: FontStyle.italic,
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                letterSpacing: 0,
+                color: theme.colorScheme.onSurface.withAlpha(140),
               ),
             ),
           ),
@@ -333,19 +331,15 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
 
   Widget _buildContainerFormatSelector(ThemeData theme, AppLocalizations l10n) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _buildSectionLabel(
-          icon: Icons.video_file_outlined,
-          title: l10n.t('container_format'),
-          theme: theme,
-        ),
+        _buildSectionLabel(title: l10n.t('container_format'), theme: theme),
         const SizedBox(height: 10),
         Center(
           child: Wrap(
             alignment: WrapAlignment.center,
-            spacing: 6,
-            runSpacing: 6,
+            spacing: 8,
+            runSpacing: 8,
             children: VideoContainer.values.map((format) {
               final isSelected = widget.encodingOptions.container == format;
               return _buildChoiceChip(
@@ -355,9 +349,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                 onSelected: (selected) {
                   if (selected) {
                     widget.onOptionsChanged(
-                      widget.encodingOptions.copyWith(
-                        container: format,
-                      ),
+                      widget.encodingOptions.copyWith(container: format),
                     );
                   }
                 },
@@ -370,8 +362,13 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
   }
 
   Widget _buildAdvancedOptionsSection(ThemeData theme, AppLocalizations l10n) {
+    final isDark = theme.brightness == Brightness.dark;
+    final dividerColor = theme.colorScheme.onSurface.withAlpha(
+      isDark ? 18 : 24,
+    );
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         InkWell(
           key: const Key('advanced_options_toggle'),
@@ -396,58 +393,44 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
           },
           borderRadius: BorderRadius.circular(10),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: theme.colorScheme.onSurface.withAlpha(
-                _isAdvancedExpanded ? 16 : 8,
+                _isAdvancedExpanded ? 14 : 8,
               ),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: _isAdvancedExpanded
-                    ? theme.colorScheme.primary.withAlpha(60)
-                    : theme.colorScheme.outline.withAlpha(35),
-                width: 0.9,
+                    ? theme.colorScheme.primary.withAlpha(80)
+                    : theme.colorScheme.onSurface.withAlpha(isDark ? 20 : 28),
+                width: 1.0,
               ),
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.tune_rounded,
-                  size: 18,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 20),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.t('settings_advanced_title'),
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        'Codec, audio bitrate, rate control & FPS',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          color: theme.colorScheme.onSurface.withAlpha(130),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    l10n.t('settings_advanced_title'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
                 ),
                 AnimatedRotation(
                   turns: _isAdvancedExpanded ? 0.5 : 0.0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 180),
+                  curve: const Cubic(0.22, 1, 0.36, 1),
                   child: Icon(
                     Icons.keyboard_arrow_down_rounded,
                     size: 20,
-                    color: theme.colorScheme.primary,
+                    color: theme.colorScheme.onSurface.withAlpha(170),
                   ),
                 ),
               ],
@@ -455,19 +438,19 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
           ),
         ),
         if (_isAdvancedExpanded) ...[
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           _buildCodecSelector(theme, l10n),
-          const SizedBox(height: 14),
-          Divider(height: 1, color: theme.dividerColor),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
+          Divider(height: 1, color: dividerColor),
+          const SizedBox(height: 16),
           _buildAudioQualitySelector(theme, l10n),
-          const SizedBox(height: 14),
-          Divider(height: 1, color: theme.dividerColor),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
+          Divider(height: 1, color: dividerColor),
+          const SizedBox(height: 16),
           _buildRateControlSelector(theme, l10n),
-          const SizedBox(height: 14),
-          Divider(height: 1, color: theme.dividerColor),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
+          Divider(height: 1, color: dividerColor),
+          const SizedBox(height: 16),
           _buildFpsSelector(theme, l10n),
         ],
       ],
@@ -494,24 +477,25 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
           title: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.red.withAlpha(25),
+                  color: const Color(0xFFE5484D).withAlpha(20),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.warning_amber_rounded,
-                  color: Colors.redAccent,
-                  size: 22,
+                  color: Color(0xFFE5484D),
+                  size: 20,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   l10n.t('advanced_warning_title'),
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
                     color: theme.colorScheme.onSurface,
                   ),
                 ),
@@ -526,7 +510,8 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                 l10n.t('advanced_warning_desc'),
                 style: TextStyle(
                   fontSize: 13.5,
-                  height: 1.4,
+                  height: 1.45,
+                  letterSpacing: 0,
                   color: theme.colorScheme.onSurface.withAlpha(190),
                 ),
               ),
@@ -565,7 +550,8 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                         child: Text(
                           l10n.t('dont_show_again'),
                           style: TextStyle(
-                            fontSize: 12.5,
+                            fontSize: 13,
+                            letterSpacing: 0,
                             color: theme.colorScheme.onSurface.withAlpha(180),
                           ),
                         ),
@@ -585,8 +571,8 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
               style: TextButton.styleFrom(
                 foregroundColor: isDark ? Colors.white : Colors.black87,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 10,
+                  horizontal: 16,
+                  vertical: 12,
                 ),
               ),
               child: Text(
@@ -608,16 +594,16 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                 }
               },
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.red.shade700,
+                backgroundColor: const Color(0xFFE5484D),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 10,
+                  horizontal: 20,
+                  vertical: 12,
                 ),
               ),
               child: Text(
                 l10n.t('proc_dialog_yes'),
-                style: const TextStyle(fontWeight: FontWeight.w700),
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -628,10 +614,9 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
 
   Widget _buildCodecSelector(ThemeData theme, AppLocalizations l10n) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _buildSectionLabel(
-          icon: Icons.video_settings_rounded,
           title: l10n.t('settings_default_codec'),
           theme: theme,
         ),
@@ -640,7 +625,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
           child: Wrap(
             alignment: WrapAlignment.center,
             spacing: 8,
-            runSpacing: 6,
+            runSpacing: 8,
             children: [
               _buildChoiceChip(
                 chipKey: const Key('codec_chip_h264'),
@@ -677,9 +662,10 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                 : l10n.t('desc_h264'),
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11.5,
-              height: 1.35,
-              color: theme.colorScheme.onSurface.withAlpha(140),
+              fontSize: 12,
+              height: 1.4,
+              letterSpacing: 0,
+              color: theme.colorScheme.onSurface.withAlpha(150),
             ),
           ),
         ),
@@ -690,43 +676,18 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
   Widget _buildAudioQualitySelector(ThemeData theme, AppLocalizations l10n) {
     final currentAudio = widget.encodingOptions.videoAudioBitrateKbps;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: _buildSectionLabel(
-                icon: Icons.graphic_eq_rounded,
-                title: l10n.t('settings_audio_quality'),
-                theme: theme,
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withAlpha(20),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                currentAudio == 0
-                    ? l10n.t('settings_audio_mute')
-                    : '$currentAudio kbps',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-            ),
-          ],
+        _buildSectionLabel(
+          title: l10n.t('settings_audio_quality'),
+          theme: theme,
         ),
         const SizedBox(height: 10),
         Center(
           child: Wrap(
             alignment: WrapAlignment.center,
             spacing: 8,
-            runSpacing: 6,
+            runSpacing: 8,
             children: [
               _buildChoiceChip(
                 label: l10n.t('settings_audio_mute'),
@@ -763,19 +724,15 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
 
   Widget _buildRateControlSelector(ThemeData theme, AppLocalizations l10n) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _buildSectionLabel(
-          icon: Icons.tune_rounded,
-          title: l10n.t('rate_control'),
-          theme: theme,
-        ),
+        _buildSectionLabel(title: l10n.t('rate_control'), theme: theme),
         const SizedBox(height: 10),
         Center(
           child: Wrap(
             alignment: WrapAlignment.center,
-            spacing: 6,
-            runSpacing: 6,
+            spacing: 8,
+            runSpacing: 8,
             children: RateControlMode.values.map((mode) {
               final isSelected = widget.encodingOptions.rateControlMode == mode;
               return _buildChoiceChip(
@@ -801,16 +758,17 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                 : l10n.t('desc_bitrate'),
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11.5,
-              height: 1.35,
-              color: theme.colorScheme.onSurface.withAlpha(140),
+              fontSize: 12,
+              height: 1.4,
+              letterSpacing: 0,
+              color: theme.colorScheme.onSurface.withAlpha(150),
             ),
           ),
         ),
         const SizedBox(height: 12),
         if (widget.encodingOptions.rateControlMode == RateControlMode.crf)
           Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 children: [
@@ -844,7 +802,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                     width: 44,
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha(25),
+                      color: theme.colorScheme.primary.withAlpha(20),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -853,7 +811,9 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
+                        letterSpacing: 0,
                         color: theme.colorScheme.primary,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ),
@@ -869,8 +829,9 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                       child: Text(
                         l10n.t('crf_hint_sharp'),
                         style: TextStyle(
-                          fontSize: 10.5,
-                          color: theme.colorScheme.onSurface.withAlpha(120),
+                          fontSize: 12,
+                          letterSpacing: 0,
+                          color: theme.colorScheme.onSurface.withAlpha(140),
                         ),
                       ),
                     ),
@@ -880,8 +841,9 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                         l10n.t('crf_hint_small'),
                         textAlign: TextAlign.end,
                         style: TextStyle(
-                          fontSize: 10.5,
-                          color: theme.colorScheme.onSurface.withAlpha(120),
+                          fontSize: 12,
+                          letterSpacing: 0,
+                          color: theme.colorScheme.onSurface.withAlpha(140),
                         ),
                       ),
                     ),
@@ -898,19 +860,20 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                     Container(
                       key: const Key('crf_custom_badge'),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 1.5,
+                        horizontal: 8,
+                        vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.secondary.withAlpha(30),
-                        borderRadius: BorderRadius.circular(4),
+                        color: theme.colorScheme.onSurface.withAlpha(16),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         l10n.t('crf_custom'),
                         style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.secondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0,
+                          color: theme.colorScheme.onSurface.withAlpha(180),
                         ),
                       ),
                     ),
@@ -926,26 +889,27 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                           widget.encodingOptions.copyWith(crfValue: defaultCrf),
                         );
                       },
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(6),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
+                          horizontal: 8,
+                          vertical: 4,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                               Icons.refresh_rounded,
-                              size: 12,
+                              size: 14,
                               color: theme.colorScheme.primary,
                             ),
-                            const SizedBox(width: 3),
+                            const SizedBox(width: 4),
                             Text(
                               l10n.t('crf_reset'),
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
+                                letterSpacing: 0,
                                 color: theme.colorScheme.primary,
                               ),
                             ),
@@ -962,9 +926,11 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             RateControlMode.bitrate) ...[
           Text(
             l10n.t('bitrate_label'),
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
-              color: theme.colorScheme.onSurface.withAlpha(140),
+              letterSpacing: 0,
+              color: theme.colorScheme.onSurface.withAlpha(150),
             ),
           ),
           Row(
@@ -1002,7 +968,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(25),
+                  color: theme.colorScheme.primary.withAlpha(20),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -1010,8 +976,10 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 12,
+                    fontSize: 12.5,
+                    letterSpacing: 0,
                     color: theme.colorScheme.primary,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ),
@@ -1022,26 +990,18 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
     );
   }
 
-  Widget _buildSectionLabel({
-    required IconData icon,
-    required String title,
-    required ThemeData theme,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: theme.colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface.withAlpha(200),
-            ),
-          ),
+  Widget _buildSectionLabel({required String title, required ThemeData theme}) {
+    return Center(
+      child: Text(
+        title,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0,
+          color: theme.colorScheme.onSurface.withAlpha(200),
         ),
-      ],
+      ),
     );
   }
 
@@ -1050,19 +1010,23 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
     required String label,
     required bool isSelected,
     required ValueChanged<bool>? onSelected,
-    double fontSize = 12,
+    double fontSize = 12.5,
     bool isEnabled = true,
     String? tooltip,
   }) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final chip = ChoiceChip(
       key: chipKey,
+      showCheckmark: false,
       label: Text(
         label,
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: fontSize,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          letterSpacing: 0,
+          fontFeatures: const [FontFeature.tabularFigures()],
           color: !isEnabled
               ? theme.colorScheme.onSurface.withAlpha(80)
               : (isSelected ? Colors.white : theme.colorScheme.onSurface),
@@ -1074,14 +1038,14 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
       backgroundColor: theme.colorScheme.surface,
       side: BorderSide(
         color: !isEnabled
-            ? theme.colorScheme.outline.withAlpha(40)
+            ? theme.colorScheme.onSurface.withAlpha(20)
             : (isSelected
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.outline.withAlpha(60)),
-        width: isSelected ? 1.4 : 1.0,
+                  : theme.colorScheme.onSurface.withAlpha(isDark ? 24 : 32)),
+        width: 1.0,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       visualDensity: VisualDensity.compact,
     );
 
@@ -1097,6 +1061,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
     required ThemeData theme,
   }) {
     final l10n = widget.l10n;
+    final isDark = theme.brightness == Brightness.dark;
     final isPortrait = widget.sourceVideo.height > widget.sourceVideo.width;
     final displayW = isPortrait && !res.label.startsWith('Original')
         ? res.height
@@ -1110,24 +1075,23 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
         : res.label;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: () => widget.onResolutionChanged(res),
         borderRadius: BorderRadius.circular(10),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? theme.colorScheme.primary.withAlpha(20)
-                : theme.colorScheme.surfaceContainerHighest.withAlpha(
-                    theme.brightness == Brightness.dark ? 30 : 50,
-                  ),
+                ? theme.colorScheme.primary.withAlpha(isDark ? 22 : 16)
+                : theme.colorScheme.onSurface.withAlpha(isDark ? 8 : 6),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: isSelected
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.outline.withAlpha(40),
-              width: isSelected ? 1.5 : 1.0,
+                  ? theme.colorScheme.primary.withAlpha(180)
+                  : theme.colorScheme.onSurface.withAlpha(isDark ? 20 : 28),
+              width: 1.0,
             ),
           ),
           child: Row(
@@ -1139,15 +1103,16 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                 size: 18,
                 color: isSelected
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withAlpha(120),
+                    : theme.colorScheme.onSurface.withAlpha(130),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   displayLabel,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 13.5,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    letterSpacing: 0,
                     color: isSelected
                         ? theme.colorScheme.primary
                         : theme.colorScheme.onSurface,
@@ -1157,14 +1122,15 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
               Text(
                 '$displayW×$displayH',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                   color: isSelected
-                      ? theme.colorScheme.primary.withAlpha(200)
-                      : theme.colorScheme.onSurface.withAlpha(120),
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurface.withAlpha(140),
                 ),
               ),
-              const SizedBox(width: 8),
-              _buildQualityBadge(res, theme),
             ],
           ),
         ),
@@ -1173,6 +1139,7 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
   }
 
   Widget _buildFpsSelector(ThemeData theme, AppLocalizations l10n) {
+    final isDark = theme.brightness == Brightness.dark;
     final sourceFps = (widget.sourceVideo.fps > 0
         ? widget.sourceVideo.fps.round()
         : 60);
@@ -1181,19 +1148,15 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
     final targetFps = widget.encodingOptions.targetFps;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _buildSectionLabel(
-          icon: Icons.speed_outlined,
-          title: l10n.t('target_fps'),
-          theme: theme,
-        ),
+        _buildSectionLabel(title: l10n.t('target_fps'), theme: theme),
         const SizedBox(height: 10),
         Center(
           child: Wrap(
             alignment: WrapAlignment.center,
-            spacing: 6,
-            runSpacing: 6,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _buildChoiceChip(
                 label: l10n.t('fps_original'),
@@ -1234,15 +1197,13 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
         if (_isCustomFps) ...[
           const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withAlpha(
-                theme.brightness == Brightness.dark ? 40 : 60,
-              ),
+              color: theme.colorScheme.onSurface.withAlpha(isDark ? 10 : 6),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: theme.colorScheme.primary.withAlpha(35),
-                width: 0.8,
+                color: theme.colorScheme.onSurface.withAlpha(isDark ? 20 : 28),
+                width: 1.0,
               ),
             ),
             child: Column(
@@ -1256,14 +1217,18 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
+                        letterSpacing: 0,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                         color: theme.colorScheme.primary,
                       ),
                     ),
                     Text(
                       '${l10n.t('fps_max')}: $maxFps FPS',
                       style: TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
+                        letterSpacing: 0,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                         color: theme.colorScheme.onSurface.withAlpha(140),
                       ),
                     ),
@@ -1313,38 +1278,6 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
           ),
         ],
       ],
-    );
-  }
-
-  Widget _buildQualityBadge(VideoResolution res, ThemeData theme) {
-    final dim = res.width < res.height ? res.width : res.height;
-    String label;
-    if (dim >= 2160) {
-      label = '4K';
-    } else if (dim >= 1440) {
-      label = '2K';
-    } else if (dim >= 1080) {
-      label = 'FHD';
-    } else if (dim >= 720) {
-      label = 'HD';
-    } else {
-      label = 'SD';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.onSurface.withAlpha(20),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: theme.colorScheme.onSurface.withAlpha(180),
-        ),
-      ),
     );
   }
 }
