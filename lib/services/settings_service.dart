@@ -192,6 +192,44 @@ class SettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(suppressAdvancedModeWarning: value));
   }
 
+  Future<void> setTranscodeEngine(String engine) async {
+    await updateSettings(
+      _settings.copyWith(
+        transcodeEngine: AppSettings.sanitizeTranscodeEngine(engine),
+      ),
+    );
+  }
+
+  Future<void> setEnableEngineFallback(bool enable) async {
+    await updateSettings(_settings.copyWith(enableEngineFallback: enable));
+  }
+
+  Future<void> setVideoProgressStyle(String style) async {
+    await updateSettings(
+      _settings.copyWith(
+        videoProgressStyle: AppSettings.sanitizeProgressStyle(style),
+      ),
+    );
+  }
+
+  Future<void> setAudioProgressStyle(String style) async {
+    await updateSettings(
+      _settings.copyWith(
+        audioProgressStyle: AppSettings.sanitizeProgressStyle(style),
+      ),
+    );
+  }
+
+  Future<void> setBothProgressStyles(String style) async {
+    final sanitized = AppSettings.sanitizeProgressStyle(style);
+    await updateSettings(
+      _settings.copyWith(
+        videoProgressStyle: sanitized,
+        audioProgressStyle: sanitized,
+      ),
+    );
+  }
+
   void setCardOpacityFast(double opacity) {
     final clamped = opacity.clamp(0.5, 1.0);
     if ((_settings.cardOpacity - clamped).abs() > 0.001) {

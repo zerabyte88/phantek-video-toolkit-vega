@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import '../models/video_info.dart';
 
@@ -52,8 +53,13 @@ class SocDescription {
 
 class DeviceSpecHelper {
   static final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
+  static const MethodChannel _channel = MethodChannel(
+    'com.phantek.lyra.vega/transformer',
+  );
   @visibleForTesting
   static double? mockBatteryTemperature;
+  @visibleForTesting
+  static bool? isAndroidOverride;
 
   static String _capitalize(String s) {
     if (s.isEmpty) return s;
@@ -1924,13 +1930,26 @@ class DeviceSpecHelper {
 
   static Future<double> getBatteryTemperature() async {
     if (mockBatteryTemperature != null) return mockBatteryTemperature!;
-    try {
-      if (Platform.isAndroid) {
+
+    final isAndroid = isAndroidOverride ?? Platform.isAndroid;
+    if (isAndroid) {
+      try {
+        final nativeTemp = await _channel.invokeMethod<double>(
+          'getDeviceTemperature',
+        );
+        if (nativeTemp != null && nativeTemp > 0) {
+          return nativeTemp;
+        }
+      } catch (_) {}
+
+      try {
         for (int i = 0; i < 5; i++) {
           final typeFile = File('/sys/class/thermal/thermal_zone$i/type');
           if (typeFile.existsSync()) {
             final type = typeFile.readAsStringSync().trim().toLowerCase();
-            if (type.contains('battery') || i == 0) {
+            if (type.contains('battery') ||
+                type.contains('bms') ||
+                type.contains('soc')) {
               final tempFile = File('/sys/class/thermal/thermal_zone$i/temp');
               if (tempFile.existsSync()) {
                 final tempStr = tempFile.readAsStringSync().trim();
@@ -1938,13 +1957,15 @@ class DeviceSpecHelper {
                 if (temp > 1000) {
                   return temp / 1000.0;
                 }
-                return temp.toDouble();
+                if (temp > 0) {
+                  return temp.toDouble();
+                }
               }
             }
           }
         }
-      }
-    } catch (_) {}
+      } catch (_) {}
+    }
     return 35.0; // Fallback normal temp
   }
 

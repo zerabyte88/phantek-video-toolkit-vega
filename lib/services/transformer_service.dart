@@ -267,6 +267,55 @@ class TransformerService {
     }
   }
 
+  @visibleForTesting
+  static Map<String, dynamic>? mockResolutionCapabilities;
+
+  static final Map<String, Map<String, dynamic>> _resolutionCapsCache = {};
+
+  /// Queries native Android MediaCodec encoder capabilities for the specified video codec.
+  /// Returns a map with keys: '4K', '2K', '1080p', '720p', '480p', '360p', and 'maxResolution'.
+  static Future<Map<String, dynamic>> getResolutionCapabilities({
+    String codec = 'h264',
+  }) async {
+    if (mockResolutionCapabilities != null) {
+      return Map<String, dynamic>.from(mockResolutionCapabilities!);
+    }
+
+    final normalizedCodec = codec.toLowerCase();
+    if (_resolutionCapsCache.containsKey(normalizedCodec)) {
+      return _resolutionCapsCache[normalizedCodec]!;
+    }
+
+    const defaultCaps = <String, dynamic>{
+      '4K': true,
+      '2K': true,
+      '1080p': true,
+      '720p': true,
+      '480p': true,
+      '360p': true,
+      'maxResolution': '4K',
+    };
+
+    if (!Platform.isAndroid) {
+      return defaultCaps;
+    }
+
+    try {
+      final res = await _channel.invokeMapMethod<String, dynamic>(
+        'getResolutionCapabilities',
+        {'videoCodec': normalizedCodec},
+      );
+      if (res != null) {
+        _resolutionCapsCache[normalizedCodec] = res;
+        return res;
+      }
+    } catch (e) {
+      debugPrint('TransformerService.getResolutionCapabilities error: $e');
+    }
+
+    return defaultCaps;
+  }
+
   /// Queries all available hardware video encoders on the device.
   static Future<List<Map<String, dynamic>>> getHardwareEncoders() async {
     if (!Platform.isAndroid) return [];
@@ -456,6 +505,9 @@ class TransformerService {
   })?
   mockExtractAudio;
 
+  @visibleForTesting
+  static bool forceNativeForTesting = false;
+
   /// Transcodes and downscales video using AndroidX Media3 Hardware Transformer.
   static Future<String?> processVideo({
     required VideoInfo sourceVideo,
@@ -526,14 +578,17 @@ class TransformerService {
       is4K: is4K,
     );
 
-    onLog('Engine: AndroidX Media3 Transformer (Hardware Accelerated)');
+    final engineDesc = appSettings.transcodeEngine == 'software'
+        ? 'Software Safe-Mode'
+        : 'Hardware Accelerated';
+    onLog('Engine: AndroidX Media3 Transformer ($engineDesc)');
     onLog('Target: ${targetW}x$targetH (${encodingOptions.codec.displayName})');
     onLog(
       'Rate Control: ${encodingOptions.rateControlMode.displayName} @ $targetBitrateKbps kbps',
     );
     onLog('Output Path: $outputPath');
 
-    if (!Platform.isAndroid) {
+    if (!Platform.isAndroid && !forceNativeForTesting) {
       // Mock completion for desktop / test runner
       onProgress(0.5, 'Size: 1.2 MB | Speed: 3.5x', 1200000);
       onProgress(1.0, 'Size: 2.5 MB | Completed', 2500000);
@@ -555,16 +610,22 @@ class TransformerService {
         'bitrateBps': targetBitrateKbps * 1000,
         'videoCodec': encodingOptions.codec.name,
         'rateControlMode': encodingOptions.rateControlMode.name,
+        'targetFps': encodingOptions.targetFps,
         'removeAudio':
             !sourceVideo.hasAudio || encodingOptions.videoAudioBitrateKbps <= 0,
         'trimStartMs': encodingOptions.trimStartMs,
         'trimEndMs': encodingOptions.trimEndMs,
+        'transcodeEngine': appSettings.transcodeEngine,
+        'enableEngineFallback': appSettings.enableEngineFallback,
       });
 
       await SettingsService().clearJobMarker();
       if (result != null) {
         onProgress(1.0, 'Completed', await File(outputPath).length());
-        onLog('Encoding completed successfully via Media3 Hardware Encoder!');
+        final completedEngineLabel = appSettings.transcodeEngine == 'software'
+            ? 'Software Safe-Mode'
+            : 'Hardware Encoder';
+        onLog('Encoding completed successfully via Media3 $completedEngineLabel!');
         if (appSettings.preserveMediaDate) {
           await _syncMediaDate(sourceVideo.filePath, outputPath);
         }

@@ -49,6 +49,18 @@ class AppSettings {
   /// Whether to suppress the warning dialog when opening advanced settings.
   final bool suppressAdvancedModeWarning;
 
+  /// Transcode engine ('hardware' or 'software').
+  final String transcodeEngine;
+
+  /// Automatically switch to alternative engine on error.
+  final bool enableEngineFallback;
+
+  /// Active progress style for video transcoding ('v1'..'v5').
+  final String videoProgressStyle;
+
+  /// Active progress style for audio extraction ('v1'..'v5').
+  final String audioProgressStyle;
+
   const AppSettings({
     this.cpuThreads = 0,
     this.ramBufferMb = 512,
@@ -65,6 +77,10 @@ class AppSettings {
     this.fileNamingFormat = 'suffix',
     this.preserveMediaDate = true,
     this.suppressAdvancedModeWarning = false,
+    this.transcodeEngine = 'hardware',
+    this.enableEngineFallback = true,
+    this.videoProgressStyle = 'v1',
+    this.audioProgressStyle = 'v1',
   });
 
   /// Physical CPU core count.
@@ -86,6 +102,10 @@ class AppSettings {
     String? fileNamingFormat,
     bool? preserveMediaDate,
     bool? suppressAdvancedModeWarning,
+    String? transcodeEngine,
+    bool? enableEngineFallback,
+    String? videoProgressStyle,
+    String? audioProgressStyle,
   }) {
     return AppSettings(
       cpuThreads: cpuThreads ?? this.cpuThreads,
@@ -108,6 +128,17 @@ class AppSettings {
       preserveMediaDate: preserveMediaDate ?? this.preserveMediaDate,
       suppressAdvancedModeWarning:
           suppressAdvancedModeWarning ?? this.suppressAdvancedModeWarning,
+      transcodeEngine: transcodeEngine != null
+          ? sanitizeTranscodeEngine(transcodeEngine)
+          : this.transcodeEngine,
+      enableEngineFallback:
+          enableEngineFallback ?? this.enableEngineFallback,
+      videoProgressStyle: videoProgressStyle != null
+          ? sanitizeProgressStyle(videoProgressStyle)
+          : this.videoProgressStyle,
+      audioProgressStyle: audioProgressStyle != null
+          ? sanitizeProgressStyle(audioProgressStyle)
+          : this.audioProgressStyle,
     );
   }
 
@@ -128,6 +159,10 @@ class AppSettings {
       'fileNamingFormat': fileNamingFormat,
       'preserveMediaDate': preserveMediaDate,
       'suppressAdvancedModeWarning': suppressAdvancedModeWarning,
+      'transcodeEngine': transcodeEngine,
+      'enableEngineFallback': enableEngineFallback,
+      'videoProgressStyle': videoProgressStyle,
+      'audioProgressStyle': audioProgressStyle,
     };
   }
 
@@ -141,6 +176,29 @@ class AppSettings {
       return 'fast';
     }
     return 'medium';
+  }
+
+  /// Normalizes transcode engine to supported values ('hardware', 'software').
+  static String sanitizeTranscodeEngine(String? engine) {
+    if (engine == 'software') return 'software';
+    return 'hardware';
+  }
+
+  /// Normalizes progress animation style to supported values ('v1'..'v5').
+  /// Maps legacy 'a1' -> 'v4', 'a3' -> 'v5'.
+  static String sanitizeProgressStyle(String? style, [String fallback = 'v1']) {
+    if (style == null) return fallback;
+    final normalized = style.trim().toLowerCase();
+    if (normalized == 'a1') return 'v4';
+    if (normalized == 'a3') return 'v5';
+    if (normalized == 'v1' ||
+        normalized == 'v2' ||
+        normalized == 'v3' ||
+        normalized == 'v4' ||
+        normalized == 'v5') {
+      return normalized;
+    }
+    return fallback;
   }
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
@@ -170,6 +228,16 @@ class AppSettings {
       preserveMediaDate: json['preserveMediaDate'] as bool? ?? true,
       suppressAdvancedModeWarning:
           json['suppressAdvancedModeWarning'] as bool? ?? false,
+      transcodeEngine: sanitizeTranscodeEngine(
+        json['transcodeEngine'] as String?,
+      ),
+      enableEngineFallback: json['enableEngineFallback'] as bool? ?? true,
+      videoProgressStyle: sanitizeProgressStyle(
+        json['videoProgressStyle'] as String?,
+      ),
+      audioProgressStyle: sanitizeProgressStyle(
+        json['audioProgressStyle'] as String?,
+      ),
     );
   }
 
@@ -192,7 +260,11 @@ class AppSettings {
           defaultVideoCodec == other.defaultVideoCodec &&
           fileNamingFormat == other.fileNamingFormat &&
           preserveMediaDate == other.preserveMediaDate &&
-          suppressAdvancedModeWarning == other.suppressAdvancedModeWarning;
+          suppressAdvancedModeWarning == other.suppressAdvancedModeWarning &&
+          transcodeEngine == other.transcodeEngine &&
+          enableEngineFallback == other.enableEngineFallback &&
+          videoProgressStyle == other.videoProgressStyle &&
+          audioProgressStyle == other.audioProgressStyle;
 
   @override
   int get hashCode => Object.hash(
@@ -211,5 +283,9 @@ class AppSettings {
     fileNamingFormat,
     preserveMediaDate,
     suppressAdvancedModeWarning,
+    transcodeEngine,
+    enableEngineFallback,
+    videoProgressStyle,
+    audioProgressStyle,
   );
 }

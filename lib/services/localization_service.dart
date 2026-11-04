@@ -35,6 +35,30 @@ class AppLocalizations {
 
   static const Map<String, Map<String, String>> _localizedValues = {
     'id': {
+      'settings_progress_style_title': 'Gaya Animasi Progres',
+      'settings_progress_style_subtitle':
+          'Kustomisasi animasi loading untuk video dan audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Keduanya',
+      'style_v1_title': 'V1 • Cincin Orbit Ganda',
+
+      'style_v2_title': 'V2 • Cincin Riak Radar',
+
+      'style_v3_title': 'V3 • Lingkaran Ombak Fluida',
+
+      'style_v4_title': 'V4 • Bola Cairan Tenang',
+
+      'style_v5_title': 'V5 • Bar Kapsul Datar',
+
+      'settings_transcode_engine': 'Mesin Transcoding',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Menggunakan chip hardware GPU/SoC untuk kecepatan maksimal & hemat baterai',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Menggunakan codec software AOSP untuk stabilitas maksimal jika hardware bermasalah',
+      'engine_fallback_toggle_title': 'Beralih Otomatis Saat Gagal (Fallback)',
+      'engine_fallback_toggle_desc': 'Beralih otomatis ke engine alternatif jika engine utama mengalami error',
+      'engine_fallback_notice': 'Beralih otomatis ke engine {engine}',
       'advanced_warning_title': 'Buka Pengaturan Lanjutan?',
       'advanced_warning_desc': 'Atur codec, audio, CRF, bitrate, dan FPS secara manual. Perubahan ini memengaruhi ukuran file dan kecepatan konversi.',
       'dont_show_again': 'Jangan tampilkan lagi',
@@ -98,6 +122,8 @@ class AppLocalizations {
       'thermal_warning_msg': 'Hindari pengisian daya saat konversi berjalan.',
       'duration': 'Durasi',
       'error_details': 'Detail Error',
+      'error_copy': 'Salin',
+      'error_copied': 'Log error disalin ke papan klip',
       'error_open_file': 'Gagal membuka file video',
       'error_read_video': 'Gagal membaca informasi video',
       'feature_crf_bitrate': 'Kontrol CRF & Bitrate',
@@ -293,9 +319,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Mulai Konversi',
       'trim_btn_skip': 'Lewati / Konversi Penuh',
       'cancel': 'Batal',
+      'res_unsupported_hardware': 'Tidak didukung hardware',
+      'res_adjusted_to_hardware': 'Disesuaikan ke {res}',
+      'hardware_limit_title': 'Batas Resolusi Hardware',
+      'hardware_limit_desc': 'Encoder hardware ponsel ini memiliki batas maksimal {target}. Video {source} ini akan tetap dikonversi, namun resolusinya akan disesuaikan menjadi {target}. Lanjutkan?',
+      'hardware_limit_continue': 'Lanjutkan',
+      'hardware_limit_cancel': 'Batal',
       'reset': 'Reset',
     },
     'en': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcoding Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_fallback_toggle_title': 'Automatic Engine Fallback',
+      'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
+      'engine_fallback_notice': 'Switched to {engine} engine',
       'advanced_warning_title': 'Open Advanced Settings?',
       'advanced_warning_desc': 'Manually tune codec, audio, CRF, bitrate, and FPS. These changes affect the output file size and the encoding speed.',
       'dont_show_again': 'Do not show again',
@@ -362,6 +418,8 @@ class AppLocalizations {
       'thermal_warning_msg': 'Avoid charging while conversion is in progress.',
       'duration': 'Duration',
       'error_details': 'Error Details',
+      'error_copy': 'Copy',
+      'error_copied': 'Error log copied to clipboard',
       'error_open_file': 'Failed to open video file',
       'error_read_video': 'Failed to read video information',
       'feature_crf_bitrate': 'CRF & Bitrate Control',
@@ -560,9 +618,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Start Conversion',
       'trim_btn_skip': 'Skip / Full Conversion',
       'cancel': 'Cancel',
+      'res_unsupported_hardware': 'Unsupported by hardware',
+      'res_adjusted_to_hardware': 'Adjusted to {res}',
+      'hardware_limit_title': 'Hardware Resolution Limit',
+      'hardware_limit_desc': 'This device\'s hardware encoder has a maximum limit of {target}. This {source} video will still be converted, but its resolution will be adjusted to {target}. Continue?',
+      'hardware_limit_continue': 'Continue',
+      'hardware_limit_cancel': 'Cancel',
       'reset': 'Reset',
     },
     'zh': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': '转码引擎',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': '使用 GPU/SoC 硬件编解码芯片以获得最高速度与更低功耗',
+      'engine_software_title': 'Software',
+      'engine_software_desc': '使用 Google AOSP 软件编解码器，硬件出现兼容性异常时保证极高稳定性',
+      'engine_fallback_toggle_title': '自动故障切换 (Fallback)',
+      'engine_fallback_toggle_desc': '如果首选引擎发生错误，自动无缝切换到备用引擎继续转码',
+      'engine_fallback_notice': '已自动切换至 {engine} 引擎',
       'advanced_warning_title': '打开高级设置？',
       'advanced_warning_desc': '高级设置支持手动调整编解码器、音频、CRF、码率以及帧率。修改这些选项可能会直接影响输出文件大小和转码处理速度。',
       'dont_show_again': '不再提示',
@@ -809,9 +897,39 @@ class AppLocalizations {
       'trim_btn_proceed': '开始转换',
       'trim_btn_skip': '跳过 / 完整转换',
       'cancel': '取消',
+      'res_unsupported_hardware': '硬件不支持',
+      'res_adjusted_to_hardware': '已调整为 {res}',
+      'hardware_limit_title': '硬件分辨率限制',
+      'hardware_limit_desc': '此设备的硬件编码器最高支持 {target}。该 {source} 视频仍将继续转换，但分辨率将自动调整为 {target}。是否继续？',
+      'hardware_limit_continue': '继续',
+      'hardware_limit_cancel': '取消',
       'reset': '重置',
     },
     'zh_CN': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': '转码引擎',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': '使用 GPU/SoC 硬件编解码芯片以获得最高速度与更低功耗',
+      'engine_software_title': 'Software',
+      'engine_software_desc': '使用 Google AOSP 软件编解码器，硬件出现兼容性异常时保证极高稳定性',
+      'engine_fallback_toggle_title': '自动故障切换 (Fallback)',
+      'engine_fallback_toggle_desc': '如果首选引擎发生错误，自动无缝切换到备用引擎继续转码',
+      'engine_fallback_notice': '已自动切换至 {engine} 引擎',
       'advanced_warning_title': '打开高级设置？',
       'advanced_warning_desc': '高级设置支持手动调整编解码器、音频、CRF、码率以及帧率。修改这些选项可能会直接影响输出文件大小和转码处理速度。',
       'dont_show_again': '不再提示',
@@ -1060,9 +1178,39 @@ class AppLocalizations {
       'trim_btn_proceed': '开始转换',
       'trim_btn_skip': '跳过 / 完整转换',
       'cancel': '取消',
+      'res_unsupported_hardware': '硬件不支持',
+      'res_adjusted_to_hardware': '已调整为 {res}',
+      'hardware_limit_title': '硬件分辨率限制',
+      'hardware_limit_desc': '此设备的硬件编码器最高支持 {target}。该 {source} 视频仍将继续转换，但分辨率将自动调整为 {target}。是否继续？',
+      'hardware_limit_continue': '继续',
+      'hardware_limit_cancel': '取消',
       'reset': '重置',
     },
     'zh_TW': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': '轉碼引擎',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': '使用 GPU/SoC 硬體編解碼晶片以獲取最高速度與更低功耗',
+      'engine_software_title': 'Software',
+      'engine_software_desc': '使用 Google AOSP 軟體編解碼器，硬體出現相容性異常時保證極高穩定性',
+      'engine_fallback_toggle_title': '自動故障切換 (Fallback)',
+      'engine_fallback_toggle_desc': '如果首選引擎發生錯誤，自動無縫切換到備用引擎繼續轉碼',
+      'engine_fallback_notice': '已自動切換至 {engine} 引擎',
       'advanced_warning_title': '開啟進階設定？',
       'advanced_warning_desc': '進階設定支援手動調整轉碼器、音訊、CRF、位元速率以及影格率。修改這些選項可能會直接影響輸出檔案大小和轉碼處理速度。',
       'dont_show_again': '不再提示',
@@ -1311,9 +1459,39 @@ class AppLocalizations {
       'trim_btn_proceed': '開始轉換',
       'trim_btn_skip': '略過 / 完整轉換',
       'cancel': '取消',
+      'res_unsupported_hardware': '硬體不支援',
+      'res_adjusted_to_hardware': '已調整為 {res}',
+      'hardware_limit_title': '硬體解析度限制',
+      'hardware_limit_desc': '此裝置的硬體編碼器最高支援 {target}。該 {source} 影片仍將繼續轉碼，但解析度將自動調整為 {target}。是否繼續？',
+      'hardware_limit_continue': '繼續',
+      'hardware_limit_cancel': '取消',
       'reset': '重設',
     },
     'es': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Motor de transcodificación',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Usa códecs de hardware GPU/SoC para máxima velocidad y eficiencia energética',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Usa códecs de software Google AOSP para máxima estabilidad si falla el hardware',
+      'engine_fallback_toggle_title': 'Alternancia automática (Fallback)',
+      'engine_fallback_toggle_desc': 'Cambia automáticamente al motor alternativo si el motor principal falla',
+      'engine_fallback_notice': 'Cambiado al motor {engine}',
       'advanced_warning_title': '¿Abrir Ajustes Avanzados?',
       'advanced_warning_desc': 'Ajusta códec, audio, CRF, tasa de bits y FPS manualmente. Estos cambios afectan el tamaño del archivo y la velocidad de codificación.',
       'dont_show_again': 'No volver a mostrar',
@@ -1582,9 +1760,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Iniciar conversión',
       'trim_btn_skip': 'Omitir / Conversión completa',
       'cancel': 'Cancelar',
+      'res_unsupported_hardware': 'No admitido por hardware',
+      'res_adjusted_to_hardware': 'Ajustado a {res}',
+      'hardware_limit_title': 'Límite de resolución de hardware',
+      'hardware_limit_desc': 'El codificador de hardware de este dispositivo tiene un límite máximo de {target}. Este video {source} se convertirá, pero su resolución se ajustará a {target}. ¿Continuar?',
+      'hardware_limit_continue': 'Continuar',
+      'hardware_limit_cancel': 'Cancelar',
       'reset': 'Restablecer',
     },
     'pt': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Motor de transcodificação',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Usa codecs de hardware GPU/SoC para máxima velocidade e economia de bateria',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Usa codecs de software Google AOSP para estabilidade máxima se o hardware falhar',
+      'engine_fallback_toggle_title': 'Alternância automática (Fallback)',
+      'engine_fallback_toggle_desc': 'Alterna automaticamente para o motor alternativo se o motor principal falhar',
+      'engine_fallback_notice': 'Alternado para o motor {engine}',
       'advanced_warning_title': 'Abrir Configurações Avançadas?',
       'advanced_warning_desc': 'Ajuste codec, áudio, CRF, taxa de bits e FPS manualmente. Essas alterações afetam o tamanho do arquivo e a velocidade de codificação.',
       'dont_show_again': 'Não mostrar novamente',
@@ -1852,9 +2060,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Iniciar conversão',
       'trim_btn_skip': 'Pular / Conversão completa',
       'cancel': 'Cancelar',
+      'res_unsupported_hardware': 'Não suportado pelo hardware',
+      'res_adjusted_to_hardware': 'Ajustado para {res}',
+      'hardware_limit_title': 'Limite de resolução de hardware',
+      'hardware_limit_desc': 'O codificador de hardware deste dispositivo tem um limite máximo de {target}. Este vídeo {source} será convertido, mas sua resolução será ajustada para {target}. Continuar?',
+      'hardware_limit_continue': 'Continuar',
+      'hardware_limit_cancel': 'Cancelar',
       'reset': 'Redefinir',
     },
     'ja': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'トランスコードエンジン',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'GPU/SoCのハードウェアコーデックを使用し、最高速度と省電力を実現',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'ハードウェアに不具合がある場合、Google AOSPソフトウェアコーデックで最大の安定性を確保',
+      'engine_fallback_toggle_title': '自動フォールバック',
+      'engine_fallback_toggle_desc': 'プライマリエンジンでエラーが発生した場合、自動的に代替エンジンに切り替え',
+      'engine_fallback_notice': '{engine} エンジンに切り替えました',
       'advanced_warning_title': '詳細設定を開きますか？',
       'advanced_warning_desc': 'コーデック、音声、CRF、ビットレート、フレームレートを手動で調整します。これらの変更はファイル容量と変換速度に直接影響します。',
       'dont_show_again': '次回から表示しない',
@@ -2109,9 +2347,39 @@ class AppLocalizations {
       'trim_btn_proceed': '変換を開始',
       'trim_btn_skip': 'スキップ / フル変換',
       'cancel': 'キャンセル',
+      'res_unsupported_hardware': 'ハードウェア非対応',
+      'res_adjusted_to_hardware': '{res} に調整済み',
+      'hardware_limit_title': 'ハードウェア解像度の上限',
+      'hardware_limit_desc': 'この端末のハードウェアエンコーダーの最大上限は {target} です。この {source} 動画は変換されますが、解像度は {target} に自動調整されます。続行しますか？',
+      'hardware_limit_continue': '続行',
+      'hardware_limit_cancel': 'キャンセル',
       'reset': 'リセット',
     },
     'ko': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': '트랜스코딩 엔진',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'GPU/SoC 하드웨어 코덱을 사용하여 최대 속도와 배터리 효율 제공',
+      'engine_software_title': 'Software',
+      'engine_software_desc': '하드웨어 코덱 문제 발생 시 Google AOSP 소프트웨어 코덱으로 안정적인 변환 보장',
+      'engine_fallback_toggle_title': '자동 폴백 (Fallback)',
+      'engine_fallback_toggle_desc': '기본 엔진 오류 발생 시 대체 엔진으로 자동 전환',
+      'engine_fallback_notice': '{engine} 엔진으로 전환되었습니다',
       'advanced_warning_title': '고급 설정을 여시겠습니까?',
       'advanced_warning_desc': '코덱, 오디오, CRF, 비트레이트 및 FPS를 수동으로 설정합니다. 이러한 변경 사항은 출력 파일 크기와 인코딩 속도에 직접적인 영향을 줍니다.',
       'dont_show_again': '다시 보지 않기',
@@ -2364,9 +2632,39 @@ class AppLocalizations {
       'trim_btn_proceed': '변환 시작',
       'trim_btn_skip': '건너뛰기 / 전체 변환',
       'cancel': '취소',
+      'res_unsupported_hardware': '하드웨어 미지원',
+      'res_adjusted_to_hardware': '{res}(으)로 조정됨',
+      'hardware_limit_title': '하드웨어 해상도 제한',
+      'hardware_limit_desc': '이 기기의 하드웨어 인코더 최대 한도는 {target}입니다. 이 {source} 비디오는 계속 변환되지만 해상도가 {target}(으)로 자동 조정됩니다. 계속하시겠습니까?',
+      'hardware_limit_continue': '계속',
+      'hardware_limit_cancel': '취소',
       'reset': '초기화',
     },
     'hi': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcoding Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_fallback_toggle_title': 'Automatic Engine Fallback',
+      'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
+      'engine_fallback_notice': 'Switched to {engine} engine',
       'advanced_warning_title': 'उन्नत सेटिंग्स खोलें?',
       'advanced_warning_desc': 'कोडेक, ऑडियो, CRF, बिटरेट और FPS को मैन्युअल रूप से सेट करें। ये बदलाव फ़ाइल आकार और एन्कोडिंग गति को सीधे प्रभावित करते हैं।',
       'dont_show_again': 'फिर कभी न दिखाएं',
@@ -2631,9 +2929,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'रूपांतरण शुरू करें',
       'trim_btn_skip': 'छोड़ें / पूर्ण रूपांतरण',
       'cancel': 'रद्द करें',
+      'res_unsupported_hardware': 'हार्डवेयर द्वारा असमर्थित',
+      'res_adjusted_to_hardware': '{res} में समायोजित',
+      'hardware_limit_title': 'हार्डवेयर रिज़ॉल्यूशन सीमा',
+      'hardware_limit_desc': 'इस डिवाइस के हार्डवेयर एन्कोडर की अधिकतम सीमा {target} है। यह {source} वीडियो कनवर्ट किया जाएगा, लेकिन इसका रिज़ॉल्यूशन {target} में समायोजित हो जाएगा। जारी रखें?',
+      'hardware_limit_continue': 'जारी रखें',
+      'hardware_limit_cancel': 'रद्द करें',
       'reset': 'रीसेट करें',
     },
     'ar': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcoding Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_fallback_toggle_title': 'Automatic Engine Fallback',
+      'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
+      'engine_fallback_notice': 'Switched to {engine} engine',
       'advanced_warning_title': 'فتح الإعدادات المتقدمة؟',
       'advanced_warning_desc': 'اضبط برنامج الترميز والصوت وCRF ومعدل البت وFPS يدويًا. تؤثر هذه التغييرات بشكل مباشر على حجم الملف وسرعة التحويل.',
       'dont_show_again': 'عدم الإظهار مرة أخرى',
@@ -2901,9 +3229,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'بدء التحويل',
       'trim_btn_skip': 'تخطي / تحويل كامل',
       'cancel': 'إلغاء',
+      'res_unsupported_hardware': 'غير مدعوم بالعتاد',
+      'res_adjusted_to_hardware': 'تم الضبط على {res}',
+      'hardware_limit_title': 'حد دقة العتاد',
+      'hardware_limit_desc': 'الحد الأقصى لمشفر العتاد في هذا الجهاز هو {target}. سيتم تحويل فيديو {source}، ولكن سيتم ضبط دقته إلى {target}. هل ترغب في المتابعة؟',
+      'hardware_limit_continue': 'متابعة',
+      'hardware_limit_cancel': 'إلغاء',
       'reset': 'إعادة تعيين',
     },
     'fr': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Moteur de transcodage',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Utilise les codecs matériels GPU/SoC pour une vitesse et une efficacité maximales',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Utilise les codecs logiciels Google AOSP pour une stabilité maximale',
+      'engine_fallback_toggle_title': 'Bascule automatique (Fallback)',
+      'engine_fallback_toggle_desc': 'Bascule automatiquement sur le moteur alternatif en cas d’échec du moteur principal',
+      'engine_fallback_notice': 'Basculé sur le moteur {engine}',
       'advanced_warning_title': 'Ouvrir les paramètres avancés ?',
       'advanced_warning_desc': 'Réglez manuellement le codec, l\'audio, le CRF, le débit et le FPS. Ces changements influent directement sur la taille du fichier et la vitesse d\'encodage.',
       'dont_show_again': 'Ne plus afficher',
@@ -3167,9 +3525,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Lancer la conversion',
       'trim_btn_skip': 'Passer / Conversion complète',
       'cancel': 'Annuler',
+      'res_unsupported_hardware': 'Non pris en charge par le matériel',
+      'res_adjusted_to_hardware': 'Ajusté à {res}',
+      'hardware_limit_title': 'Limite de résolution matérielle',
+      'hardware_limit_desc': 'L\'encodeur matériel de cet appareil est limité à {target}. Cette vidéo {source} sera tout de même convertie, mais sa résolution sera ajustée à {target}. Continuer ?',
+      'hardware_limit_continue': 'Continuer',
+      'hardware_limit_cancel': 'Annuler',
       'reset': 'Réinitialiser',
     },
     'ru': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Движок транскодирования',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Использует аппаратные кодеки GPU/SoC для максимальной скорости и энергоэффективности',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Использует программные кодеки Google AOSP для максимальной стабильности при сбоях аппаратуры',
+      'engine_fallback_toggle_title': 'Автоматическое переключение (Fallback)',
+      'engine_fallback_toggle_desc': 'Автоматически переключаться на альтернативный движок при сбое основного',
+      'engine_fallback_notice': 'Переключено на движок {engine}',
       'advanced_warning_title': 'Открыть расширенные настройки?',
       'advanced_warning_desc': 'Настройте кодек, звук, CRF, битрейт и FPS вручную. Эти изменения влияют на итоговый размер файла и скорость кодирования.',
       'dont_show_again': 'Больше не показывать',
@@ -3429,9 +3817,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Начать конвертацию',
       'trim_btn_skip': 'Пропустить / Полная конвертация',
       'cancel': 'Отмена',
+      'res_unsupported_hardware': 'Не поддерживается аппаратно',
+      'res_adjusted_to_hardware': 'Скорректировано до {res}',
+      'hardware_limit_title': 'Ограничение аппаратного разрешения',
+      'hardware_limit_desc': 'Аппаратный кодировщик устройства поддерживает максимум {target}. Видео {source} будет конвертировано, но разрешение изменится на {target}. Продолжить?',
+      'hardware_limit_continue': 'Продолжить',
+      'hardware_limit_cancel': 'Отмена',
       'reset': 'Сбросить',
     },
     'de': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcodierungs-Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Nutzt GPU/SoC-Hardware-Codecs für maximale Geschwindigkeit & Akkueffizienz',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Nutzt Google AOSP-Software-Codecs für maximale Stabilität bei Hardware-Problemen',
+      'engine_fallback_toggle_title': 'Automatischer Fallback',
+      'engine_fallback_toggle_desc': 'Automatisch zur alternativen Engine wechseln, wenn primäre Engine fehlschlägt',
+      'engine_fallback_notice': 'Zu {engine}-Engine gewechselt',
       'advanced_warning_title': 'Erweiterte Einstellungen öffnen?',
       'advanced_warning_desc': 'Passen Sie Codec, Audio, CRF, Bitrate und FPS manuell an. Diese Änderungen beeinflussen die Ausgabedateigröße und die Codiergeschwindigkeit.',
       'dont_show_again': 'Nicht mehr anzeigen',
@@ -3699,9 +4117,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Konvertierung starten',
       'trim_btn_skip': 'Überspringen / Vollständige Konvertierung',
       'cancel': 'Abbrechen',
+      'res_unsupported_hardware': 'Von Hardware nicht unterstützt',
+      'res_adjusted_to_hardware': 'Angepasst auf {res}',
+      'hardware_limit_title': 'Hardware-Auflösungslimit',
+      'hardware_limit_desc': 'Der Hardware-Encoder dieses Geräts ist auf maximal {target} begrenzt. Dieses {source}-Video wird konvertiert, die Auflösung wird jedoch auf {target} angepasst. Fortfahren?',
+      'hardware_limit_continue': 'Fortfahren',
+      'hardware_limit_cancel': 'Abbrechen',
       'reset': 'Zurücksetzen',
     },
     'it': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcoding Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_fallback_toggle_title': 'Automatic Engine Fallback',
+      'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
+      'engine_fallback_notice': 'Switched to {engine} engine',
       'advanced_warning_title': 'Aprire le impostazioni avanzate?',
       'advanced_warning_desc': 'Regola codec, audio, CRF, bitrate e FPS manualmente. Queste modifiche influiscono sulle dimensioni del file e sulla velocità di codifica.',
       'dont_show_again': 'Non mostrare più',
@@ -3966,9 +4414,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Avvia conversione',
       'trim_btn_skip': 'Salta / Conversione completa',
       'cancel': 'Annulla',
+      'res_unsupported_hardware': 'Non supportato dall\'hardware',
+      'res_adjusted_to_hardware': 'Adattato a {res}',
+      'hardware_limit_title': 'Limite risoluzione hardware',
+      'hardware_limit_desc': 'L\'encoder hardware di questo dispositivo ha un limite massimo di {target}. Questo video {source} verrà comunque convertito, ma la risoluzione sarà regolata a {target}. Continuare?',
+      'hardware_limit_continue': 'Continua',
+      'hardware_limit_cancel': 'Annulla',
       'reset': 'Ripristina',
     },
     'nl': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcoding Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_fallback_toggle_title': 'Automatic Engine Fallback',
+      'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
+      'engine_fallback_notice': 'Switched to {engine} engine',
       'advanced_warning_title': 'Geavanceerde instellingen openen?',
       'advanced_warning_desc': 'Pas handmatig codec, audio, CRF, bitrate en FPS aan. Deze wijzigingen zijn van invloed op de bestandsgrootte en de codeersnelheid.',
       'dont_show_again': 'Niet meer weergeven',
@@ -4234,9 +4712,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Conversie starten',
       'trim_btn_skip': 'Overslaan / Volledige conversie',
       'cancel': 'Annuleren',
+      'res_unsupported_hardware': 'Niet ondersteund door hardware',
+      'res_adjusted_to_hardware': 'Aangepast naar {res}',
+      'hardware_limit_title': 'Hardware resolutielimiet',
+      'hardware_limit_desc': 'De hardware-encoder van dit apparaat heeft een maximumlimiet van {target}. Deze {source}-video wordt wel geconverteerd, maar de resolutie wordt aangepast naar {target}. Doorgaan?',
+      'hardware_limit_continue': 'Doorgaan',
+      'hardware_limit_cancel': 'Annuleren',
       'reset': 'Herstellen',
     },
     'da': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcoding Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_fallback_toggle_title': 'Automatic Engine Fallback',
+      'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
+      'engine_fallback_notice': 'Switched to {engine} engine',
       'advanced_warning_title': 'Åbn avancerede indstillinger?',
       'advanced_warning_desc': 'Juster codec, lyd, CRF, bithastighed og FPS manuelt. Disse ændringer påvirker outputfilens størrelse og kodningshastigheden.',
       'dont_show_again': 'Vis ikke igen',
@@ -4499,9 +5007,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Start konvertering',
       'trim_btn_skip': 'Spring over / Fuld konvertering',
       'cancel': 'Annuller',
+      'res_unsupported_hardware': 'Ikke understøttet af hardware',
+      'res_adjusted_to_hardware': 'Justeret til {res}',
+      'hardware_limit_title': 'Hardwareopløsningsgrænse',
+      'hardware_limit_desc': 'Denne enheds hardwarekoder har en maksimal grænse på {target}. Denne {source}-video vil stadig blive konverteret, men opløsningen justeres til {target}. Fortsæt?',
+      'hardware_limit_continue': 'Fortsæt',
+      'hardware_limit_cancel': 'Annuller',
       'reset': 'Nulstil',
     },
     'fi': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcoding Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_fallback_toggle_title': 'Automatic Engine Fallback',
+      'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
+      'engine_fallback_notice': 'Switched to {engine} engine',
       'advanced_warning_title': 'Avataanko lisäasetukset?',
       'advanced_warning_desc': 'Säädä koodekkia, ääntä, CRF:ää, bittinopeutta ja FPS:ää manuaalisesti. Nämä muutokset vaikuttavat tiedostokokoon ja koodausnopeuteen.',
       'dont_show_again': 'Älä näytä uudelleen',
@@ -4764,9 +5302,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Aloita muunnos',
       'trim_btn_skip': 'Ohita / Täysi muunnos',
       'cancel': 'Peruuta',
+      'res_unsupported_hardware': 'Laitteisto ei tue',
+      'res_adjusted_to_hardware': 'Mukautettu tarkkuuteen {res}',
+      'hardware_limit_title': 'Laitteiston tarkkuusraja',
+      'hardware_limit_desc': 'Tämän laitteen laitteistokooderin enimmäisraja on {target}. Tämä {source}-video muunnetaan silti, mutta sen tarkkuudeksi asetetaan {target}. Jatketaanko?',
+      'hardware_limit_continue': 'Jatka',
+      'hardware_limit_cancel': 'Peruuta',
       'reset': 'Palauta',
     },
     'no': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcoding Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_fallback_toggle_title': 'Automatic Engine Fallback',
+      'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
+      'engine_fallback_notice': 'Switched to {engine} engine',
       'advanced_warning_title': 'Åpne avanserte innstillinger?',
       'advanced_warning_desc': 'Juster kodek, lyd, CRF, bithastighet og FPS manuelt. Disse endringene påvirker utdatafilens størrelse og kodingshastigheten.',
       'dont_show_again': 'Ikke vis igjen',
@@ -5027,9 +5595,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Start konvertering',
       'trim_btn_skip': 'Hopp over / Full konvertering',
       'cancel': 'Avbryt',
+      'res_unsupported_hardware': 'Ikke støttet av maskinvare',
+      'res_adjusted_to_hardware': 'Justert til {res}',
+      'hardware_limit_title': 'Maskinvareoppløsningsgrense',
+      'hardware_limit_desc': 'Denne enhetens maskinvarekoder har en maksimumsgrense på {target}. Denne {source}-videoen vil likevel bli konvertert, men oppløsningen justeres til {target}. Fortsett?',
+      'hardware_limit_continue': 'Fortsett',
+      'hardware_limit_cancel': 'Avbryt',
       'reset': 'Tilbakestill',
     },
     'sv': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcoding Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_fallback_toggle_title': 'Automatic Engine Fallback',
+      'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
+      'engine_fallback_notice': 'Switched to {engine} engine',
       'advanced_warning_title': 'Öppna avancerade inställningar?',
       'advanced_warning_desc': 'Justera kodek, ljud, CRF, bithastighet och FPS manuellt. Dessa ändringar påverkar utdatafilens storlek och kodningshastigheten.',
       'dont_show_again': 'Visa inte igen',
@@ -5294,9 +5892,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Starta konvertering',
       'trim_btn_skip': 'Hoppa över / Fullständig konvertering',
       'cancel': 'Avbryt',
+      'res_unsupported_hardware': 'Stöds inte av hårdvara',
+      'res_adjusted_to_hardware': 'Anpassad till {res}',
+      'hardware_limit_title': 'Gräns för maskinvaruupplösning',
+      'hardware_limit_desc': 'Den här enhetens hårdvaruomkodare har en maxgräns på {target}. Denna {source}-video kommer fortfarande att konverteras, men upplösningen anpassas till {target}. Vill du fortsätta?',
+      'hardware_limit_continue': 'Fortsätt',
+      'hardware_limit_cancel': 'Avbryt',
       'reset': 'Återställ',
     },
     'ms': {
+      'settings_progress_style_title': 'Gaya Animasi Progres',
+      'settings_progress_style_subtitle':
+          'Kustomisasi animasi loading untuk video dan audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Keduanya',
+      'style_v1_title': 'V1 • Cincin Orbit Ganda',
+
+      'style_v2_title': 'V2 • Cincin Riak Radar',
+
+      'style_v3_title': 'V3 • Lingkaran Ombak Fluida',
+
+      'style_v4_title': 'V4 • Bola Cairan Tenang',
+
+      'style_v5_title': 'V5 • Bar Kapsul Datar',
+
+      'settings_transcode_engine': 'Enjin Transcoding',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Menggunakan cip perkakasan GPU/SoC untuk kelajuan maksimum & penjimatan bateri',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Menggunakan codec perisian AOSP untuk kestabilan maksimum jika perkakasan bermasalah',
+      'engine_fallback_toggle_title': 'Beralih Automatik Apabila Gagal (Fallback)',
+      'engine_fallback_toggle_desc': 'Beralih secara automatik ke enjin alternatif jika enjin utama mengalami ralat',
+      'engine_fallback_notice': 'Beralih secara automatik ke enjin {engine}',
       'advanced_warning_title': 'Buka Tetapan Lanjutan?',
       'advanced_warning_desc': 'Laraskan codec, audio, CRF, kadar bit dan FPS secara manual. Perubahan ini mempengaruhi saiz fail dan kelajuan pengekodan.',
       'dont_show_again': 'Jangan tunjukkan lagi',
@@ -5559,9 +6187,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Mula Penukaran',
       'trim_btn_skip': 'Langkau / Penukaran Penuh',
       'cancel': 'Batal',
+      'res_unsupported_hardware': 'Tidak disokong perkakasan',
+      'res_adjusted_to_hardware': 'Dilaraskan kepada {res}',
+      'hardware_limit_title': 'Had Resolusi Perkakasan',
+      'hardware_limit_desc': 'Pengekod perkakasan peranti ini mempunyai had maksimum {target}. Video {source} ini akan tetap ditukar, tetapi resolusinya akan dilaraskan kepada {target}. Teruskan?',
+      'hardware_limit_continue': 'Teruskan',
+      'hardware_limit_cancel': 'Batal',
       'reset': 'Tetapkan Semula',
     },
     'vi': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcoding Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_fallback_toggle_title': 'Automatic Engine Fallback',
+      'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
+      'engine_fallback_notice': 'Switched to {engine} engine',
       'advanced_warning_title': 'Mở cài đặt nâng cao?',
       'advanced_warning_desc': 'Tùy chỉnh codec, âm thanh, CRF, tốc độ bit và FPS thủ công. Những thay đổi này ảnh hưởng trực tiếp đến kích thước tệp và tốc độ mã hóa.',
       'dont_show_again': 'Không hiển thị lại',
@@ -5829,9 +6487,39 @@ class AppLocalizations {
       'trim_btn_proceed': 'Bắt đầu chuyển đổi',
       'trim_btn_skip': 'Bỏ qua / Chuyển đổi toàn bộ',
       'cancel': 'Hủy',
+      'res_unsupported_hardware': 'Phần cứng không hỗ trợ',
+      'res_adjusted_to_hardware': 'Được điều chỉnh về {res}',
+      'hardware_limit_title': 'Giới hạn độ phân giải phần cứng',
+      'hardware_limit_desc': 'Bộ mã hóa phần cứng của thiết bị này có giới hạn tối đa là {target}. Video {source} này vẫn sẽ được chuyển đổi, nhưng độ phân giải sẽ được điều chỉnh thành {target}. Tiếp tục?',
+      'hardware_limit_continue': 'Tiếp tục',
+      'hardware_limit_cancel': 'Hủy',
       'reset': 'Đặt lại',
     },
     'th': {
+      'settings_progress_style_title': 'Progress Animation Style',
+      'settings_progress_style_subtitle':
+          'Customize loading bar animation for video and audio',
+      'scope_video': 'Video',
+      'scope_audio': 'Audio',
+      'scope_both': 'Both',
+      'style_v1_title': 'V1 • Dual Ring Orbit',
+
+      'style_v2_title': 'V2 • Radar Ripple Ring',
+
+      'style_v3_title': 'V3 • Circular Fluid Wave',
+
+      'style_v4_title': 'V4 • Calm Liquid Orb',
+
+      'style_v5_title': 'V5 • Flat Capsule Bar',
+
+      'settings_transcode_engine': 'Transcoding Engine',
+      'engine_hardware_title': 'Hardware',
+      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
+      'engine_software_title': 'Software',
+      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_fallback_toggle_title': 'Automatic Engine Fallback',
+      'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
+      'engine_fallback_notice': 'Switched to {engine} engine',
       'advanced_warning_title': 'เปิดการตั้งค่าขั้นสูงหรือไม่?',
       'advanced_warning_desc': 'ปรับแต่งตัวแปลงสัญญาณ เสียง CRF บิตเรต และ FPS ด้วยตนเอง การเปลี่ยนแปลงเหล่านี้ส่งผลต่อขนาดไฟล์และความเร็วในการเข้ารหัส',
       'dont_show_again': 'ไม่ต้องแสดงอีก',
@@ -6093,6 +6781,12 @@ class AppLocalizations {
       'trim_btn_proceed': 'เริ่มแปลงไฟล์',
       'trim_btn_skip': 'ข้าม / แปลงทั้งหมด',
       'cancel': 'ยกเลิก',
+      'res_unsupported_hardware': 'ฮาร์ดแวร์ไม่รองรับ',
+      'res_adjusted_to_hardware': 'ปรับเป็น {res}',
+      'hardware_limit_title': 'ขีดจำกัดความละเอียดฮาร์ดแวร์',
+      'hardware_limit_desc': 'ตัวเข้ารหัสฮาร์ดแวร์ของอุปกรณ์นี้รองรับสูงสุด {target} วิดีโอ {source} นี้จะยังคงถูกแปลง แต่ความละเอียดจะถูกปรับเป็น {target} ดำเนินการต่อหรือไม่?',
+      'hardware_limit_continue': 'ดำเนินการต่อ',
+      'hardware_limit_cancel': 'ยกเลิก',
       'reset': 'รีเซ็ต',
     },
   };

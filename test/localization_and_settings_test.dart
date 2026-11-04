@@ -26,6 +26,7 @@ import 'package:phantek_video_toolkit_vega/theme/app_theme.dart';
 import 'package:phantek_video_toolkit_vega/widgets/animated_flame_title.dart';
 import 'package:phantek_video_toolkit_vega/widgets/audio_extractor_card.dart';
 import 'package:phantek_video_toolkit_vega/widgets/conversion_options_card.dart';
+import 'package:phantek_video_toolkit_vega/widgets/progress_animation_painter.dart';
 import 'package:phantek_video_toolkit_vega/widgets/theme_animated_background.dart';
 import 'package:phantek_video_toolkit_vega/widgets/video_info_card.dart';
 
@@ -328,6 +329,8 @@ void main() {
       expect(settings.defaultVideoCodec, equals('h264'));
       expect(settings.fileNamingFormat, equals('suffix'));
       expect(settings.preserveMediaDate, isTrue);
+      expect(settings.transcodeEngine, equals('hardware'));
+      expect(settings.enableEngineFallback, isTrue);
     });
 
     test('Serialization to and from JSON works', () {
@@ -344,6 +347,8 @@ void main() {
         defaultVideoCodec: 'hevc',
         fileNamingFormat: 'timestamp',
         preserveMediaDate: false,
+        transcodeEngine: 'software',
+        enableEngineFallback: false,
       );
 
       final json = original.toJson();
@@ -361,6 +366,8 @@ void main() {
       expect(restored.preserveMediaDate, isFalse);
       expect(restored.outputDirectory, equals('/custom/storage/Movies'));
       expect(restored.audioOutputDirectory, equals('/custom/storage/Music'));
+      expect(restored.transcodeEngine, equals('software'));
+      expect(restored.enableEngineFallback, isFalse);
     });
 
     test('New theme, wakelock, and cache storage translations exist', () {
@@ -400,6 +407,14 @@ void main() {
         expect(l10n.t('naming_format_simple').isNotEmpty, isTrue);
         expect(l10n.t('settings_preserve_date').isNotEmpty, isTrue);
         expect(l10n.t('settings_preserve_date_desc').isNotEmpty, isTrue);
+        expect(l10n.t('settings_transcode_engine').isNotEmpty, isTrue);
+        expect(l10n.t('engine_hardware_title').isNotEmpty, isTrue);
+        expect(l10n.t('engine_hardware_desc').isNotEmpty, isTrue);
+        expect(l10n.t('engine_software_title').isNotEmpty, isTrue);
+        expect(l10n.t('engine_software_desc').isNotEmpty, isTrue);
+        expect(l10n.t('engine_fallback_toggle_title').isNotEmpty, isTrue);
+        expect(l10n.t('engine_fallback_toggle_desc').isNotEmpty, isTrue);
+        expect(l10n.t('engine_fallback_notice').isNotEmpty, isTrue);
       }
     });
 
@@ -498,6 +513,124 @@ void main() {
         await service.setCardOpacity(0.6);
         await service.resetToDefaults();
         expect(service.settings.cardOpacity, equals(1.0));
+      },
+    );
+
+    test('Dual engine settings and fallback methods work correctly', () async {
+      // 1. AppSettings sanitizeTranscodeEngine
+      expect(
+        AppSettings.sanitizeTranscodeEngine('software'),
+        equals('software'),
+      );
+      expect(
+        AppSettings.sanitizeTranscodeEngine('hardware'),
+        equals('hardware'),
+      );
+      expect(
+        AppSettings.sanitizeTranscodeEngine('unknown'),
+        equals('hardware'),
+      );
+      expect(
+        AppSettings.sanitizeTranscodeEngine(null),
+        equals('hardware'),
+      );
+
+      // 2. copyWith and equality
+      const base = AppSettings();
+      final updated = base.copyWith(
+        transcodeEngine: 'software',
+        enableEngineFallback: false,
+      );
+      expect(updated.transcodeEngine, equals('software'));
+      expect(updated.enableEngineFallback, isFalse);
+      expect(updated != base, isTrue);
+      expect(updated.hashCode != base.hashCode, isTrue);
+
+      final same = base.copyWith();
+      expect(same == base, isTrue);
+      expect(same.hashCode, equals(base.hashCode));
+
+      // 3. SettingsService updates
+      final service = SettingsService();
+      await service.setTranscodeEngine('software');
+      expect(service.settings.transcodeEngine, equals('software'));
+
+      await service.setEnableEngineFallback(false);
+      expect(service.settings.enableEngineFallback, isFalse);
+
+      await service.setTranscodeEngine('hardware');
+      expect(service.settings.transcodeEngine, equals('hardware'));
+
+      await service.setEnableEngineFallback(true);
+      expect(service.settings.enableEngineFallback, isTrue);
+    });
+
+    test(
+      'TransformerService passes transcodeEngine and enableEngineFallback to native channel',
+      () async {
+        final tempDir = Directory.systemTemp.createTempSync('transcode_engine_test_');
+        Map<dynamic, dynamic>? capturedArgs;
+        const channel = MethodChannel('com.phantek.lyra.vega/transformer');
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+              if (methodCall.method == 'transcodeVideo') {
+                capturedArgs = methodCall.arguments as Map<dynamic, dynamic>?;
+                final outPath = capturedArgs?['outputPath'] as String?;
+                if (outPath != null) {
+                  File(outPath).writeAsStringSync('dummy_output');
+                  return outPath;
+                }
+                return '/mock/path/output.mp4';
+              }
+              return null;
+            });
+
+        TransformerService.forceNativeForTesting = true;
+        try {
+          const video = VideoInfo(
+            filePath: '/mock/path/input.mp4',
+            fileName: 'input.mp4',
+            width: 1920,
+            height: 1080,
+            durationSeconds: 10.0,
+            bitrate: 4000000,
+            fps: 30.0,
+            codec: 'h264',
+            fileSizeBytes: 5000000,
+            hasAudio: true,
+          );
+
+          final customSettings = AppSettings(
+            transcodeEngine: 'software',
+            enableEngineFallback: false,
+            outputDirectory: tempDir.path,
+          );
+
+          const targetRes = VideoResolution(
+            label: '1080p',
+            width: 1920,
+            height: 1080,
+          );
+
+          await TransformerService.processVideo(
+            sourceVideo: video,
+            targetResolution: targetRes,
+            appSettings: customSettings,
+            onProgress: (progress, stats, [size]) {},
+            onLog: (msg) {},
+          );
+
+          expect(capturedArgs, isNotNull);
+          expect(capturedArgs!['transcodeEngine'], equals('software'));
+          expect(capturedArgs!['enableEngineFallback'], isFalse);
+        } finally {
+          TransformerService.forceNativeForTesting = false;
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(channel, null);
+          try {
+            tempDir.deleteSync(recursive: true);
+          } catch (_) {}
+        }
       },
     );
 
@@ -5318,6 +5451,411 @@ void main() {
 
         expect(find.text('video_touring_23062026.mp4'), findsOneWidget);
         expect(find.text('239500.ts'), findsNothing);
+      });
+    });
+
+    group('Progress Animation Styles (V1-V5) & Localization Tests', () {
+      test('AppSettings has default v1 progress style for video and audio', () {
+        const settings = AppSettings();
+        expect(settings.videoProgressStyle, equals('v1'));
+        expect(settings.audioProgressStyle, equals('v1'));
+      });
+
+      test('AppSettings.sanitizeProgressStyle normalizes styles and maps a1/a3', () {
+        expect(AppSettings.sanitizeProgressStyle('v1'), equals('v1'));
+        expect(AppSettings.sanitizeProgressStyle('V2'), equals('v2'));
+        expect(AppSettings.sanitizeProgressStyle('  v3  '), equals('v3'));
+        expect(AppSettings.sanitizeProgressStyle('V4'), equals('v4'));
+        expect(AppSettings.sanitizeProgressStyle('V5'), equals('v5'));
+        expect(AppSettings.sanitizeProgressStyle('a1'), equals('v4'));
+        expect(AppSettings.sanitizeProgressStyle('A1'), equals('v4'));
+        expect(AppSettings.sanitizeProgressStyle('a3'), equals('v5'));
+        expect(AppSettings.sanitizeProgressStyle('A3'), equals('v5'));
+        expect(AppSettings.sanitizeProgressStyle(null), equals('v1'));
+        expect(AppSettings.sanitizeProgressStyle('invalid'), equals('v1'));
+        expect(AppSettings.sanitizeProgressStyle('unknown', 'v2'), equals('v2'));
+      });
+
+      test('AppSettings copyWith, serialization, equality, and hashCode support progress styles', () {
+        const original = AppSettings();
+        final modified = original.copyWith(
+          videoProgressStyle: 'v3',
+          audioProgressStyle: 'v5',
+        );
+        expect(modified.videoProgressStyle, equals('v3'));
+        expect(modified.audioProgressStyle, equals('v5'));
+
+        final json = modified.toJson();
+        expect(json['videoProgressStyle'], equals('v3'));
+        expect(json['audioProgressStyle'], equals('v5'));
+
+        final restored = AppSettings.fromJson(json);
+        expect(restored.videoProgressStyle, equals('v3'));
+        expect(restored.audioProgressStyle, equals('v5'));
+        expect(restored, equals(modified));
+        expect(restored.hashCode, equals(modified.hashCode));
+
+        // Test fromJson with legacy a1 / a3 values
+        final legacyJson = {
+          'videoProgressStyle': 'a1',
+          'audioProgressStyle': 'a3',
+        };
+        final legacyRestored = AppSettings.fromJson(legacyJson);
+        expect(legacyRestored.videoProgressStyle, equals('v4'));
+        expect(legacyRestored.audioProgressStyle, equals('v5'));
+      });
+
+      test('SettingsService updates video, audio, and both progress styles', () async {
+        SharedPreferences.setMockInitialValues({});
+        final service = SettingsService();
+        await service.init();
+
+        expect(service.settings.videoProgressStyle, equals('v1'));
+        expect(service.settings.audioProgressStyle, equals('v1'));
+
+        await service.setVideoProgressStyle('v2');
+        expect(service.settings.videoProgressStyle, equals('v2'));
+        expect(service.settings.audioProgressStyle, equals('v1'));
+
+        await service.setAudioProgressStyle('v4');
+        expect(service.settings.videoProgressStyle, equals('v2'));
+        expect(service.settings.audioProgressStyle, equals('v4'));
+
+        await service.setBothProgressStyles('v5');
+        expect(service.settings.videoProgressStyle, equals('v5'));
+        expect(service.settings.audioProgressStyle, equals('v5'));
+
+        await service.resetToDefaults();
+        expect(service.settings.videoProgressStyle, equals('v1'));
+        expect(service.settings.audioProgressStyle, equals('v1'));
+      });
+
+      test('All 23 supported languages have all progress style localization keys', () {
+        const keys = [
+          'settings_progress_style_title',
+          'settings_progress_style_subtitle',
+          'scope_video',
+          'scope_audio',
+          'scope_both',
+          'style_v1_title',
+          'style_v2_title',
+          'style_v3_title',
+          'style_v4_title',
+          'style_v5_title',
+        ];
+
+        for (final code in supportedCodes) {
+          final l10n = AppLocalizations(code);
+          for (final key in keys) {
+            final translated = l10n.t(key);
+            expect(translated.isNotEmpty, isTrue, reason: 'Key $key must not be empty in $code');
+            expect(translated, isNot(equals(key)), reason: 'Key $key must be translated in $code');
+          }
+        }
+      });
+
+      testWidgets('SettingsScreen displays progress style tile and opens bottom sheet with scope toggle and styles', (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final service = SettingsService();
+        await service.init();
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: SettingsScreen(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final l10n = service.l10n;
+        final titleFinder = find.text(l10n.t('settings_progress_style_title'));
+        expect(titleFinder, findsOneWidget);
+
+        await tester.scrollUntilVisible(titleFinder, 100);
+        await tester.pumpAndSettle();
+
+        await tester.tap(titleFinder);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ProgressStylePreviewBox), findsOneWidget);
+        expect(find.text('68%'), findsOneWidget);
+        expect(find.text(l10n.t('scope_video')), findsOneWidget);
+        expect(find.text(l10n.t('scope_audio')), findsOneWidget);
+        expect(find.text(l10n.t('scope_both')), findsOneWidget);
+
+        expect(find.text(l10n.t('style_v1_title')), findsOneWidget);
+        expect(find.text(l10n.t('style_v2_title')), findsOneWidget);
+        expect(find.text(l10n.t('style_v3_title')), findsOneWidget);
+        expect(find.text(l10n.t('style_v4_title')), findsOneWidget);
+
+        final v5Finder = find.text(l10n.t('style_v5_title'));
+        await tester.scrollUntilVisible(v5Finder, 50, scrollable: find.byType(Scrollable).last);
+        expect(v5Finder, findsOneWidget);
+
+        final v3Finder = find.text(l10n.t('style_v3_title'));
+        await tester.scrollUntilVisible(v3Finder, 50, scrollable: find.byType(Scrollable).last);
+        await tester.tap(v3Finder);
+        await tester.pumpAndSettle();
+        expect(service.settings.videoProgressStyle, equals('v3'));
+        expect(service.settings.audioProgressStyle, equals('v3'));
+        final previewV3 = tester.widget<ProgressStylePreviewBox>(find.byType(ProgressStylePreviewBox));
+        expect(previewV3.style, equals('v3'));
+
+        await tester.tap(find.text(l10n.t('scope_video')));
+        await tester.pumpAndSettle();
+
+        final v1Finder = find.text(l10n.t('style_v1_title'));
+        await tester.ensureVisible(v1Finder);
+        await tester.pumpAndSettle();
+        await tester.tap(v1Finder);
+        await tester.pumpAndSettle();
+        expect(service.settings.videoProgressStyle, equals('v1'));
+        expect(service.settings.audioProgressStyle, equals('v3'));
+        final previewV1 = tester.widget<ProgressStylePreviewBox>(find.byType(ProgressStylePreviewBox));
+        expect(previewV1.style, equals('v1'));
+
+        await tester.tap(find.text(l10n.t('scope_audio')));
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(v5Finder);
+        await tester.pumpAndSettle();
+        await tester.tap(v5Finder);
+        await tester.pumpAndSettle();
+        expect(service.settings.videoProgressStyle, equals('v1'));
+        expect(service.settings.audioProgressStyle, equals('v5'));
+        final previewV5 = tester.widget<ProgressStylePreviewBox>(find.byType(ProgressStylePreviewBox));
+        expect(previewV5.style, equals('v5'));
+      });
+
+      testWidgets('ProgressStylePreviewBox renders active style preview correctly for all styles (v1 - v5)', (tester) async {
+        final styles = ['v1', 'v2', 'v3', 'v4', 'v5'];
+        final theme = AppTheme.getTheme('vega_default');
+
+        for (final style in styles) {
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: theme,
+              home: Scaffold(
+                body: Center(
+                  child: ProgressStylePreviewBox(
+                    style: style,
+                    theme: theme,
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(find.byType(ProgressStylePreviewBox), findsOneWidget);
+          expect(find.text('68%'), findsOneWidget);
+          expect(find.byType(CustomPaint), findsWidgets);
+        }
+      });
+
+      testWidgets('ProgressStylePreviewBox respects MediaQuery disableAnimations (reduced motion)', (tester) async {
+        final theme = AppTheme.getTheme('oled_pure');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            home: MediaQuery(
+              data: const MediaQueryData(disableAnimations: true),
+              child: Scaffold(
+                body: Center(
+                  child: ProgressStylePreviewBox(
+                    style: 'v2',
+                    theme: theme,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ProgressStylePreviewBox), findsOneWidget);
+        expect(find.text('68%'), findsOneWidget);
+      });
+    });
+
+    group('Hardware encoder resolution capabilities tests', () {
+      tearDown(() {
+        TransformerService.mockResolutionCapabilities = null;
+      });
+
+      test('All 23 supported languages have all hardware limit localization keys', () {
+        const keys = [
+          'res_unsupported_hardware',
+          'res_adjusted_to_hardware',
+          'hardware_limit_title',
+          'hardware_limit_desc',
+          'hardware_limit_continue',
+          'hardware_limit_cancel',
+        ];
+
+        for (final code in supportedCodes) {
+          final l10n = AppLocalizations(code);
+          for (final key in keys) {
+            final translated = l10n.t(key);
+            expect(translated.isNotEmpty, isTrue, reason: 'Key $key must not be empty in $code');
+            expect(translated, isNot(equals(key)), reason: 'Key $key must be translated in $code');
+          }
+        }
+      });
+
+      test('TransformerService.getResolutionCapabilities returns default on non-Android and honors mock', () async {
+        TransformerService.mockResolutionCapabilities = null;
+        final defaultCaps = await TransformerService.getResolutionCapabilities();
+        expect(defaultCaps['4K'], isTrue);
+        expect(defaultCaps['2K'], isTrue);
+        expect(defaultCaps['maxResolution'], '4K');
+
+        TransformerService.mockResolutionCapabilities = {
+          '4K': false,
+          '2K': false,
+          '1080p': true,
+          '720p': true,
+          '480p': true,
+          '360p': true,
+          'maxResolution': '1080p',
+        };
+
+        final mockedCaps = await TransformerService.getResolutionCapabilities();
+        expect(mockedCaps['4K'], isFalse);
+        expect(mockedCaps['2K'], isFalse);
+        expect(mockedCaps['1080p'], isTrue);
+        expect(mockedCaps['maxResolution'], '1080p');
+      });
+
+      testWidgets('ConversionOptionsCard disables 2K in downscale mode when hardware lacks 2K support', (tester) async {
+        final l10n = const AppLocalizations('id');
+        const source4K = VideoInfo(
+          filePath: '/storage/sample_4k.mp4',
+          fileName: 'sample_4k.mp4',
+          width: 3840,
+          height: 2160,
+          durationSeconds: 60,
+          bitrate: 20000000,
+          fps: 30,
+          codec: 'h264',
+          fileSizeBytes: 100000000,
+        );
+
+        final downscaleResolutions = VideoResolution.standardResolutions
+            .where((r) => r.height < 2160)
+            .toList();
+
+        VideoResolution selected = downscaleResolutions.firstWhere((r) => r.label == '1080p');
+
+        const caps = <String, dynamic>{
+          '4K': false,
+          '2K': false,
+          '1080p': true,
+          '720p': true,
+          '480p': true,
+          '360p': true,
+          'maxResolution': '1080p',
+        };
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.getTheme('oled_pure'),
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (context, setState) {
+                  return SingleChildScrollView(
+                    child: ConversionOptionsCard(
+                      sourceVideo: source4K,
+                      resolutions: downscaleResolutions,
+                      selectedResolution: selected,
+                      resolutionCapabilities: caps,
+                      encodingOptions: const EncodingOptions(),
+                      onResolutionChanged: (res) {
+                        setState(() => selected = res);
+                      },
+                      onOptionsChanged: (_) {},
+                      l10n: l10n,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text(l10n.t('res_unsupported_hardware')), findsOneWidget);
+        expect(find.byIcon(Icons.block_rounded), findsOneWidget);
+
+        await tester.tap(find.text('2K'));
+        await tester.pumpAndSettle();
+        expect(selected.label, equals('1080p'));
+      });
+
+      testWidgets('ConversionOptionsCard keeps Original 2K active and shows adjusted message in Convert mode', (tester) async {
+        final l10n = const AppLocalizations('id');
+        const source2K = VideoInfo(
+          filePath: '/storage/sample_2k.mp4',
+          fileName: 'sample_2k.mp4',
+          width: 2560,
+          height: 1440,
+          durationSeconds: 60,
+          bitrate: 15000000,
+          fps: 30,
+          codec: 'h264',
+          fileSizeBytes: 80000000,
+        );
+
+        final convertResolutions = [
+          VideoResolution(
+            label: 'Original (${source2K.resolution})',
+            width: source2K.width,
+            height: source2K.height,
+          ),
+        ];
+
+        VideoResolution selected = convertResolutions.first;
+
+        const caps = <String, dynamic>{
+          '4K': false,
+          '2K': false,
+          '1080p': true,
+          '720p': true,
+          '480p': true,
+          '360p': true,
+          'maxResolution': '1080p',
+        };
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.getTheme('oled_pure'),
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (context, setState) {
+                  return SingleChildScrollView(
+                    child: ConversionOptionsCard(
+                      sourceVideo: source2K,
+                      resolutions: convertResolutions,
+                      selectedResolution: selected,
+                      resolutionCapabilities: caps,
+                      encodingOptions: const EncodingOptions(),
+                      onResolutionChanged: (res) {
+                        setState(() => selected = res);
+                      },
+                      onOptionsChanged: (_) {},
+                      l10n: l10n,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final adjustedMsg = l10n.t('res_adjusted_to_hardware', args: {'res': '1080p'});
+        expect(find.text(adjustedMsg), findsOneWidget);
+        expect(find.byIcon(Icons.block_rounded), findsNothing);
       });
     });
   });

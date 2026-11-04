@@ -54,8 +54,40 @@ class _HomeScreenState extends State<HomeScreen> {
   Uint8List? _videoThumbnail;
   VideoResolution? _selectedResolution;
   EncodingOptions _encodingOptions = const EncodingOptions();
+  Map<String, dynamic>? _resolutionCapabilities;
   bool _isLoading = false;
   String _loadingMessage = '';
+
+  Future<void> _loadResolutionCapabilities({String? codec}) async {
+    final effectiveCodec = codec ?? _encodingOptions.codec.name;
+    try {
+      final caps = await TransformerService.getResolutionCapabilities(
+        codec: effectiveCodec,
+      );
+      if (mounted) {
+        setState(() {
+          _resolutionCapabilities = caps;
+          if (_selectedMode == _AppMode.downscale &&
+              _selectedResolution != null) {
+            final isSupported =
+                caps[_selectedResolution!.label] as bool? ?? true;
+            if (!isSupported) {
+              final downscaleOptions = _getResolutionsForMode(
+                _AppMode.downscale,
+              );
+              final firstSupported = downscaleOptions.firstWhere(
+                (r) => (caps[r.label] as bool? ?? true),
+                orElse: () => downscaleOptions.first,
+              );
+              _selectedResolution = firstSupported;
+            }
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading resolution capabilities: $e');
+    }
+  }
 
   @override
   void initState() {
@@ -174,6 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       });
       if (info != null) {
+        _loadResolutionCapabilities(codec: preferredCodec.name);
         TransformerService.getVideoThumbnail(path).then((thumb) {
           if (mounted && _videoInfo?.filePath == path) {
             setState(() => _videoThumbnail = thumb);
@@ -491,7 +524,14 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedMode = mode;
       final resolutions = _getResolutionsForMode(mode);
       if (resolutions.isNotEmpty) {
-        _selectedResolution = resolutions.first;
+        if (mode == _AppMode.downscale && _resolutionCapabilities != null) {
+          _selectedResolution = resolutions.firstWhere(
+            (r) => (_resolutionCapabilities![r.label] as bool? ?? true),
+            orElse: () => resolutions.first,
+          );
+        } else {
+          _selectedResolution = resolutions.first;
+        }
       }
     });
   }
@@ -616,11 +656,97 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (!mounted) return;
 
+    final maxRes =
+        _resolutionCapabilities?['maxResolution'] as String? ?? '1080p';
+    final isSourceUnsupported =
+        _resolutionCapabilities != null &&
+        (_resolutionCapabilities![_videoInfo!.resolution] == false);
+
+    if (_selectedMode == _AppMode.convert && isSourceUnsupported) {
+      final l10n = _settingsService.l10n;
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) {
+          final theme = Theme.of(ctx);
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withAlpha(25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.amber,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.t('hardware_limit_title'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              l10n.t(
+                'hardware_limit_desc',
+                args: {'source': _videoInfo!.resolution, 'target': maxRes},
+              ),
+              style: TextStyle(
+                fontSize: 13.5,
+                height: 1.45,
+                color: theme.colorScheme.onSurface.withAlpha(200),
+              ),
+            ),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: Text(l10n.t('hardware_limit_cancel')),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: Text(l10n.t('hardware_limit_continue')),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      );
+
+      if (proceed != true) return;
+    }
+
+    if (!mounted) return;
+
+    final targetResForProcessing =
+        (_selectedMode == _AppMode.convert && isSourceUnsupported)
+        ? (VideoResolution.standardResolutions.firstWhere(
+            (r) => r.label == maxRes,
+            orElse: () => fallbackRes,
+          ))
+        : fallbackRes;
+
     final configuredOptions = await Navigator.of(context).push<EncodingOptions>(
       MaterialPageRoute(
         builder: (context) => TrimPreviewScreen(
           videoInfo: _videoInfo!,
-          targetResolution: fallbackRes,
+          targetResolution: targetResForProcessing,
           encodingOptions: options,
           appSettings: _settingsService.settings,
           isAudioExtraction: _selectedMode == _AppMode.extractor,
@@ -634,7 +760,7 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(
         builder: (context) => ProcessingScreen(
           videoInfo: _videoInfo!,
-          targetResolution: fallbackRes,
+          targetResolution: targetResForProcessing,
           encodingOptions: configuredOptions,
           appSettings: _settingsService.settings,
           isAudioExtraction: _selectedMode == _AppMode.extractor,
@@ -974,11 +1100,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   resolutions: _getResolutionsForMode(_selectedMode),
                   selectedResolution: _selectedResolution,
                   encodingOptions: _encodingOptions,
+                  resolutionCapabilities: _resolutionCapabilities,
                   onResolutionChanged: (res) =>
                       setState(() => _selectedResolution = res),
                   onOptionsChanged: (opts) {
+                    final oldCodec = _encodingOptions.codec;
                     setState(() => _encodingOptions = opts);
                     _settingsService.saveEncodingOptions(opts);
+                    if (oldCodec != opts.codec) {
+                      _loadResolutionCapabilities(codec: opts.codec.name);
+                    }
                   },
                   l10n: l10n,
                 ),

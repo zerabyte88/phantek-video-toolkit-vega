@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
@@ -22,6 +23,7 @@ import '../services/localization_service.dart';
 import '../services/media_scanner_service.dart';
 import '../services/settings_service.dart';
 import '../widgets/app_glass_card.dart';
+import '../widgets/progress_animation_painter.dart';
 import '../widgets/theme_animated_background.dart';
 
 class ProcessingScreen extends StatefulWidget {
@@ -835,6 +837,15 @@ class _ProcessingScreenState extends State<ProcessingScreen>
               ? 0.0
               : _progress.clamp(0.0, 1.0));
 
+    final settings = widget.appSettings != const AppSettings()
+        ? widget.appSettings
+        : _settingsService.settings;
+    final activeStyle = AppSettings.sanitizeProgressStyle(
+      widget.isAudioExtraction
+          ? settings.audioProgressStyle
+          : settings.videoProgressStyle,
+    );
+
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0.0, end: targetProgress),
       duration: const Duration(milliseconds: 600),
@@ -845,179 +856,232 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             : l10n.t('proc_converting');
         final currentStatus = _isProcessing ? actionText : _statusText;
 
-        return Column(
-          children: [
-            if (!widget.isAudioExtraction)
-              SizedBox(
-                width: 176,
-                height: 176,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    RepaintBoundary(
-                      child: AnimatedBuilder(
-                        animation: _pulseController,
-                        builder: (context, _) {
-                          return CustomPaint(
-                            size: const Size(176, 176),
-                            painter: _DualRingProgressPainter(
-                              progress: animatedProgress,
-                              animationValue: _pulseController.value,
-                              isProcessing: _isProcessing,
-                              isSuccess: _isSuccess,
-                              color: progressPrimary,
-                              secondaryColor: progressSecondary,
-                              deepColor: palette.deep,
-                              crestColor: palette.crest,
-                              basinColor: palette.basin,
-                              trackColor: palette.track,
-                              isWaveform: false,
-                              isDark: isDark,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (_isProcessing) ...[
-                          Text(
-                            _formatPercentage(animatedProgress),
-                            style: TextStyle(
-                              fontSize: 34,
-                              fontWeight: FontWeight.w700,
-                              color: progressPrimary,
-                              letterSpacing: -0.5,
-                              shadows: textOutlineShadows,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
-                          if (_speedText.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              _speedText,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.onSurface.withAlpha(
-                                  190,
-                                ),
-                                letterSpacing: 0,
-                                shadows: textOutlineShadows,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ] else ...[
-                          Icon(
-                            _isSuccess
-                                ? Icons.check_circle_rounded
-                                : Icons.error_rounded,
-                            size: 40,
-                            color: progressPrimary,
-                            shadows: textOutlineShadows,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _isSuccess ? _formatPercentage(1.0) : 'Error',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: progressPrimary,
-                              letterSpacing: 0,
-                              shadows: textOutlineShadows,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+        final percentageWidget = _isProcessing
+            ? Text(
+                _formatPercentage(animatedProgress),
+                style: TextStyle(
+                  fontSize: 38,
+                  fontWeight: FontWeight.w700,
+                  color: progressPrimary,
+                  letterSpacing: -0.5,
+                  shadows: textOutlineShadows,
+                  fontFeatures: const [
+                    FontFeature.tabularFigures(),
                   ],
                 ),
               )
-            else ...[
-              if (_isProcessing) ...[
-                Text(
-                  _formatPercentage(animatedProgress),
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w600,
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _isSuccess
+                        ? Icons.check_circle_rounded
+                        : Icons.error_rounded,
+                    size: 40,
                     color: progressPrimary,
-                    letterSpacing: -0.5,
                     shadows: textOutlineShadows,
-                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
-                ),
-                if (_speedText.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
-                    _speedText,
+                    _isSuccess ? _formatPercentage(1.0) : 'Error',
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: theme.colorScheme.onSurface.withAlpha(140),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: progressPrimary,
                       letterSpacing: 0,
                       shadows: textOutlineShadows,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                      fontFeatures: const [
+                        FontFeature.tabularFigures(),
+                      ],
                     ),
                   ),
                 ],
-              ] else ...[
-                Icon(
-                  _isSuccess ? Icons.check_circle_rounded : Icons.error_rounded,
-                  size: 36,
-                  color: progressPrimary,
-                  shadows: textOutlineShadows,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _isSuccess ? _formatPercentage(1.0) : 'Error',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: progressPrimary,
-                    letterSpacing: 0,
-                    shadows: textOutlineShadows,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+              );
+
+        Widget indicatorWidget;
+        switch (activeStyle) {
+          case 'v1': // Dual Ring Orbit: 180x180 dp, center percentage 38sp
+            indicatorWidget = SizedBox(
+              width: 180,
+              height: 180,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _pulseController,
+                      builder: (context, _) => CustomPaint(
+                        size: const Size(180, 180),
+                        painter: _DualRingProgressPainter(
+                          progress: animatedProgress,
+                          animationValue: _pulseController.value,
+                          isProcessing: _isProcessing,
+                          isSuccess: _isSuccess,
+                          color: progressPrimary,
+                          secondaryColor: progressSecondary,
+                          deepColor: palette.deep,
+                          crestColor: palette.crest,
+                          basinColor: palette.basin,
+                          trackColor: palette.track,
+                          style: 'v1',
+                          isDark: isDark,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ],
-              const SizedBox(height: 14),
-              SizedBox(
-                width: 300,
-                height: 92,
-                child: RepaintBoundary(
-                  child: AnimatedBuilder(
-                    animation: _pulseController,
-                    builder: (context, _) => CustomPaint(
-                      size: const Size(300, 92),
-                      painter: _DualRingProgressPainter(
-                        progress: animatedProgress,
-                        animationValue: _pulseController.value,
-                        isProcessing: _isProcessing,
-                        isSuccess: _isSuccess,
-                        color: progressPrimary,
-                        secondaryColor: progressSecondary,
-                        deepColor: palette.deep,
-                        crestColor: palette.crest,
-                        basinColor: palette.basin,
-                        trackColor: palette.track,
-                        isWaveform: true,
-                        isDark: isDark,
+                  percentageWidget,
+                ],
+              ),
+            );
+            break;
+
+          case 'v2': // Radar Ripple Ring: 180x180 dp, center percentage 38sp
+            indicatorWidget = SizedBox(
+              width: 180,
+              height: 180,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _pulseController,
+                      builder: (context, _) => CustomPaint(
+                        size: const Size(180, 180),
+                        painter: _DualRingProgressPainter(
+                          progress: animatedProgress,
+                          animationValue: _pulseController.value,
+                          isProcessing: _isProcessing,
+                          isSuccess: _isSuccess,
+                          color: progressPrimary,
+                          secondaryColor: progressSecondary,
+                          deepColor: palette.deep,
+                          crestColor: palette.crest,
+                          basinColor: palette.basin,
+                          trackColor: palette.track,
+                          style: 'v2',
+                          isDark: isDark,
+                        ),
+                      ),
+                    ),
+                  ),
+                  percentageWidget,
+                ],
+              ),
+            );
+            break;
+
+          case 'v3': // Circular Fluid Wave: 180x180 dp, center percentage 38sp
+            indicatorWidget = SizedBox(
+              width: 180,
+              height: 180,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _pulseController,
+                      builder: (context, _) => CustomPaint(
+                        size: const Size(180, 180),
+                        painter: _DualRingProgressPainter(
+                          progress: animatedProgress,
+                          animationValue: _pulseController.value,
+                          isProcessing: _isProcessing,
+                          isSuccess: _isSuccess,
+                          color: progressPrimary,
+                          secondaryColor: progressSecondary,
+                          deepColor: palette.deep,
+                          crestColor: palette.crest,
+                          basinColor: palette.basin,
+                          trackColor: palette.track,
+                          style: 'v3',
+                          isDark: isDark,
+                        ),
+                      ),
+                    ),
+                  ),
+                  percentageWidget,
+                ],
+              ),
+            );
+            break;
+
+          case 'v4': // Calm Liquid Orb: 180x180 dp, center percentage 38sp
+            indicatorWidget = SizedBox(
+              width: 180,
+              height: 180,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _pulseController,
+                      builder: (context, _) => CustomPaint(
+                        size: const Size(180, 180),
+                        painter: _DualRingProgressPainter(
+                          progress: animatedProgress,
+                          animationValue: _pulseController.value,
+                          isProcessing: _isProcessing,
+                          isSuccess: _isSuccess,
+                          color: progressPrimary,
+                          secondaryColor: progressSecondary,
+                          deepColor: palette.deep,
+                          crestColor: palette.crest,
+                          basinColor: palette.basin,
+                          trackColor: palette.track,
+                          style: 'v4',
+                          isDark: isDark,
+                        ),
+                      ),
+                    ),
+                  ),
+                  percentageWidget,
+                ],
+              ),
+            );
+            break;
+
+          case 'v5': // Flat Capsule Bar: 280x16 dp, center percentage 38sp above bar
+          default:
+            indicatorWidget = Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                percentageWidget,
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: 280,
+                  height: 16,
+                  child: RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _pulseController,
+                      builder: (context, _) => CustomPaint(
+                        size: const Size(280, 16),
+                        painter: _DualRingProgressPainter(
+                          progress: animatedProgress,
+                          animationValue: _pulseController.value,
+                          isProcessing: _isProcessing,
+                          isSuccess: _isSuccess,
+                          color: progressPrimary,
+                          secondaryColor: progressSecondary,
+                          deepColor: palette.deep,
+                          crestColor: palette.crest,
+                          basinColor: palette.basin,
+                          trackColor: palette.track,
+                          style: 'v5',
+                          isDark: isDark,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            );
+            break;
+        }
+
+        return Column(
+          children: [
+            indicatorWidget,
             const SizedBox(height: 16),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -1678,6 +1742,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         ],
       );
     } else {
+      final isDark = theme.brightness == Brightness.dark;
       final resolvedThreads = DeviceSpecHelper.resolveThreadCount(
         video: widget.videoInfo,
         requestedThreads: widget.appSettings.cpuThreads,
@@ -1728,12 +1793,15 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           if (_errorMessage != null && _errorMessage!.isNotEmpty) ...[
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: Colors.red.withAlpha(20),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.red.withAlpha(60)),
+                color: Colors.red.withAlpha(isDark ? 24 : 14),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.redAccent.withAlpha(isDark ? 80 : 60),
+                  width: 1.0,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1746,26 +1814,110 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                         size: 16,
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        l10n.t('error_details'),
-                        style: const TextStyle(
-                          color: Colors.redAccent,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                      Expanded(
+                        child: Text(
+                          l10n.t('error_details'),
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12.5,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            await Clipboard.setData(
+                              ClipboardData(text: _errorMessage!),
+                            );
+                            if (mounted) {
+                              messenger.hideCurrentSnackBar();
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.check_circle_rounded,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(l10n.t('error_copied')),
+                                      ),
+                                    ],
+                                  ),
+                                  duration: const Duration(seconds: 2),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  backgroundColor: const Color(0xFF1E293B),
+                                ),
+                              );
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent.withAlpha(isDark ? 30 : 20),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: Colors.redAccent.withAlpha(70),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.copy_rounded,
+                                  size: 12,
+                                  color: Colors.redAccent,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  l10n.t('error_copy'),
+                                  style: const TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 100),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.black.withAlpha(50)
+                          : Colors.black.withAlpha(10),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    constraints: const BoxConstraints(maxHeight: 110),
                     child: SingleChildScrollView(
-                      child: Text(
+                      physics: const BouncingScrollPhysics(),
+                      child: SelectableText(
                         _errorMessage!,
                         style: TextStyle(
                           fontFamily: 'monospace',
                           fontSize: 9.5,
-                          color: theme.colorScheme.onSurface.withAlpha(180),
+                          height: 1.35,
+                          color: theme.colorScheme.onSurface.withAlpha(190),
                         ),
                       ),
                     ),
@@ -2244,248 +2396,21 @@ class _SuccessBottomSheet extends StatelessWidget {
   }
 }
 
-class _DualRingProgressPainter extends CustomPainter {
-  final double progress;
-  final double animationValue;
-  final bool isProcessing;
-  final bool isSuccess;
-  final Color color;
-  final Color secondaryColor;
-  final Color deepColor;
-  final Color crestColor;
-  final Color basinColor;
-  final Color trackColor;
-  final bool isWaveform;
-  final bool isDark;
-
+class _DualRingProgressPainter extends DualRingProgressPainter {
   _DualRingProgressPainter({
-    required this.progress,
-    required this.animationValue,
-    required this.isProcessing,
-    required this.isSuccess,
-    required this.color,
-    required this.secondaryColor,
-    required this.deepColor,
-    required this.crestColor,
-    required this.basinColor,
-    required this.trackColor,
-    required this.isWaveform,
-    required this.isDark,
+    required super.progress,
+    required super.animationValue,
+    required super.isProcessing,
+    required super.isSuccess,
+    required super.color,
+    required super.secondaryColor,
+    required super.deepColor,
+    required super.crestColor,
+    required super.basinColor,
+    required super.trackColor,
+    required super.isDark,
+    super.style,
   });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (size.width <= 0 || size.height <= 0) return;
-    if (isWaveform) {
-      _paintWaveform(canvas, size);
-    } else {
-      _paintLiquidOrb(canvas, size);
-    }
-  }
-
-  void _paintLiquidOrb(Canvas canvas, Size size) {
-    final diameter = math.min(size.width, size.height);
-    final radius = (diameter - 6.0) / 2.0;
-    if (radius <= 0) return;
-
-    final center = Offset(size.width / 2, size.height / 2);
-    final orbRect = Rect.fromCircle(center: center, radius: radius);
-
-    canvas.save();
-    canvas.clipPath(Path()..addOval(orbRect));
-
-    canvas.drawRect(
-      orbRect,
-      Paint()
-        ..color = basinColor
-        ..style = PaintingStyle.fill,
-    );
-
-    if (isProcessing) {
-      final safeProgress = (progress.isNaN || progress.isInfinite)
-          ? 0.0
-          : progress.clamp(0.0, 1.0);
-      final safeAnim = (animationValue.isNaN || animationValue.isInfinite)
-          ? 0.0
-          : animationValue;
-      final effectiveFill = 0.03 + safeProgress * 0.97;
-      final waterY = orbRect.bottom - (effectiveFill * orbRect.height);
-      final topTaper = 1.0 - ((safeProgress - 0.92) / 0.08).clamp(0.0, 1.0);
-      final amp = (radius * 0.065).clamp(1.5, 6.0) * topTaper;
-
-      final backWavePath = _buildWavePath(
-        orbRect: orbRect,
-        waterY: waterY,
-        amp: amp,
-        cycles: 1.5,
-        phase: -safeAnim * 2 * math.pi + 1.1,
-      );
-      canvas.drawPath(
-        backWavePath,
-        Paint()
-          ..color = crestColor.withAlpha(isDark ? 145 : 175)
-          ..style = PaintingStyle.fill,
-      );
-
-      final frontWavePath = _buildWavePath(
-        orbRect: orbRect,
-        waterY: waterY,
-        amp: amp,
-        cycles: 1.25,
-        phase: safeAnim * 2 * math.pi,
-      );
-      canvas.drawPath(
-        frontWavePath,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [color, deepColor],
-          ).createShader(orbRect)
-          ..style = PaintingStyle.fill,
-      );
-    } else {
-      canvas.drawRect(
-        orbRect,
-        Paint()
-          ..color = color.withAlpha(isDark ? 36 : 28)
-          ..style = PaintingStyle.fill,
-      );
-    }
-
-    canvas.restore();
-
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..color = color.withAlpha(isProcessing ? 225 : 255)
-        ..strokeWidth = 3.0
-        ..style = PaintingStyle.stroke,
-    );
-  }
-
-  Path _buildWavePath({
-    required Rect orbRect,
-    required double waterY,
-    required double amp,
-    required double cycles,
-    required double phase,
-  }) {
-    const steps = 28;
-    final startX = orbRect.left - 4.0;
-    final endX = orbRect.right + 4.0;
-    final span = endX - startX;
-    final bottomY = orbRect.bottom + 4.0;
-    final path = Path();
-
-    for (int i = 0; i <= steps; i++) {
-      final x = startX + (span * i / steps);
-      final nx = (x - orbRect.left) / orbRect.width;
-      final y = waterY + math.sin(nx * cycles * 2 * math.pi + phase) * amp;
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.lineTo(endX, bottomY);
-    path.lineTo(startX, bottomY);
-    path.close();
-    return path;
-  }
-
-  void _paintWaveform(Canvas canvas, Size size) {
-    const targetBars = 36;
-    final effectiveBars = size.width < 108
-        ? math.max(1, (size.width / 3.0).floor())
-        : targetBars;
-    final gap = (size.width * 0.01).clamp(1.0, 3.0);
-    final barWidth = ((size.width - gap * (effectiveBars - 1)) / effectiveBars)
-        .clamp(1.0, 12.0);
-    final totalW = barWidth * effectiveBars + gap * (effectiveBars - 1);
-    final startX = (size.width - totalW) / 2.0;
-    final centerY = size.height / 2.0;
-
-    final safeProgress = (progress.isNaN || progress.isInfinite)
-        ? 0.0
-        : progress.clamp(0.0, 1.0);
-    final safeAnim = (animationValue.isNaN || animationValue.isInfinite)
-        ? 0.0
-        : animationValue;
-    final litCount = isProcessing
-        ? (safeProgress * effectiveBars).ceil()
-        : (isSuccess ? effectiveBars : (safeProgress * effectiveBars).ceil());
-
-    final activePaint = Paint()..style = PaintingStyle.fill;
-    if (isProcessing) {
-      activePaint.shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [crestColor, color, deepColor],
-      ).createShader(Offset.zero & size);
-    } else {
-      activePaint.color = color;
-    }
-
-    final inactivePaint = Paint()
-      ..color = trackColor
-      ..style = PaintingStyle.fill;
-    final minBarH = math.min(2.0, size.height);
-
-    for (int i = 0; i < effectiveBars; i++) {
-      final baseRatio =
-          (0.24 + (math.sin(i * 0.7).abs() * 0.52) + ((i % 5) * 0.045)).clamp(
-            0.22,
-            0.95,
-          );
-      final isLit = i < litCount;
-      final waveFactor = (isProcessing && isLit)
-          ? (0.68 +
-                0.32 *
-                    (0.5 +
-                        0.5 * math.sin((safeAnim * 2 * math.pi) - (i * 0.5))))
-          : 0.80;
-      final barH = (size.height * baseRatio * waveFactor).clamp(
-        minBarH,
-        size.height,
-      );
-      final rrect = RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(
-            startX + i * (barWidth + gap) + barWidth / 2.0,
-            centerY,
-          ),
-          width: barWidth,
-          height: barH,
-        ),
-        Radius.circular(barWidth / 2.0),
-      );
-      canvas.drawRRect(rrect, isLit ? activePaint : inactivePaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DualRingProgressPainter oldDelegate) {
-    final progressChanged =
-        oldDelegate.progress != progress &&
-        !(oldDelegate.progress.isNaN && progress.isNaN);
-    final animChanged =
-        oldDelegate.animationValue != animationValue &&
-        !(oldDelegate.animationValue.isNaN && animationValue.isNaN);
-    return progressChanged ||
-        animChanged ||
-        oldDelegate.isProcessing != isProcessing ||
-        oldDelegate.isSuccess != isSuccess ||
-        oldDelegate.color != color ||
-        oldDelegate.secondaryColor != secondaryColor ||
-        oldDelegate.deepColor != deepColor ||
-        oldDelegate.crestColor != crestColor ||
-        oldDelegate.basinColor != basinColor ||
-        oldDelegate.trackColor != trackColor ||
-        oldDelegate.isWaveform != isWaveform ||
-        oldDelegate.isDark != isDark;
-  }
 }
 
 class _WindowsTaskGraph extends StatelessWidget {

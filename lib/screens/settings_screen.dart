@@ -12,6 +12,7 @@ import '../services/license_service.dart';
 import '../services/localization_service.dart';
 import '../services/settings_service.dart';
 import '../widgets/app_glass_card.dart';
+import '../widgets/progress_animation_painter.dart';
 import '../widgets/theme_animated_background.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -24,8 +25,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.3.9';
-  String _buildNumber = '23009';
+  String _appVersion = 'v2.5.1';
+  String _buildNumber = '25001';
   double? _dragCardOpacity;
 
   @override
@@ -54,14 +55,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '23009';
+              : '25001';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.3.9';
-          _buildNumber = '23009';
+          _appVersion = 'v2.5.1';
+          _buildNumber = '25001';
         });
       }
     }
@@ -145,9 +146,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     // Screen wakelock
                     _buildWakelockTile(theme, settings, l10n),
+
+                    _buildDivider(theme),
+
+                    // Progress animation style
+                    _buildProgressStyleTile(context, theme, settings, l10n),
                   ],
                 ),
               ),
+
+              const SizedBox(height: 20),
+
+              // Transcoding Engine & Fallback
+              _buildSectionTitle(
+                icon: Icons.memory_rounded,
+                title: l10n.t('settings_transcode_engine'),
+                theme: theme,
+              ),
+              const SizedBox(height: 8),
+              _buildTranscodeEngineCard(theme, settings, l10n),
 
               const SizedBox(height: 20),
 
@@ -704,7 +721,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                             style: TextStyle(
                                               fontSize: 10.5,
                                               fontWeight: FontWeight.w600,
-                                              color: theme.colorScheme.onPrimary,
+                                              color:
+                                                  theme.colorScheme.onPrimary,
                                             ),
                                           ),
                                         ],
@@ -1140,6 +1158,138 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  // Transcode engine card
+
+  Widget _buildTranscodeEngineCard(
+    ThemeData theme,
+    AppSettings settings,
+    AppLocalizations l10n,
+  ) {
+    final isSoftware = settings.transcodeEngine == 'software';
+
+    return _buildModernCard(
+      theme: theme,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Engine mode title
+          Row(
+            children: [
+              Icon(
+                Icons.speed_rounded,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l10n.t('settings_transcode_engine'),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Two ChoiceChips for hardware and software
+          Center(
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                _buildChoiceChip(
+                  theme: theme,
+                  label: l10n.t('engine_hardware_title'),
+                  selected: !isSoftware,
+                  onSelected: () =>
+                      _settingsService.setTranscodeEngine('hardware'),
+                ),
+                _buildChoiceChip(
+                  theme: theme,
+                  label: l10n.t('engine_software_title'),
+                  selected: isSoftware,
+                  onSelected: () =>
+                      _settingsService.setTranscodeEngine('software'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Description for selected engine
+          Center(
+            child: Text(
+              isSoftware
+                  ? l10n.t('engine_software_desc')
+                  : l10n.t('engine_hardware_desc'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11.5,
+                height: 1.35,
+                color: theme.colorScheme.onSurface.withAlpha(140),
+              ),
+            ),
+          ),
+
+          _buildDivider(theme),
+
+          // Automatic Engine Fallback switch tile
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withAlpha(20),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.alt_route_rounded,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l10n.t('engine_fallback_toggle_title'),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              RepaintBoundary(
+                child: Switch(
+                  value: settings.enableEngineFallback,
+                  onChanged: (val) {
+                    _settingsService.setEnableEngineFallback(val);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Center(
+            child: Text(
+              l10n.t('engine_fallback_toggle_desc'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11.5,
+                color: theme.colorScheme.onSurface.withAlpha(130),
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Wakelock tile
 
   Widget _buildWakelockTile(
@@ -1201,6 +1351,410 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // Progress animation style tile & modal
+
+  Widget _buildProgressStyleTile(
+    BuildContext context,
+    ThemeData theme,
+    AppSettings settings,
+    AppLocalizations l10n,
+  ) {
+    final vStyle = settings.videoProgressStyle.toUpperCase();
+    final aStyle = settings.audioProgressStyle.toUpperCase();
+    final subtitle = vStyle == aStyle
+        ? '$vStyle (${l10n.t('scope_both')})'
+        : '${l10n.t('scope_video')}: $vStyle • ${l10n.t('scope_audio')}: $aStyle';
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => _showProgressStyleModal(context, theme, l10n),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withAlpha(20),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.motion_photos_on_rounded,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.t('settings_progress_style_title'),
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: theme.colorScheme.onSurface.withAlpha(120),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Center(
+              child: Text(
+                l10n.t('settings_progress_style_subtitle'),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  height: 1.3,
+                  color: theme.colorScheme.onSurface.withAlpha(130),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showProgressStyleModal(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
+    String currentScope = 'both'; // 'video', 'audio', 'both'
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final settings = _settingsService.settings;
+            final isDark = theme.brightness == Brightness.dark;
+            final primary = theme.colorScheme.primary;
+
+            final activeStyle = currentScope == 'video'
+                ? settings.videoProgressStyle
+                : currentScope == 'audio'
+                    ? settings.audioProgressStyle
+                    : (settings.videoProgressStyle == settings.audioProgressStyle
+                        ? settings.videoProgressStyle
+                        : null);
+
+            final styles = [
+              {
+                'id': 'v1',
+                'title': l10n.t('style_v1_title'),
+                'icon': Icons.radio_button_checked_rounded,
+              },
+              {
+                'id': 'v2',
+                'title': l10n.t('style_v2_title'),
+                'icon': Icons.sensors_rounded,
+              },
+              {
+                'id': 'v3',
+                'title': l10n.t('style_v3_title'),
+                'icon': Icons.waves_rounded,
+              },
+              {
+                'id': 'v4',
+                'title': l10n.t('style_v4_title'),
+                'icon': Icons.water_drop_rounded,
+              },
+              {
+                'id': 'v5',
+                'title': l10n.t('style_v5_title'),
+                'icon': Icons.view_stream_rounded,
+              },
+            ];
+
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.90,
+              minChildSize: 0.50,
+              maxChildSize: 0.95,
+              builder: (_, scrollController) {
+                return Column(
+                  children: [
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 12, bottom: 8),
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.onSurface.withAlpha(50),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 16, 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.motion_photos_on_rounded,
+                            color: primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.t('settings_progress_style_title'),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            icon: const Icon(Icons.close_rounded, size: 20),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFCBD5E1),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF1E293B)
+                              : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            _buildScopeButton(
+                              label: l10n.t('scope_video'),
+                              isSelected: currentScope == 'video',
+                              theme: theme,
+                              onTap: () {
+                                setModalState(() => currentScope = 'video');
+                              },
+                            ),
+                            _buildScopeButton(
+                              label: l10n.t('scope_audio'),
+                              isSelected: currentScope == 'audio',
+                              theme: theme,
+                              onTap: () {
+                                setModalState(() => currentScope = 'audio');
+                              },
+                            ),
+                            _buildScopeButton(
+                              label: l10n.t('scope_both'),
+                              isSelected: currentScope == 'both',
+                              theme: theme,
+                              onTap: () {
+                                setModalState(() => currentScope = 'both');
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ProgressStylePreviewBox(
+                      style: activeStyle ?? settings.videoProgressStyle,
+                      theme: theme,
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: ListView(
+                        controller: scrollController,
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        children: styles.map((item) {
+                          final id = item['id'] as String;
+                          final title = item['title'] as String;
+                          final icon = item['icon'] as IconData;
+                          final isSelected = activeStyle == id;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Material(
+                              color: isSelected
+                                  ? primary.withAlpha(25)
+                                  : isDark
+                                      ? const Color(0xFF1E293B).withAlpha(120)
+                                      : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(14),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(14),
+                                onTap: () async {
+                                  if (currentScope == 'video') {
+                                    await _settingsService.setVideoProgressStyle(id);
+                                  } else if (currentScope == 'audio') {
+                                    await _settingsService.setAudioProgressStyle(id);
+                                  } else {
+                                    await _settingsService.setBothProgressStyles(id);
+                                  }
+                                  setModalState(() {});
+                                  if (mounted) setState(() {});
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? primary
+                                          : isDark
+                                              ? const Color(0xFF334155)
+                                              : const Color(0xFFE2E8F0),
+                                      width: isSelected ? 1.8 : 1.0,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? primary.withAlpha(30)
+                                              : primary.withAlpha(15),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Icon(
+                                          icon,
+                                          size: 20,
+                                          color: isSelected
+                                              ? primary
+                                              : theme.colorScheme.onSurface
+                                                  .withAlpha(180),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Text(
+                                          title,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w700
+                                                : FontWeight.w500,
+                                            color: isSelected
+                                                ? primary
+                                                : theme.colorScheme.onSurface,
+                                          ),
+                                        ),
+                                      ),
+                                      Icon(
+                                        isSelected
+                                            ? Icons.check_circle_rounded
+                                            : Icons.radio_button_unchecked_rounded,
+                                        size: 22,
+                                        color: isSelected
+                                            ? primary
+                                            : theme.colorScheme.onSurface
+                                                .withAlpha(80),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildScopeButton({
+    required String label,
+    required bool isSelected,
+    required ThemeData theme,
+    required VoidCallback onTap,
+  }) {
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark ? primary.withAlpha(200) : primary)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected
+                  ? Colors.white
+                  : theme.colorScheme.onSurface.withAlpha(160),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1784,7 +2338,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           fontWeight: selected && enabled ? FontWeight.w600 : FontWeight.w500,
           color: !enabled
               ? theme.colorScheme.onSurface.withAlpha(80)
-              : (selected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface),
+              : (selected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurface),
         ),
       ),
       onSelected: enabled && onSelected != null ? (_) => onSelected() : null,

@@ -9,6 +9,7 @@ import android.content.ActivityNotFoundException
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.media.MediaCodecInfo
@@ -18,6 +19,7 @@ import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.media.MediaScannerConnection
 import android.net.Uri
+import android.os.BatteryManager
 import android.os.Build
 import android.os.Environment
 import android.os.Handler
@@ -33,7 +35,9 @@ import androidx.media3.common.C
 import androidx.media3.common.Effect
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.Clock
+import androidx.media3.effect.FrameDropEffect
 import androidx.media3.effect.Presentation
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.DefaultAssetLoaderFactory
@@ -47,6 +51,8 @@ import androidx.media3.transformer.InAppMp4Muxer
 import androidx.media3.transformer.ProgressHolder
 import androidx.media3.transformer.Transformer
 import androidx.media3.transformer.VideoEncoderSettings
+import androidx.media3.transformer.EncoderSelector
+import com.google.common.collect.ImmutableList
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
@@ -138,6 +144,8 @@ class MainActivity : FlutterActivity() {
                 "getVideoInfo" -> handleGetVideoInfo(call, result)
                 "getVideoThumbnail" -> handleGetVideoThumbnail(call, result)
                 "getHardwareEncoders" -> handleGetHardwareEncoders(result)
+                "getResolutionCapabilities" -> handleGetResolutionCapabilities(call, result)
+                "getDeviceTemperature" -> handleGetDeviceTemperature(result)
                 "transcodeVideo" -> handleTranscodeVideo(call, result)
                 "extractAudio" -> handleExtractAudio(call, result)
                 "cancelTransformation" -> handleCancelTransformation(result)
@@ -990,6 +998,80 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    private fun handleGetResolutionCapabilities(call: MethodCall, result: MethodChannel.Result) {
+        val codecArg = call.argument<String>("videoCodec") ?: "h264"
+        val mimeType = if (codecArg.equals("hevc", ignoreCase = true) || codecArg.equals("h265", ignoreCase = true)) {
+            MediaFormat.MIMETYPE_VIDEO_HEVC
+        } else {
+            MediaFormat.MIMETYPE_VIDEO_AVC
+        }
+
+        var support4k = false
+        var support2k = false
+        var support1080p = false
+        var support720p = false
+        var support480p = false
+        var support360p = false
+
+        try {
+            val codecList = MediaCodecList(MediaCodecList.REGULAR_CODECS)
+            for (codecInfo in codecList.codecInfos) {
+                if (!codecInfo.isEncoder) continue
+                val types = codecInfo.supportedTypes
+                val matchedType = types.firstOrNull { it.equals(mimeType, ignoreCase = true) } ?: continue
+                try {
+                    val caps = codecInfo.getCapabilitiesForType(matchedType)
+                    val videoCaps = caps.videoCapabilities ?: continue
+                    if (videoCaps.isSizeSupported(3840, 2160) || videoCaps.isSizeSupported(2160, 3840)) support4k = true
+                    if (videoCaps.isSizeSupported(2560, 1440) || videoCaps.isSizeSupported(1440, 2560)) support2k = true
+                    if (videoCaps.isSizeSupported(1920, 1080) || videoCaps.isSizeSupported(1080, 1920)) support1080p = true
+                    if (videoCaps.isSizeSupported(1280, 720) || videoCaps.isSizeSupported(720, 1280)) support720p = true
+                    if (videoCaps.isSizeSupported(854, 480) || videoCaps.isSizeSupported(480, 854)) support480p = true
+                    if (videoCaps.isSizeSupported(640, 360) || videoCaps.isSizeSupported(360, 640)) support360p = true
+                } catch (_: Exception) {}
+            }
+        } catch (_: Exception) {}
+
+        val maxRes = when {
+            support4k -> "4K"
+            support2k -> "2K"
+            support1080p -> "1080p"
+            support720p -> "720p"
+            support480p -> "480p"
+            support360p -> "360p"
+            else -> "1080p"
+        }
+
+        result.success(
+            mapOf(
+                "4K" to support4k,
+                "2K" to support2k,
+                "1080p" to support1080p,
+                "720p" to support720p,
+                "480p" to support480p,
+                "360p" to support360p,
+                "maxResolution" to maxRes
+            )
+        )
+    }
+
+    private fun handleGetDeviceTemperature(result: MethodChannel.Result) {
+        try {
+            val intent = applicationContext.registerReceiver(
+                null,
+                IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            )
+            val tempTenths = intent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0
+            if (tempTenths > 0) {
+                result.success(tempTenths / 10.0)
+            } else {
+                result.success(null)
+            }
+        } catch (_: Exception) {
+            result.success(null)
+        }
+    }
+
     private fun handleTranscodeVideo(call: MethodCall, result: MethodChannel.Result) {
         acquireWakeLock()
         androidx.media3.effect.DebugTraceUtil.enableTracing = true
@@ -999,12 +1081,15 @@ class MainActivity : FlutterActivity() {
         val sourceHeight = call.argument<Int>("sourceHeight") ?: 0
         val targetWidth = call.argument<Int>("targetWidth") ?: 0
         val targetHeight = call.argument<Int>("targetHeight") ?: 0
+        val targetFps = call.argument<Int>("targetFps") ?: 0
         val bitrateBps = call.argument<Int>("bitrateBps") ?: 0
         val videoCodec = call.argument<String>("videoCodec") ?: "h264"
         val rateControlMode = call.argument<String>("rateControlMode") ?: "crf"
         val removeAudio = call.argument<Boolean>("removeAudio") ?: false
         val trimStartMs = (call.argument<Number>("trimStartMs"))?.toLong()
         val trimEndMs = (call.argument<Number>("trimEndMs"))?.toLong()
+        val transcodeEngine = call.argument<String>("transcodeEngine") ?: "hardware"
+        val enableEngineFallback = call.argument<Boolean>("enableEngineFallback") ?: true
 
         if (inputPath.isNullOrEmpty() || outputPath.isNullOrEmpty()) {
             releaseWakeLock()
@@ -1015,6 +1100,7 @@ class MainActivity : FlutterActivity() {
         activeOutputPath = outputPath
         isCancelled = false
         activeTranscodeResult = result
+        var hasFallenBack = false
 
         // Select MIME type
         val targetVideoMime = if (videoCodec.equals("hevc", ignoreCase = true) || videoCodec.equals("h265", ignoreCase = true)) {
@@ -1024,143 +1110,254 @@ class MainActivity : FlutterActivity() {
         }
 
         try {
-            val inputFile = File(inputPath)
-            val mediaItemBuilder = MediaItem.Builder().setUri(Uri.fromFile(inputFile))
-            val startMs = trimStartMs ?: 0L
-            val endMs = trimEndMs ?: 0L
-            val isTrimmed = (startMs > 0L) || (endMs > 0L && endMs > startMs)
-            if (isTrimmed) {
-                val clippingBuilder = MediaItem.ClippingConfiguration.Builder()
-                if (startMs > 0L) {
-                    clippingBuilder.setStartPositionMs(startMs)
-                }
-                if (endMs > startMs) {
-                    clippingBuilder.setEndPositionMs(endMs)
-                }
-                clippingBuilder.setStartsAtKeyFrame(false)
-                mediaItemBuilder.setClippingConfiguration(clippingBuilder.build())
-            }
-            val mediaItem = mediaItemBuilder.build()
-
-            // Bypass Presentation effect if dimensions match to skip GPU shader overhead
-            val isScalingNeeded = (targetWidth > 0 && targetHeight > 0) &&
-                (sourceWidth <= 0 || sourceHeight <= 0 || targetWidth != sourceWidth || targetHeight != sourceHeight)
-
-            val videoEffects = mutableListOf<Effect>()
-            if (isScalingNeeded) {
-                videoEffects.add(
-                    Presentation.createForWidthAndHeight(
-                        targetWidth,
-                        targetHeight,
-                        Presentation.LAYOUT_SCALE_TO_FIT
-                    )
-                )
-            }
-
-            val editedMediaItem = EditedMediaItem.Builder(mediaItem)
-                .setEffects(Effects(listOf(), videoEffects))
-                .setRemoveAudio(removeAudio)
-                .build()
-
-            // Encoder factory with 2.0s GOP interval and OEM fallback
-            val encoderFactoryBuilder = DefaultEncoderFactory.Builder(applicationContext)
-                .setEnableFallback(true)
-
-            val videoSettingsBuilder = VideoEncoderSettings.Builder()
-                .setiFrameIntervalSeconds(2.0f)
-                .setEncoderPerformanceParameters(120, 0)
-
-            if (bitrateBps > 0) {
-                videoSettingsBuilder.setBitrate(bitrateBps)
-                if (rateControlMode.equals("bitrate", ignoreCase = true)) {
-                    videoSettingsBuilder.setBitrateMode(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR)
-                } else {
-                    videoSettingsBuilder.setBitrateMode(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR)
-                }
-            }
-            encoderFactoryBuilder.setRequestedVideoEncoderSettings(videoSettingsBuilder.build())
-            val encoderFactory = encoderFactoryBuilder.build()
-
-            // Allow falling back to another (e.g. software) decoder when the
-            // preferred hardware decoder rejects the stream, common with 4K HEVC.
-            val decoderFactory = DefaultDecoderFactory.Builder(applicationContext)
-                .setEnableDecoderFallback(true)
-                .build()
-
-            val muxerFactory = InAppMp4Muxer.Factory()
-            val transformerBuilder = Transformer.Builder(applicationContext)
-                .setAssetLoaderFactory(
-                    DefaultAssetLoaderFactory(
-                        applicationContext,
-                        decoderFactory,
-                        Clock.DEFAULT,
-                        null as android.media.metrics.LogSessionId?
-                    )
-                )
-                .setVideoMimeType(targetVideoMime)
-                .setAudioMimeType(MimeTypes.AUDIO_AAC)
-                .setEncoderFactory(encoderFactory)
-                .setMuxerFactory(muxerFactory)
-                .setMaxDelayBetweenMuxerSamplesMs(180_000L)
-
-            transformerBuilder.addListener(object : Transformer.Listener {
-                override fun onCompleted(composition: Composition, exportResult: ExportResult) {
-                    releaseWakeLock()
-                    stopProgressPolling()
-                    activeTransformer = null
-                    val res = activeTranscodeResult
-                    activeTranscodeResult = null
-                    mainHandler.post {
-                        sendProgress(1.0, File(outputPath).length())
-                        sendLog("Hardware transcoding completed successfully!")
-                        res?.success(outputPath)
+            val codecList = MediaCodecList(MediaCodecList.REGULAR_CODECS)
+            for (info in codecList.codecInfos) {
+                if (!info.isEncoder) {
+                    for (type in info.supportedTypes) {
+                        if (type.equals(MimeTypes.VIDEO_H265, ignoreCase = true) || type.equals("video/hevc", ignoreCase = true)) {
+                            val caps = info.getCapabilitiesForType(type)
+                            val vCaps = caps.videoCapabilities
+                            val is4kSupported = vCaps?.areSizeAndRateSupported(3840, 2160, 60.0) ?: false
+                            val isHw = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) info.isHardwareAccelerated else (!info.name.startsWith("OMX.google.") && !info.name.startsWith("c2.android."))
+                            sendLog("Decoder capability: ${info.name} (HW: $isHw, 4K60: $is4kSupported)")
+                        }
                     }
                 }
-
-                override fun onError(
-                    composition: Composition,
-                    exportResult: ExportResult,
-                    exportException: ExportException
-                ) {
-                    releaseWakeLock()
-                    stopProgressPolling()
-                    activeTransformer = null
-                    val res = activeTranscodeResult
-                    activeTranscodeResult = null
-                    val err = exportException.localizedMessage ?: "Transcoding failed"
-                    val causeMsg = exportException.cause?.localizedMessage ?: exportException.cause?.message
-                    val fullErr = (if (!causeMsg.isNullOrBlank() && causeMsg != err) "$err ($causeMsg)" else err) +
-                        " [${exportException.errorCodeName}]"
-                    sendLog("Hardware transcoding error: $fullErr")
-                    cleanupOutput(outputPath)
-                    mainHandler.post {
-                        res?.error("TRANSCODE_FAILED", fullErr, null)
-                    }
-                }
-            })
-
-            val transformer = transformerBuilder.build()
-            activeTransformer = transformer
-
-            sendLog("Starting AndroidX Media3 Transformer HW engine...")
-            sendLog("Input: $inputPath")
-            sendLog("Target: ${targetWidth}x$targetHeight @ ${if (bitrateBps > 0) "${bitrateBps / 1000} kbps" else "Auto Bitrate"} ($videoCodec - $rateControlMode)")
-            sendLog("Output: $outputPath")
-
-            transformer.start(editedMediaItem, outputPath)
-
-            // Start progress polling safely on Main Looper (applicationLooper)
-            startProgressPolling(transformer, outputPath)
-
-        } catch (t: Throwable) {
-            releaseWakeLock()
-            cleanupOutput(outputPath)
-            activeTransformer = null
-            stopProgressPolling()
-            val res = activeTranscodeResult
-            activeTranscodeResult = null
-            res?.error("TRANSCODE_INIT_FAILED", t.localizedMessage ?: "Failed to start transcoding", null)
+            }
+        } catch (e: Exception) {
+            sendLog("Could not inspect codec capabilities: ${e.message}")
         }
+
+        val inputFile = File(inputPath)
+        val mediaItemBuilder = MediaItem.Builder().setUri(Uri.fromFile(inputFile))
+        val startMs = trimStartMs ?: 0L
+        val endMs = trimEndMs ?: 0L
+        val isTrimmed = (startMs > 0L) || (endMs > 0L && endMs > startMs)
+        if (isTrimmed) {
+            val clippingBuilder = MediaItem.ClippingConfiguration.Builder()
+            if (startMs > 0L) {
+                clippingBuilder.setStartPositionMs(startMs)
+            }
+            if (endMs > startMs) {
+                clippingBuilder.setEndPositionMs(endMs)
+            }
+            clippingBuilder.setStartsAtKeyFrame(false)
+            mediaItemBuilder.setClippingConfiguration(clippingBuilder.build())
+        }
+        val mediaItem = mediaItemBuilder.build()
+
+        // Bypass Presentation effect if dimensions match to skip GPU shader overhead
+        val isScalingNeeded = (targetWidth > 0 && targetHeight > 0) &&
+            (sourceWidth <= 0 || sourceHeight <= 0 || targetWidth != sourceWidth || targetHeight != sourceHeight)
+
+        val videoEffects = mutableListOf<Effect>()
+        if (isScalingNeeded) {
+            videoEffects.add(
+                Presentation.createForWidthAndHeight(
+                    targetWidth,
+                    targetHeight,
+                    Presentation.LAYOUT_SCALE_TO_FIT
+                )
+            )
+        }
+        if (targetFps > 0) {
+            videoEffects.add(
+                FrameDropEffect.createDefaultFrameDropEffect(targetFps.toFloat())
+            )
+        }
+
+        val audioProcessors = mutableListOf<androidx.media3.common.audio.AudioProcessor>()
+        if (!removeAudio) {
+            // Force decoding audio to raw PCM and re-encoding with pristine monotonic timestamps.
+            // Prevents MuxerWrapper deadlocks caused by audio passthrough gaps or PTS jitter.
+            audioProcessors.add(SonicAudioProcessor())
+        }
+
+        val editedMediaItem = EditedMediaItem.Builder(mediaItem)
+            .setEffects(Effects(audioProcessors, videoEffects))
+            .setRemoveAudio(removeAudio)
+            .build()
+
+        fun startTransformerPipeline(engine: String, isFallbackAttempt: Boolean) {
+            try {
+                acquireWakeLock()
+                val encoderFactoryBuilder = DefaultEncoderFactory.Builder(applicationContext)
+                    .setEnableFallback(true)
+
+                if (engine == "software") {
+                    encoderFactoryBuilder.setVideoEncoderSelector(EncoderSelector { mimeType ->
+                        val codecList = MediaCodecList(MediaCodecList.REGULAR_CODECS)
+                        val swList = codecList.codecInfos.filter { info ->
+                            info.isEncoder &&
+                            info.supportedTypes.any { it.equals(mimeType, ignoreCase = true) } &&
+                            run {
+                                val isHw = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                    info.isHardwareAccelerated
+                                } else {
+                                    !info.name.startsWith("OMX.google.", ignoreCase = true) &&
+                                    !info.name.startsWith("c2.android.", ignoreCase = true)
+                                }
+                                !isHw
+                            }
+                        }.sortedByDescending {
+                            if (it.name.startsWith("c2.android.", ignoreCase = true) || it.name.startsWith("OMX.google.", ignoreCase = true)) 1 else 0
+                        }
+                        if (swList.isNotEmpty()) {
+                            val chosen = swList.first().name
+                            sendLog("Software video encoder selected: $chosen")
+                            ImmutableList.copyOf(swList)
+                        } else {
+                            sendLog("Warning: No software encoder found in MediaCodecList for $mimeType, falling back to default")
+                            EncoderSelector.DEFAULT.selectEncoderInfos(mimeType)
+                        }
+                    })
+                } else {
+                    encoderFactoryBuilder.setVideoEncoderSelector(EncoderSelector { mimeType ->
+                        val defaultList = EncoderSelector.DEFAULT.selectEncoderInfos(mimeType)
+                        val chosen = defaultList.firstOrNull()?.name ?: "auto"
+                        sendLog("Hardware video encoder selected: $chosen")
+                        defaultList
+                    })
+                }
+
+                val videoSettingsBuilder = VideoEncoderSettings.Builder()
+                    .setiFrameIntervalSeconds(2.0f)
+                    .setEncoderPerformanceParameters(120, 0)
+
+                if (bitrateBps > 0) {
+                    videoSettingsBuilder.setBitrate(bitrateBps)
+                    if (rateControlMode.equals("bitrate", ignoreCase = true)) {
+                        videoSettingsBuilder.setBitrateMode(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR)
+                    } else {
+                        videoSettingsBuilder.setBitrateMode(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR)
+                    }
+                }
+                encoderFactoryBuilder.setRequestedVideoEncoderSettings(videoSettingsBuilder.build())
+                val encoderFactory = encoderFactoryBuilder.build()
+
+                // Allow falling back to another (e.g. software) decoder when the
+                // preferred hardware decoder rejects the stream, common with 4K HEVC.
+                val decoderFactory = DefaultDecoderFactory.Builder(applicationContext)
+                    .setEnableDecoderFallback(true)
+                    .setListener { codecName, codecExceptions ->
+                        sendLog("Active decoder initialized: $codecName")
+                        if (codecExceptions.isNotEmpty()) {
+                            for (ex in codecExceptions) {
+                                sendLog("Decoder fallback prior exception: ${ex.message}")
+                            }
+                        }
+                    }
+                    .build()
+
+                val muxerFactory = InAppMp4Muxer.Factory()
+                val transformerBuilder = Transformer.Builder(applicationContext)
+                    .setAssetLoaderFactory(
+                        DefaultAssetLoaderFactory(
+                            applicationContext,
+                            decoderFactory,
+                            Clock.DEFAULT,
+                            null as android.media.metrics.LogSessionId?
+                        )
+                    )
+                    .setVideoMimeType(targetVideoMime)
+                    .setAudioMimeType(MimeTypes.AUDIO_AAC)
+                    .setEncoderFactory(encoderFactory)
+                    .setMuxerFactory(muxerFactory)
+                    .setMaxDelayBetweenMuxerSamplesMs(30_000L)
+
+                transformerBuilder.addListener(object : Transformer.Listener {
+                    override fun onCompleted(composition: Composition, exportResult: ExportResult) {
+                        releaseWakeLock()
+                        stopProgressPolling()
+                        activeTransformer = null
+                        val res = activeTranscodeResult
+                        activeTranscodeResult = null
+                        sendLog("Engine encoder used: videoEncoder=${exportResult.videoEncoderName ?: "none"}, audioEncoder=${exportResult.audioEncoderName ?: "none"}")
+                        mainHandler.post {
+                            sendProgress(1.0, File(outputPath).length())
+                            val engineLabel = if (isFallbackAttempt) "Fallback ($engine)" else (if (engine == "software") "Software Safe-Mode" else "Hardware")
+                            sendLog("$engineLabel transcoding completed successfully!")
+                            res?.success(outputPath)
+                        }
+                    }
+
+                    override fun onError(
+                        composition: Composition,
+                        exportResult: ExportResult,
+                        exportException: ExportException
+                    ) {
+                        if (enableEngineFallback && !hasFallenBack && !isCancelled) {
+                            hasFallenBack = true
+                            val fallbackEngine = if (engine == "hardware") "software" else "hardware"
+                            sendLog("Primary engine ($engine) failed: ${exportException.message}. Automatically falling back to $fallbackEngine engine...")
+                            stopProgressPolling()
+                            activeTransformer = null
+                            try {
+                                File(outputPath).delete()
+                            } catch (_: Exception) {}
+                            mainHandler.post {
+                                startTransformerPipeline(fallbackEngine, isFallbackAttempt = true)
+                            }
+                        } else {
+                            releaseWakeLock()
+                            stopProgressPolling()
+                            activeTransformer = null
+                            val res = activeTranscodeResult
+                            activeTranscodeResult = null
+                            sendLog("Engine encoder at failure: videoEncoder=${exportResult.videoEncoderName ?: "none"}, audioEncoder=${exportResult.audioEncoderName ?: "none"}")
+                            val err = exportException.localizedMessage ?: "Transcoding failed"
+                            val causeMsg = exportException.cause?.localizedMessage ?: exportException.cause?.message
+                            val fullErr = (if (!causeMsg.isNullOrBlank() && causeMsg != err) "$err ($causeMsg)" else err) +
+                                " [${exportException.errorCodeName}]"
+                            sendLog("${if (engine == "software") "Software safe-mode" else "Hardware"} transcoding error: $fullErr")
+                            cleanupOutput(outputPath)
+                            mainHandler.post {
+                                res?.error("TRANSCODE_FAILED", fullErr, null)
+                            }
+                        }
+                    }
+                })
+
+                val transformer = transformerBuilder.build()
+                activeTransformer = transformer
+
+                val engineLabel = if (isFallbackAttempt) "Fallback ($engine)" else (if (engine == "software") "Software Safe-Mode" else "Hardware")
+                sendLog("Starting AndroidX Media3 Transformer $engineLabel engine...")
+                sendLog("Input: $inputPath")
+                sendLog("Target: ${targetWidth}x$targetHeight @ ${if (targetFps > 0) "$targetFps fps" else "Source FPS"}, ${if (bitrateBps > 0) "${bitrateBps / 1000} kbps" else "Auto Bitrate"} ($videoCodec - $rateControlMode)")
+                sendLog("Output: $outputPath")
+
+                transformer.start(editedMediaItem, outputPath)
+
+                // Start progress polling safely on Main Looper (applicationLooper)
+                startProgressPolling(transformer, outputPath)
+
+            } catch (t: Throwable) {
+                if (enableEngineFallback && !hasFallenBack && !isCancelled) {
+                    hasFallenBack = true
+                    val fallbackEngine = if (engine == "hardware") "software" else "hardware"
+                    sendLog("Primary engine ($engine) init failed: ${t.message}. Automatically falling back to $fallbackEngine engine...")
+                    stopProgressPolling()
+                    activeTransformer = null
+                    try {
+                        File(outputPath).delete()
+                    } catch (_: Exception) {}
+                    mainHandler.post {
+                        startTransformerPipeline(fallbackEngine, isFallbackAttempt = true)
+                    }
+                } else {
+                    releaseWakeLock()
+                    cleanupOutput(outputPath)
+                    activeTransformer = null
+                    stopProgressPolling()
+                    val res = activeTranscodeResult
+                    activeTranscodeResult = null
+                    res?.error("TRANSCODE_INIT_FAILED", t.localizedMessage ?: "Failed to start transcoding", null)
+                }
+            }
+        }
+
+        startTransformerPipeline(transcodeEngine, isFallbackAttempt = false)
     }
 
     private fun handleExtractAudio(call: MethodCall, result: MethodChannel.Result) {

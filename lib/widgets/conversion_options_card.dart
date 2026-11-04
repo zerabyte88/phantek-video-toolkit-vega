@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 // Copyright (C) 2026 zerabyte88
 
 import 'package:flutter/material.dart';
@@ -17,6 +17,7 @@ class ConversionOptionsCard extends StatefulWidget {
   final ValueChanged<VideoResolution> onResolutionChanged;
   final ValueChanged<EncodingOptions> onOptionsChanged;
   final AppLocalizations l10n;
+  final Map<String, dynamic>? resolutionCapabilities;
 
   const ConversionOptionsCard({
     super.key,
@@ -27,6 +28,7 @@ class ConversionOptionsCard extends StatefulWidget {
     required this.onResolutionChanged,
     required this.onOptionsChanged,
     required this.l10n,
+    this.resolutionCapabilities,
   });
 
   @override
@@ -1084,10 +1086,28 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
         ? '${l10n.t('res_original')} (${res.label.substring(res.label.indexOf('(') + 1)}'
         : res.label;
 
-    return Padding(
+    String resKey = res.label;
+    if (res.label.startsWith('Original')) {
+      final match = RegExp(r'\(([^)]+)\)').firstMatch(res.label);
+      if (match != null) {
+        resKey = match.group(1)!;
+      }
+    }
+    final isSupported = widget.resolutionCapabilities != null
+        ? (widget.resolutionCapabilities![resKey] as bool? ??
+            widget.resolutionCapabilities![res.label] as bool? ??
+            true)
+        : true;
+    final maxRes =
+        widget.resolutionCapabilities?['maxResolution'] as String? ?? '1080p';
+
+    final isOriginal = res.label.startsWith('Original');
+    final isDisabled = !isSupported && !isOriginal;
+
+    Widget tile = Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: InkWell(
-        onTap: () => widget.onResolutionChanged(res),
+        onTap: isDisabled ? null : () => widget.onResolutionChanged(res),
         borderRadius: BorderRadius.circular(10),
         child: Container(
           constraints: const BoxConstraints(minHeight: 48),
@@ -1107,26 +1127,55 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
           child: Row(
             children: [
               Icon(
-                isSelected
-                    ? Icons.radio_button_checked_rounded
-                    : Icons.radio_button_unchecked_rounded,
+                isDisabled
+                    ? Icons.block_rounded
+                    : (isSelected
+                        ? Icons.radio_button_checked_rounded
+                        : Icons.radio_button_unchecked_rounded),
                 size: 18,
-                color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withAlpha(130),
+                color: isDisabled
+                    ? theme.colorScheme.onSurface.withAlpha(80)
+                    : (isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface.withAlpha(130)),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  displayLabel,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    letterSpacing: 0,
-                    color: isSelected
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      displayLabel,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                        letterSpacing: 0,
+                        color: isDisabled
+                            ? theme.colorScheme.onSurface.withAlpha(140)
+                            : (isSelected
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface),
+                      ),
+                    ),
+                    if (!isSupported) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        isOriginal
+                            ? l10n.t('res_adjusted_to_hardware', args: {'res': maxRes})
+                            : l10n.t('res_unsupported_hardware'),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0,
+                          color: isOriginal
+                              ? Colors.amber.shade700
+                              : theme.colorScheme.onSurface.withAlpha(140),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               Text(
@@ -1136,9 +1185,11 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0,
                   fontFeatures: const [FontFeature.tabularFigures()],
-                  color: isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurface.withAlpha(140),
+                  color: isDisabled
+                      ? theme.colorScheme.onSurface.withAlpha(90)
+                      : (isSelected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface.withAlpha(140)),
                 ),
               ),
             ],
@@ -1146,6 +1197,12 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
         ),
       ),
     );
+
+    if (isDisabled) {
+      tile = Opacity(opacity: 0.38, child: tile);
+    }
+
+    return tile;
   }
 
   Widget _buildFpsSelector(ThemeData theme, AppLocalizations l10n) {
