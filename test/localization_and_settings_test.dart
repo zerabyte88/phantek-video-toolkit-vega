@@ -17,6 +17,7 @@ import 'package:phantek_video_toolkit_vega/services/transformer_service.dart';
 import 'package:phantek_video_toolkit_vega/services/localization_service.dart';
 import 'package:phantek_video_toolkit_vega/services/media_scanner_service.dart';
 import 'package:phantek_video_toolkit_vega/screens/home_screen.dart';
+import 'package:phantek_video_toolkit_vega/screens/processing_screen.dart';
 import 'package:phantek_video_toolkit_vega/screens/settings_screen.dart';
 import 'package:phantek_video_toolkit_vega/screens/trim_preview_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -576,17 +577,11 @@ void main() {
       );
     });
 
-    test('Percentage formatting retains 1 decimal place consistently without rounding discrepancy', () {
-      String formatPercentage(double progress) {
-        final percent = (progress * 100).clamp(0.0, 100.0);
-        return '${percent.toStringAsFixed(1)}%';
-      }
-
-      // 0.185 (18.5%) should format to 18.5%, not 19%
-      expect(formatPercentage(0.185), equals('18.5%'));
-      expect(formatPercentage(0.0), equals('0.0%'));
-      expect(formatPercentage(0.50), equals('50.0%'));
-      expect(formatPercentage(1.0), equals('100.0%'));
+    test('Percentage formatting rounds to clean integer consistently', () {
+      expect(ProcessingScreen.formatProgressPercentage(0.185), equals('19%'));
+      expect(ProcessingScreen.formatProgressPercentage(0.0), equals('0%'));
+      expect(ProcessingScreen.formatProgressPercentage(0.50), equals('50%'));
+      expect(ProcessingScreen.formatProgressPercentage(1.0), equals('100%'));
     });
   });
 

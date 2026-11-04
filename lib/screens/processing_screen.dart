@@ -40,21 +40,17 @@ class ProcessingScreen extends StatefulWidget {
     this.isAudioExtraction = false,
   });
 
-  /// Formats a normalized progress ratio (0.0 to 1.0) into a percentage string
-  /// with 1 decimal place precision (e.g. 14.1%, 100.0%), safely handling NaN and infinity.
+  /// Formats a normalized progress ratio (0.0 to 1.0) into an integer percentage string
+  /// (e.g. 14%, 100%), safely handling NaN and infinity.
   static String formatProgressPercentage(double progress) {
-    if (progress.isNaN || progress.isInfinite) return '0.0%';
-    final percent = (progress * 100).clamp(0.0, 100.0);
-    return '${percent.toStringAsFixed(1)}%';
+    if (progress.isNaN || progress.isInfinite) return '0%';
+    final percent = (progress * 100).clamp(0.0, 100.0).round();
+    return '$percent%';
   }
 
   /// Hook to open files, configurable in tests.
   static Future<OpenResult> Function(String path, {String? type})
   openFileRunner = (path, {type}) => OpenFilex.open(path, type: type);
-
-  /// Clock hook for time-based visual progress interpolation, configurable in tests.
-  @visibleForTesting
-  static DateTime Function() now = DateTime.now;
 
   @override
   State<ProcessingScreen> createState() => _ProcessingScreenState();
@@ -73,12 +69,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   String? _errorMessage;
   bool _isOom = false;
   late AnimationController _pulseController;
-
-  int _lastReportedIntPercent = 0;
-  DateTime _lastTickTimestamp = DateTime.now();
-  double _measuredMsPerPercent = 1200.0;
-  int _lastNotifIntPercent = -1;
-  DateTime _lastNotifTime = DateTime.fromMillisecondsSinceEpoch(0);
 
   DateTime? _startTime;
   Duration _elapsedDuration = Duration.zero;
@@ -195,12 +185,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     _totalDuration = null;
     _errorMessage = null;
 
-    _lastReportedIntPercent = 0;
-    _lastTickTimestamp = ProcessingScreen.now();
-    _measuredMsPerPercent = 1200.0;
-    _lastNotifIntPercent = -1;
-    _lastNotifTime = DateTime.fromMillisecondsSinceEpoch(0);
-
     _prevSizeBytes = 0;
     _latestOutputBytes = 0;
     _storageIoRateMb = 0.0;
@@ -225,7 +209,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
 
     await ForegroundServiceManager().startService(
       title: l10n.t('app_title'),
-      text: '$actionText 0.0%',
+      text: '$actionText 0%',
       buttons: [
         NotificationButton(id: 'btn_cancel', text: l10n.t('notif_btn_cancel')),
       ],
@@ -274,11 +258,15 @@ class _ProcessingScreenState extends State<ProcessingScreen>
 
         // Storage throughput
         int currentBytes = _latestOutputBytes;
-        if (currentBytes == 0 && _outputPath != null) {
+        if (_outputPath != null) {
           try {
             final f = File(_outputPath!);
             if (f.existsSync()) {
-              currentBytes = f.lengthSync();
+              final diskBytes = f.lengthSync();
+              if (diskBytes > currentBytes) {
+                currentBytes = diskBytes;
+                _latestOutputBytes = diskBytes;
+              }
             }
           } catch (_) {}
         }
@@ -356,20 +344,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         speed = '';
       }
 
-      final now = ProcessingScreen.now();
-      final safeProgress =
-          progress.isNaN || progress.isInfinite ? 0.0 : progress;
-      final currentInt = (safeProgress * 100).floor().clamp(0, 100);
-      if (currentInt > _lastReportedIntPercent || safeProgress <= 0.0) {
-        if (_lastReportedIntPercent > 0 && currentInt > _lastReportedIntPercent) {
-          final elapsedMs = now.difference(_lastTickTimestamp).inMilliseconds;
-          final steps = currentInt - _lastReportedIntPercent;
-          _measuredMsPerPercent = (elapsedMs / steps).clamp(200.0, 20000.0);
-        }
-        _lastReportedIntPercent = currentInt;
-        _lastTickTimestamp = now;
-      }
-
+      final now = DateTime.now();
       final elapsed = _startTime != null
           ? now.difference(_startTime!)
           : Duration.zero;
@@ -378,22 +353,17 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           ? ' | ETA: ${_formatDuration(remaining)}'
           : '';
 
-      // Update foreground notification (throttled to integer changes or at most 1 Hz)
-      if (currentInt != _lastNotifIntPercent ||
-          now.difference(_lastNotifTime).inMilliseconds >= 1000) {
-        _lastNotifIntPercent = currentInt;
-        _lastNotifTime = now;
-        ForegroundServiceManager().updateService(
-          title: l10n.t('app_title'),
-          text: '$actionText ${_formatPercentage(progress)}$etaStr',
-          buttons: [
-            NotificationButton(
-              id: 'btn_cancel',
-              text: l10n.t('notif_btn_cancel'),
-            ),
-          ],
-        );
-      }
+      // Update foreground notification
+      ForegroundServiceManager().updateService(
+        title: l10n.t('app_title'),
+        text: '$actionText ${_formatPercentage(progress)}$etaStr',
+        buttons: [
+          NotificationButton(
+            id: 'btn_cancel',
+            text: l10n.t('notif_btn_cancel'),
+          ),
+        ],
+      );
 
       if (mounted) {
         setState(() {
@@ -851,25 +821,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     ];
   }
 
-  double _computeVisualProgress() {
-    if (_isSuccess) return 1.0;
-    if (!_isProcessing ||
-        _progress.isNaN ||
-        _progress.isInfinite ||
-        _progress <= 0.0) {
-      if (_progress.isNaN || _progress.isInfinite) return 0.0;
-      return _progress.clamp(0.0, 1.0);
-    }
-    if (_lastReportedIntPercent >= 100) return 1.0;
-    final elapsedMs = ProcessingScreen.now()
-        .difference(_lastTickTimestamp)
-        .inMilliseconds;
-    final subFraction =
-        0.95 * (1.0 - math.exp(-elapsedMs / _measuredMsPerPercent));
-    final currentVisual = (_lastReportedIntPercent + subFraction) / 100.0;
-    return currentVisual.clamp(0.0, 0.999);
-  }
-
   Widget _buildProgressSection(ThemeData theme, l10n) {
     final isDark = theme.brightness == Brightness.dark;
     final palette = _getThemePalette();
@@ -878,11 +829,17 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         ? palette.primary
         : (_isSuccess ? const Color(0xFF4CC38A) : const Color(0xFFE5484D));
     final progressSecondary = progressPrimary;
+    final targetProgress = _isSuccess
+        ? 1.0
+        : (_progress.isNaN || _progress.isInfinite
+              ? 0.0
+              : _progress.clamp(0.0, 1.0));
 
-    return AnimatedBuilder(
-      animation: _pulseController,
-      builder: (context, _) {
-        final visualProgress = _computeVisualProgress();
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: targetProgress),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.linear,
+      builder: (context, animatedProgress, child) {
         final actionText = widget.isAudioExtraction
             ? l10n.t('proc_extracting')
             : l10n.t('proc_converting');
@@ -897,21 +854,28 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    CustomPaint(
-                      size: const Size(176, 176),
-                      painter: _DualRingProgressPainter(
-                        progress: visualProgress,
-                        animationValue: _pulseController.value,
-                        isProcessing: _isProcessing,
-                        isSuccess: _isSuccess,
-                        color: progressPrimary,
-                        secondaryColor: progressSecondary,
-                        deepColor: palette.deep,
-                        crestColor: palette.crest,
-                        basinColor: palette.basin,
-                        trackColor: palette.track,
-                        isWaveform: false,
-                        isDark: isDark,
+                    RepaintBoundary(
+                      child: AnimatedBuilder(
+                        animation: _pulseController,
+                        builder: (context, _) {
+                          return CustomPaint(
+                            size: const Size(176, 176),
+                            painter: _DualRingProgressPainter(
+                              progress: animatedProgress,
+                              animationValue: _pulseController.value,
+                              isProcessing: _isProcessing,
+                              isSuccess: _isSuccess,
+                              color: progressPrimary,
+                              secondaryColor: progressSecondary,
+                              deepColor: palette.deep,
+                              crestColor: palette.crest,
+                              basinColor: palette.basin,
+                              trackColor: palette.track,
+                              isWaveform: false,
+                              isDark: isDark,
+                            ),
+                          );
+                        },
                       ),
                     ),
                     Column(
@@ -920,7 +884,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                       children: [
                         if (_isProcessing) ...[
                           Text(
-                            _formatPercentage(visualProgress),
+                            _formatPercentage(animatedProgress),
                             style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.w700,
@@ -982,12 +946,13 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             else ...[
               if (_isProcessing) ...[
                 Text(
-                  _formatPercentage(visualProgress),
+                  _formatPercentage(animatedProgress),
                   style: TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.w600,
                     color: progressPrimary,
                     letterSpacing: -0.5,
+                    shadows: textOutlineShadows,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
@@ -1000,6 +965,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                       fontWeight: FontWeight.w400,
                       color: theme.colorScheme.onSurface.withAlpha(140),
                       letterSpacing: 0,
+                      shadows: textOutlineShadows,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
@@ -1009,6 +975,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                   _isSuccess ? Icons.check_circle_rounded : Icons.error_rounded,
                   size: 36,
                   color: progressPrimary,
+                  shadows: textOutlineShadows,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -1018,6 +985,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                     fontWeight: FontWeight.w600,
                     color: progressPrimary,
                     letterSpacing: 0,
+                    shadows: textOutlineShadows,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
@@ -1026,21 +994,26 @@ class _ProcessingScreenState extends State<ProcessingScreen>
               SizedBox(
                 width: 300,
                 height: 92,
-                child: CustomPaint(
-                  size: const Size(300, 92),
-                  painter: _DualRingProgressPainter(
-                    progress: visualProgress,
-                    animationValue: _pulseController.value,
-                    isProcessing: _isProcessing,
-                    isSuccess: _isSuccess,
-                    color: progressPrimary,
-                    secondaryColor: progressSecondary,
-                    deepColor: palette.deep,
-                    crestColor: palette.crest,
-                    basinColor: palette.basin,
-                    trackColor: palette.track,
-                    isWaveform: true,
-                    isDark: isDark,
+                child: RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: _pulseController,
+                    builder: (context, _) => CustomPaint(
+                      size: const Size(300, 92),
+                      painter: _DualRingProgressPainter(
+                        progress: animatedProgress,
+                        animationValue: _pulseController.value,
+                        isProcessing: _isProcessing,
+                        isSuccess: _isSuccess,
+                        color: progressPrimary,
+                        secondaryColor: progressSecondary,
+                        deepColor: palette.deep,
+                        crestColor: palette.crest,
+                        basinColor: palette.basin,
+                        trackColor: palette.track,
+                        isWaveform: true,
+                        isDark: isDark,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1115,7 +1088,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         Expanded(
           child: _buildTelemetryTile(
             theme: theme,
-            statusDotColor: thermalColor,
             label: l10n.t('telemetry_thermal'),
             value: '${_temperature.toStringAsFixed(0)}°C',
             history: _thermalHistory,
@@ -1150,7 +1122,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
 
   Widget _buildTelemetryTile({
     required ThemeData theme,
-    Color? statusDotColor,
     required String label,
     required String value,
     List<double>? history,
@@ -1166,7 +1137,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     final borderColor = theme.colorScheme.onSurface.withAlpha(isDark ? 20 : 28);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(12),
@@ -1176,38 +1147,21 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              if (statusDotColor != null) ...[
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: statusDotColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-              ],
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: theme.colorScheme.onSurface.withAlpha(140),
-                      letterSpacing: 0,
-                    ),
-                    maxLines: 1,
-                  ),
-                ),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface.withAlpha(140),
+                letterSpacing: 0,
               ),
-            ],
+              maxLines: 1,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
@@ -1229,7 +1183,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             ),
           ),
           if (history != null && graphColor != null) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             _WindowsTaskGraph(
               history: history,
               color: graphColor,
@@ -2564,12 +2518,14 @@ class _WindowsTaskGraph extends StatelessWidget {
         border: Border.all(color: borderColor, width: 0.8),
       ),
       clipBehavior: Clip.antiAlias,
-      child: CustomPaint(
-        painter: _WindowsGraphPainter(
-          history: history,
-          color: color,
-          gridColor: gridColor,
-          isProcessing: isProcessing,
+      child: RepaintBoundary(
+        child: CustomPaint(
+          painter: _WindowsGraphPainter(
+            history: history,
+            color: color,
+            gridColor: gridColor,
+            isProcessing: isProcessing,
+          ),
         ),
       ),
     );

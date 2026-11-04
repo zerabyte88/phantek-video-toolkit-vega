@@ -17,6 +17,7 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher_vega"
         android:roundIcon="@mipmap/ic_launcher_vega_round"
+        android:largeHeap="true"
         android:requestLegacyExternalStorage="true">
         <activity
             android:name=".MainActivity"

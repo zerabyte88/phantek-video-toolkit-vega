@@ -22,6 +22,7 @@ import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
@@ -42,6 +43,7 @@ import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.Effects
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
+import androidx.media3.transformer.InAppMp4Muxer
 import androidx.media3.transformer.ProgressHolder
 import androidx.media3.transformer.Transformer
 import androidx.media3.transformer.VideoEncoderSettings
@@ -80,6 +82,29 @@ class MainActivity : FlutterActivity() {
     // Pending channel results to prevent hanging Futures on cancel
     private var activeTranscodeResult: MethodChannel.Result? = null
     private var activeAudioExtractResult: MethodChannel.Result? = null
+
+    private var wakeLock: PowerManager.WakeLock? = null
+
+    private fun acquireWakeLock() {
+        try {
+            if (wakeLock == null) {
+                val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+                wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "PhantekVega::TranscodeWakeLock")?.apply {
+                    setReferenceCounted(false)
+                }
+            }
+            wakeLock?.acquire(2 * 60 * 60 * 1000L) // 2 hours max safety limit
+        } catch (_: Exception) {}
+    }
+
+    private fun releaseWakeLock() {
+        try {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+            }
+        } catch (_: Exception) {}
+        wakeLock = null
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -246,6 +271,11 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        releaseWakeLock()
+        super.onDestroy()
     }
 
     private fun handleResolveMediaDetails(call: MethodCall, result: MethodChannel.Result) {
@@ -961,6 +991,8 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun handleTranscodeVideo(call: MethodCall, result: MethodChannel.Result) {
+        acquireWakeLock()
+        androidx.media3.effect.DebugTraceUtil.enableTracing = true
         val inputPath = call.argument<String>("inputPath")
         val outputPath = call.argument<String>("outputPath")
         val sourceWidth = call.argument<Int>("sourceWidth") ?: 0
@@ -975,6 +1007,7 @@ class MainActivity : FlutterActivity() {
         val trimEndMs = (call.argument<Number>("trimEndMs"))?.toLong()
 
         if (inputPath.isNullOrEmpty() || outputPath.isNullOrEmpty()) {
+            releaseWakeLock()
             result.error("INVALID_ARGS", "inputPath and outputPath are required", null)
             return
         }
@@ -1035,6 +1068,7 @@ class MainActivity : FlutterActivity() {
 
             val videoSettingsBuilder = VideoEncoderSettings.Builder()
                 .setiFrameIntervalSeconds(2.0f)
+                .setEncoderPerformanceParameters(120, 0)
 
             if (bitrateBps > 0) {
                 videoSettingsBuilder.setBitrate(bitrateBps)
@@ -1053,7 +1087,7 @@ class MainActivity : FlutterActivity() {
                 .setEnableDecoderFallback(true)
                 .build()
 
-            // C.TIME_UNSET prevents sample timeouts and timestamp gaps on long/TS media
+            val muxerFactory = InAppMp4Muxer.Factory()
             val transformerBuilder = Transformer.Builder(applicationContext)
                 .setAssetLoaderFactory(
                     DefaultAssetLoaderFactory(
@@ -1066,10 +1100,12 @@ class MainActivity : FlutterActivity() {
                 .setVideoMimeType(targetVideoMime)
                 .setAudioMimeType(MimeTypes.AUDIO_AAC)
                 .setEncoderFactory(encoderFactory)
-                .setMaxDelayBetweenMuxerSamplesMs(C.TIME_UNSET)
+                .setMuxerFactory(muxerFactory)
+                .setMaxDelayBetweenMuxerSamplesMs(180_000L)
 
             transformerBuilder.addListener(object : Transformer.Listener {
                 override fun onCompleted(composition: Composition, exportResult: ExportResult) {
+                    releaseWakeLock()
                     stopProgressPolling()
                     activeTransformer = null
                     val res = activeTranscodeResult
@@ -1086,6 +1122,7 @@ class MainActivity : FlutterActivity() {
                     exportResult: ExportResult,
                     exportException: ExportException
                 ) {
+                    releaseWakeLock()
                     stopProgressPolling()
                     activeTransformer = null
                     val res = activeTranscodeResult
@@ -1116,6 +1153,7 @@ class MainActivity : FlutterActivity() {
             startProgressPolling(transformer, outputPath)
 
         } catch (t: Throwable) {
+            releaseWakeLock()
             cleanupOutput(outputPath)
             activeTransformer = null
             stopProgressPolling()
@@ -1126,6 +1164,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun handleExtractAudio(call: MethodCall, result: MethodChannel.Result) {
+        acquireWakeLock()
         val inputPath = call.argument<String>("inputPath")
         val outputPath = call.argument<String>("outputPath")
         val format = call.argument<String>("format") ?: "m4a"
@@ -1134,7 +1173,7 @@ class MainActivity : FlutterActivity() {
         val trimEndMs = (call.argument<Number>("trimEndMs"))?.toLong()
 
         if (inputPath.isNullOrEmpty() || outputPath.isNullOrEmpty()) {
-            result.error("INVALID_ARGS", "inputPath and outputPath are required", null)
+            releaseWakeLock()
             return
         }
 
@@ -1148,6 +1187,7 @@ class MainActivity : FlutterActivity() {
                 try {
                     sendLog("Extracting uncompressed audio to WAV...")
                     extractAudioToWav(inputPath, outputPath, trimStartMs, trimEndMs)
+                    releaseWakeLock()
                     mainHandler.post {
                         sendProgress(1.0, File(outputPath).length())
                         sendLog("WAV extraction completed successfully!")
@@ -1156,6 +1196,7 @@ class MainActivity : FlutterActivity() {
                         res?.success(outputPath)
                     }
                 } catch (t: Throwable) {
+                    releaseWakeLock()
                     cleanupOutput(outputPath)
                     mainHandler.post {
                         val res = activeAudioExtractResult
@@ -1174,6 +1215,7 @@ class MainActivity : FlutterActivity() {
                     sendLog("Checking source audio track for MP3 stream...")
                     val success = extractAudioDirectStream(inputPath, outputPath, "audio/mpeg", trimStartMs, trimEndMs)
                     if (success) {
+                        releaseWakeLock()
                         mainHandler.post {
                             sendProgress(1.0, File(outputPath).length())
                             sendLog("MP3 stream extracted directly!")
@@ -1182,6 +1224,7 @@ class MainActivity : FlutterActivity() {
                             res?.success(outputPath)
                         }
                     } else {
+                        releaseWakeLock()
                         cleanupOutput(outputPath)
                         mainHandler.post {
                             val res = activeAudioExtractResult
@@ -1192,6 +1235,7 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                 } catch (t: Throwable) {
+                    releaseWakeLock()
                     cleanupOutput(outputPath)
                     mainHandler.post {
                         val res = activeAudioExtractResult
@@ -1226,11 +1270,14 @@ class MainActivity : FlutterActivity() {
                 .setRemoveVideo(true)
                 .build()
 
+            val muxerFactory = InAppMp4Muxer.Factory()
             val transformer = Transformer.Builder(applicationContext)
                 .setAudioMimeType(MimeTypes.AUDIO_AAC)
-                .setMaxDelayBetweenMuxerSamplesMs(C.TIME_UNSET)
+                .setMuxerFactory(muxerFactory)
+                .setMaxDelayBetweenMuxerSamplesMs(180_000L)
                 .addListener(object : Transformer.Listener {
                     override fun onCompleted(composition: Composition, exportResult: ExportResult) {
+                        releaseWakeLock()
                         stopProgressPolling()
                         activeTransformer = null
                         val res = activeAudioExtractResult
@@ -1247,6 +1294,7 @@ class MainActivity : FlutterActivity() {
                         exportResult: ExportResult,
                         exportException: ExportException
                     ) {
+                        releaseWakeLock()
                         stopProgressPolling()
                         activeTransformer = null
                         val res = activeAudioExtractResult
@@ -1269,6 +1317,7 @@ class MainActivity : FlutterActivity() {
             startProgressPolling(transformer, outputPath)
 
         } catch (t: Throwable) {
+            releaseWakeLock()
             cleanupOutput(outputPath)
             activeTransformer = null
             stopProgressPolling()
@@ -1280,6 +1329,7 @@ class MainActivity : FlutterActivity() {
 
     private fun handleCancelTransformation(result: MethodChannel.Result) {
         isCancelled = true
+        releaseWakeLock()
         stopProgressPolling()
         try {
             activeTransformer?.cancel()
@@ -1313,18 +1363,39 @@ class MainActivity : FlutterActivity() {
     private fun startProgressPolling(transformer: Transformer, outputPath: String) {
         stopProgressPolling()
         val progressHolder = ProgressHolder()
+        var lastRatio = 0.0
+        var consecutiveWaitingCount = 0
 
         val runnable = object : Runnable {
             override fun run() {
                 if (isCancelled || activeTransformer != transformer) return
                 try {
                     val state = transformer.getProgress(progressHolder)
-                    if (state == Transformer.PROGRESS_STATE_AVAILABLE) {
-                        val progressRatio = (progressHolder.progress / 100.0).coerceIn(0.0, 1.0)
-                        val currentBytes = try { File(outputPath).length() } catch (_: Exception) { 0L }
-                        sendProgress(progressRatio, currentBytes)
+                    val currentBytes = try { File(outputPath).length() } catch (_: Exception) { 0L }
+
+                    when (state) {
+                        Transformer.PROGRESS_STATE_AVAILABLE -> {
+                            consecutiveWaitingCount = 0
+                            val ratio = (progressHolder.progress / 100.0).coerceIn(0.0, 1.0)
+                            if (ratio >= lastRatio) {
+                                lastRatio = ratio
+                            }
+                            sendProgress(lastRatio, currentBytes)
+                        }
+                        Transformer.PROGRESS_STATE_WAITING_FOR_AVAILABILITY -> {
+                            consecutiveWaitingCount++
+                            sendProgress(lastRatio, currentBytes)
+                            if (consecutiveWaitingCount == 20) {
+                                sendLog("Transformer buffer in progress, output size: ${currentBytes / 1024} KB")
+                            }
+                        }
+                        Transformer.PROGRESS_STATE_UNAVAILABLE -> {
+                            sendProgress(lastRatio, currentBytes)
+                        }
                     }
-                } catch (_: Exception) {}
+                } catch (e: Exception) {
+                    sendLog("Progress polling issue: ${e.message ?: e.javaClass.simpleName}")
+                }
 
                 if (!isCancelled && activeTransformer == transformer) {
                     mainHandler.postDelayed(this, 500)

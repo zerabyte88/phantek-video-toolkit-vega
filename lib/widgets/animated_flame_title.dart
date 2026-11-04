@@ -176,32 +176,37 @@ class _AnimatedFlameTitleState extends State<AnimatedFlameTitle>
 
         return FittedBox(
           fit: BoxFit.scaleDown,
-          child: CustomPaint(
-            painter: _FlameBorderPainter(
-              progress: progress,
-              colors: activeColors,
-            ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                color: theme.colorScheme.surface.withAlpha(210),
+          child: RepaintBoundary(
+            child: CustomPaint(
+              painter: _FlameBorderPainter(
+                progress: progress,
+                colors: activeColors,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(activeIcon, size: 16, color: iconColor),
-                  const SizedBox(width: 6),
-                  Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.2,
-                      color: theme.colorScheme.onSurface,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  color: theme.colorScheme.surface.withAlpha(210),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(activeIcon, size: 16, color: iconColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      widget.title,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

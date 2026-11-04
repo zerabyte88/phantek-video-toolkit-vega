@@ -203,7 +203,7 @@ void main() {
     });
 
     testWidgets(
-      'ProcessingScreen displays progress percentage with 1 decimal place',
+      'ProcessingScreen displays progress percentage as integer',
       (WidgetTester tester) async {
         await tester.pumpWidget(
           const MaterialApp(
@@ -216,9 +216,9 @@ void main() {
           ),
         );
 
-        // Initial state before transcode progress should format with 1 decimal place
+        // Initial state before transcode progress should format as integer
         await tester.pump();
-        expect(find.text('0.0%'), findsWidgets);
+        expect(find.text('0%'), findsWidgets);
       },
     );
 
@@ -263,7 +263,7 @@ void main() {
           final dynamic painter = customPaint.painter;
 
           // Find Text widget displaying the percentage
-          final percentageTextFinder = find.text('0.0%');
+          final percentageTextFinder = find.text('0%');
           expect(percentageTextFinder, findsWidgets);
 
           // Get the Text widget style color
@@ -291,12 +291,8 @@ void main() {
     );
 
     testWidgets(
-      'ProcessingScreen interpolates smooth decimal progress between updates',
+      'ProcessingScreen interpolates smooth progress between updates',
       (WidgetTester tester) async {
-        DateTime fakeNow = DateTime(2026, 1, 1, 12, 0, 0);
-        ProcessingScreen.now = () => fakeNow;
-        addTearDown(() => ProcessingScreen.now = DateTime.now);
-
         void Function(double, String, [int?])? progressCallback;
         final completer = Completer<String?>();
 
@@ -333,17 +329,24 @@ void main() {
 
         // Initial build before task starts
         await tester.pump();
-        expect(find.text('0.0%'), findsWidgets);
+        expect(find.text('0%'), findsWidgets);
 
         // Advance frames to trigger post-frame callback and async service startup
         await tester.pump(const Duration(milliseconds: 50));
         await tester.pump(const Duration(milliseconds: 50));
         expect(progressCallback, isNotNull);
 
-        // Task updates progress to 10.0%
-        progressCallback!(0.10, 'Size: 1 MB', 1000000);
-        await tester.pump();
-        expect(find.text('10.0%'), findsOneWidget);
+        // Task updates progress to 20%
+        progressCallback!(0.20, 'Size: 1 MB', 1000000);
+        await tester.pump(); // Start TweenAnimationBuilder interpolation from 0 to 0.20
+
+        // Advance 150ms (25% of 600ms linear tween -> ~0.05 / 5%)
+        await tester.pump(const Duration(milliseconds: 150));
+        expect(find.text('5%'), findsOneWidget);
+
+        // Advance another 150ms (50% of 600ms linear tween -> ~0.10 / 10%)
+        await tester.pump(const Duration(milliseconds: 150));
+        expect(find.text('10%'), findsOneWidget);
 
         // Verify active progress ring color matches the percentage text color during interpolation
         final customPaintFinder = find.byWidgetPredicate(
@@ -356,20 +359,18 @@ void main() {
         final dynamic painter = tester
             .widget<CustomPaint>(customPaintFinder)
             .painter;
-        final text10 = tester.widget<Text>(find.text('10.0%'));
+        final text10 = tester.widget<Text>(find.text('10%'));
         expect(painter.color, equals(text10.style?.color));
         expect(painter.secondaryColor, equals(text10.style?.color));
         expect(painter.progress, closeTo(0.10, 0.01));
 
-        // Advance fake time by 600ms (measuredMs = 1200ms -> subFraction ~0.37 -> ~10.4%)
-        fakeNow = fakeNow.add(const Duration(milliseconds: 600));
-        await tester.pump();
-        expect(find.text('10.4%'), findsOneWidget);
+        // Advance another 150ms (75% of 600ms linear tween -> ~0.15 / 15%)
+        await tester.pump(const Duration(milliseconds: 150));
+        expect(find.text('15%'), findsOneWidget);
 
-        // Advance fake time by another 1200ms (subFraction ~0.74 -> ~10.7%)
-        fakeNow = fakeNow.add(const Duration(milliseconds: 1200));
-        await tester.pump();
-        expect(find.text('10.7%'), findsOneWidget);
+        // Advance another 150ms (100% of 600ms linear tween -> ~0.20 / 20%)
+        await tester.pump(const Duration(milliseconds: 150));
+        expect(find.text('20%'), findsOneWidget);
 
         // Complete the process successfully
         final tempFile = File('${Directory.systemTemp.path}/test_output.mp4')
@@ -383,7 +384,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 600));
         await tester.pump(const Duration(milliseconds: 600));
         expect(find.byIcon(Icons.check_circle_rounded), findsWidgets);
-        expect(find.text('100.0%'), findsWidgets);
+        expect(find.text('100%'), findsWidgets);
 
         // Flush 4-second delayed foreground service stop timer
         await tester.pump(const Duration(seconds: 5));
@@ -436,40 +437,31 @@ void main() {
       expect(find.text('Error'), findsOneWidget);
     });
 
-    test('ProcessingScreen.formatProgressPercentage formats smooth decimals and handles edge cases', () {
-      expect(ProcessingScreen.formatProgressPercentage(0.0), equals('0.0%'));
-      expect(ProcessingScreen.formatProgressPercentage(0.001), equals('0.1%'));
-      expect(ProcessingScreen.formatProgressPercentage(0.002), equals('0.2%'));
-      expect(ProcessingScreen.formatProgressPercentage(0.005), equals('0.5%'));
-      expect(
-        ProcessingScreen.formatProgressPercentage(0.1412),
-        equals('14.1%'),
-      );
-      expect(
-        ProcessingScreen.formatProgressPercentage(0.1426),
-        equals('14.3%'),
-      );
-      expect(ProcessingScreen.formatProgressPercentage(0.5), equals('50.0%'));
-      expect(
-        ProcessingScreen.formatProgressPercentage(0.9994),
-        equals('99.9%'),
-      );
-      expect(ProcessingScreen.formatProgressPercentage(1.0), equals('100.0%'));
+    test('ProcessingScreen.formatProgressPercentage formats integers and handles edge cases', () {
+      expect(ProcessingScreen.formatProgressPercentage(0.0), equals('0%'));
+      expect(ProcessingScreen.formatProgressPercentage(0.004), equals('0%'));
+      expect(ProcessingScreen.formatProgressPercentage(0.006), equals('1%'));
+      expect(ProcessingScreen.formatProgressPercentage(0.01), equals('1%'));
+      expect(ProcessingScreen.formatProgressPercentage(0.141), equals('14%'));
+      expect(ProcessingScreen.formatProgressPercentage(0.146), equals('15%'));
+      expect(ProcessingScreen.formatProgressPercentage(0.5), equals('50%'));
+      expect(ProcessingScreen.formatProgressPercentage(0.999), equals('100%'));
+      expect(ProcessingScreen.formatProgressPercentage(1.0), equals('100%'));
       // Boundary clamping
-      expect(ProcessingScreen.formatProgressPercentage(-0.1), equals('0.0%'));
-      expect(ProcessingScreen.formatProgressPercentage(1.05), equals('100.0%'));
+      expect(ProcessingScreen.formatProgressPercentage(-0.1), equals('0%'));
+      expect(ProcessingScreen.formatProgressPercentage(1.05), equals('100%'));
       // Corrupt / non-finite inputs
       expect(
         ProcessingScreen.formatProgressPercentage(double.nan),
-        equals('0.0%'),
+        equals('0%'),
       );
       expect(
         ProcessingScreen.formatProgressPercentage(double.infinity),
-        equals('0.0%'),
+        equals('0%'),
       );
       expect(
         ProcessingScreen.formatProgressPercentage(double.negativeInfinity),
-        equals('0.0%'),
+        equals('0%'),
       );
     });
 
@@ -560,23 +552,23 @@ void main() {
         await tester.pump(const Duration(milliseconds: 50));
         expect(progressCallback, isNotNull);
 
-        // Overshoot progress (1.25 -> clamped to 100.0%)
+        // Overshoot progress (1.25 -> clamped to 100%)
         progressCallback!(1.25, 'Size: 2 MB', 2000000);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 600));
-        expect(find.text('100.0%'), findsOneWidget);
+        expect(find.text('100%'), findsOneWidget);
 
-        // Undershoot progress (-0.25 -> clamped to 0.0%)
+        // Undershoot progress (-0.25 -> clamped to 0%)
         progressCallback!(-0.25, 'Size: 0 MB', 0);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 600));
-        expect(find.text('0.0%'), findsOneWidget);
+        expect(find.text('0%'), findsOneWidget);
 
-        // Non-finite progress (NaN -> fallback to 0.0%)
+        // Non-finite progress (NaN -> fallback to 0%)
         progressCallback!(double.nan, 'Size: 0 MB', 0);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 600));
-        expect(find.text('0.0%'), findsOneWidget);
+        expect(find.text('0%'), findsOneWidget);
 
         completer.complete(null);
         await tester.pump();
@@ -702,7 +694,7 @@ void main() {
           expect(painter.isWaveform, isFalse);
 
           final percentageTextWidget = tester
-              .widgetList<Text>(find.text('0.0%'))
+              .widgetList<Text>(find.text('0%'))
               .firstWhere((w) => w.style?.fontSize == 34);
           expect(painter.color, equals(percentageTextWidget.style?.color));
           expect(
@@ -796,7 +788,7 @@ void main() {
           expect(painter.isWaveform, isTrue);
 
           final percentageTextWidget = tester
-              .widgetList<Text>(find.text('0.0%'))
+              .widgetList<Text>(find.text('0%'))
               .firstWhere((w) => w.style?.fontSize == 34);
           expect(painter.color, equals(percentageTextWidget.style?.color));
           expect(
@@ -830,7 +822,7 @@ void main() {
         progressCallback!(0.55, 'Size: 512 KB', 524288);
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 600));
-        expect(find.textContaining('55.'), findsOneWidget);
+        expect(find.text('55%'), findsOneWidget);
 
         final activePaintFinder = find.byWidgetPredicate(
           (widget) =>
