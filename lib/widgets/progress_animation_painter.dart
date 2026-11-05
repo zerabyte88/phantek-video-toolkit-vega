@@ -118,7 +118,7 @@ class DualRingProgressPainter extends CustomPainter {
     final orbitSweepPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = isSmall ? 1.5 : 2.0
-      ..strokeCap = StrokeCap.round
+      ..strokeCap = StrokeCap.butt
       ..shader = SweepGradient(
         startAngle: 0.0,
         endAngle: arcLen,
