@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Copyright (C) 2026 zerabyte88
-
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';

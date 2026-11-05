@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Copyright (C) 2026 zerabyte88
-
 import 'package:flutter/foundation.dart';
 
 /// Service responsible for registering native and custom licenses

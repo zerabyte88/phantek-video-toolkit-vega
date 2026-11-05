@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Copyright (C) 2026 zerabyte88
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -25,8 +22,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.5.1';
-  String _buildNumber = '25001';
+  String _appVersion = 'v2.5.2';
+  String _buildNumber = '25002';
   double? _dragCardOpacity;
 
   @override
@@ -55,14 +52,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '25001';
+              : '25002';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.5.1';
-          _buildNumber = '25001';
+          _appVersion = 'v2.5.2';
+          _buildNumber = '25002';
         });
       }
     }
@@ -97,7 +94,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             children: [
-              // 1. Appearance & Language
               _buildSectionTitle(
                 icon: Icons.palette_outlined,
                 title: l10n.t('theme_appearance'),
@@ -109,11 +105,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Language
                     _buildLanguageTile(context, theme, settings, l10n),
                     _buildDivider(theme),
 
-                    // Theme header
                     Row(
                       children: [
                         Icon(
@@ -134,22 +128,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Theme selector
                     _buildThemeGrid(theme, settings, l10n),
 
                     _buildDivider(theme),
 
-                    // Card opacity
                     _buildCardOpacitySlider(theme, settings, l10n),
 
                     _buildDivider(theme),
 
-                    // Screen wakelock
                     _buildWakelockTile(theme, settings, l10n),
 
                     _buildDivider(theme),
 
-                    // Progress animation style
                     _buildProgressStyleTile(context, theme, settings, l10n),
                   ],
                 ),
@@ -157,7 +147,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               const SizedBox(height: 20),
 
-              // Transcoding Engine & Fallback
               _buildSectionTitle(
                 icon: Icons.memory_rounded,
                 title: l10n.t('settings_transcode_engine'),
@@ -168,7 +157,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               const SizedBox(height: 20),
 
-              // 4. Storage
               _buildSectionTitle(
                 icon: Icons.folder_copy_outlined,
                 title: l10n.t('storage_cache'),
@@ -180,7 +168,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Video folder
                     _buildFolderTile(
                       icon: Icons.video_library_outlined,
                       title: l10n.t('settings_output_folder'),
@@ -229,7 +216,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     _buildDivider(theme),
 
-                    // Audio folder
                     _buildFolderTile(
                       icon: Icons.music_note_outlined,
                       title: l10n.t('settings_audio_output_folder'),
@@ -280,12 +266,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     _buildDivider(theme),
 
-                    // File naming pattern
                     _buildFileNamingSection(theme, settings, l10n),
 
                     _buildDivider(theme),
 
-                    // Preserve original media date
                     _buildPreserveMediaDateTile(theme, settings, l10n),
                   ],
                 ),
@@ -293,7 +277,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               const SizedBox(height: 20),
 
-              // 4. Device Specs & About
               _buildSectionTitle(
                 icon: Icons.info_outline_rounded,
                 title: l10n.t('device_specs_title'),
@@ -359,12 +342,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 16),
               ],
 
-              // About card
               _buildAboutCard(theme, l10n),
 
               const SizedBox(height: 20),
 
-              // Reset defaults
               Center(
                 child: () {
                   final effectiveOpacity =
@@ -408,7 +389,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // UI components
 
   Widget _buildSectionTitle({
     required IconData icon,
@@ -459,7 +439,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Language selector
 
   Widget _buildLanguageTile(
     BuildContext context,
@@ -467,7 +446,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     AppSettings settings,
     AppLocalizations l10n,
   ) {
-    // Active language metadata
     final active = AppLocalizations.supportedLanguages.firstWhere(
       (l) =>
           l['code'] == settings.languageCode ||
@@ -587,7 +565,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           builder: (_, scrollController) {
             return Column(
               children: [
-                // Drag handle
                 Center(
                   child: Container(
                     margin: const EdgeInsets.only(top: 12, bottom: 8),
@@ -745,7 +722,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Theme selector
 
   Widget _buildThemeGrid(
     ThemeData theme,
@@ -1009,7 +985,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Card opacity slider
 
   Widget _buildCardOpacitySlider(
     ThemeData theme,
@@ -1050,7 +1025,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            // Percentage badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
               decoration: BoxDecoration(
@@ -1158,7 +1132,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Transcode engine card
 
   Widget _buildTranscodeEngineCard(
     ThemeData theme,
@@ -1172,7 +1145,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Engine mode title
           Row(
             children: [
               Icon(
@@ -1193,7 +1165,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 10),
 
-          // Two ChoiceChips for hardware and software
           Center(
             child: Wrap(
               alignment: WrapAlignment.center,
@@ -1219,7 +1190,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 8),
 
-          // Description for selected engine
           Center(
             child: Text(
               isSoftware
@@ -1236,7 +1206,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _buildDivider(theme),
 
-          // Automatic Engine Fallback switch tile
           Row(
             children: [
               Container(
@@ -1290,7 +1259,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Wakelock tile
 
   Widget _buildWakelockTile(
     ThemeData theme,
@@ -1354,7 +1322,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Progress animation style tile & modal
 
   Widget _buildProgressStyleTile(
     BuildContext context,
@@ -1758,7 +1725,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // File naming pattern section
 
   Widget _buildFileNamingSection(
     ThemeData theme,
@@ -1837,7 +1803,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Preserve media date tile
 
   Widget _buildPreserveMediaDateTile(
     ThemeData theme,
@@ -1901,7 +1866,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Storage folder tile
 
   Widget _buildFolderTile({
     required IconData icon,
@@ -2008,7 +1972,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // About & developer card
 
   Widget _buildAboutCard(ThemeData theme, AppLocalizations l10n) {
     return _buildModernCard(
@@ -2036,7 +1999,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Detail rows
           _buildDetailRow(theme, l10n.t('app_version'), _appVersion),
           const SizedBox(height: 6),
           _buildDetailRow(theme, l10n.t('build_label'), _buildNumber),
@@ -2050,7 +2012,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 12),
 
-          // Developer profile
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -2301,7 +2262,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Helper widgets
 
   Widget _buildChoiceChip({
     required ThemeData theme,

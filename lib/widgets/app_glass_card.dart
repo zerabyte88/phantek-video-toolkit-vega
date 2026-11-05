@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Copyright (C) 2026 zerabyte88
-
 import 'package:flutter/material.dart';
 
 import '../services/settings_service.dart';

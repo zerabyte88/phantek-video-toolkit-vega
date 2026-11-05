@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Copyright (C) 2026 zerabyte88
-
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';

@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Copyright (C) 2026 zerabyte88
-
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -23,7 +20,6 @@ import 'processing_screen.dart';
 import 'settings_screen.dart';
 import 'trim_preview_screen.dart';
 
-// App operation modes
 enum _AppMode { convert, downscale, extractor }
 
 class HomeScreen extends StatefulWidget {
@@ -48,7 +44,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _settingsService = SettingsService();
 
-  // State
   _AppMode _selectedMode = _AppMode.convert;
   VideoInfo? _videoInfo;
   Uint8List? _videoThumbnail;
@@ -324,7 +319,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Video selection
 
   Future<void> _pickVideo() async {
     final l10n = _settingsService.l10n;
@@ -474,7 +468,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Mode switching
 
   List<VideoResolution> _getResolutionsForMode(
     _AppMode mode, [
@@ -818,7 +811,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Loading state
 
   Widget _buildLoadingState(ThemeData theme, AppLocalizations l10n) {
     return Center(
@@ -866,7 +858,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Empty state
 
   Widget _buildEmptyState(ThemeData theme, AppLocalizations l10n) {
     return LayoutBuilder(
@@ -1021,7 +1012,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Loaded state
 
   /// Each mode carries its own accent so the active task reads at a glance.
   /// Sakura keeps its own brand color across modes.
@@ -1071,11 +1061,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Mode switch
               _buildSegmentedModeBar(theme, l10n),
               const SizedBox(height: 16),
 
-              // Video info card
               VideoInfoCard(
                 videoInfo: _videoInfo!,
                 thumbnailBytes: _videoThumbnail,
@@ -1083,7 +1071,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Options card
               if (_selectedMode == _AppMode.extractor)
                 AudioExtractorCard(
                   sourceVideo: _videoInfo!,
@@ -1116,7 +1103,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 20),
 
-              // Start conversion
               FilledButton(
                 onPressed:
                     ((_selectedMode == _AppMode.extractor &&
@@ -1145,7 +1131,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Change video
               () {
                 final cardOpacity = _settingsService.settings.cardOpacity.clamp(
                   0.5,
@@ -1191,7 +1176,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Segment item widget
 
 class _SegmentItem extends StatelessWidget {
   final String label;

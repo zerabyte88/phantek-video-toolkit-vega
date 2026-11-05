@@ -1,18 +1,15 @@
-// SPDX-License-Identifier: MIT
-// Copyright (C) 2026 zerabyte88
-
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
 import '../models/app_settings.dart';
 
-/// CustomPainter untuk rendering 5 varian gaya animasi progres:
-/// - V1: Dual Ring Orbit (Cincin orbit ganda dengan satelit pemandu)
-/// - V2: Radar Ripple Ring (Cincin riak radar konsentris ganda)
-/// - V3: Circular Fluid Wave (Lingkaran ombak fluida dengan kurva ujung mulus)
-/// - V4: Calm Liquid Orb (Bola cairan tenang seimbang diameter 142dp)
-/// - V5: Flat Capsule Bar (Bar kapsul datar linier dengan efek kilau sapuan shimmer)
+/// Renders 5 progress animation styles:
+/// - V1: Dual Ring Orbit
+/// - V2: Radar Ripple Ring
+/// - V3: Serpentine Snake Ring
+/// - V4: Calm Liquid Orb
+/// - V5: Flat Capsule Bar
 class DualRingProgressPainter extends CustomPainter {
   final double progress;
   final double animationValue;
@@ -71,7 +68,7 @@ class DualRingProgressPainter extends CustomPainter {
     }
   }
 
-  /// V1: Dual Ring Orbit (Asli APK lama)
+  /// V1: Dual Ring Orbit
   void _paintDualRingOrbit(Canvas canvas, Size size) {
     final diameter = math.min(size.width, size.height);
     final isSmall = diameter < 120;
@@ -86,23 +83,28 @@ class DualRingProgressPainter extends CustomPainter {
         ? 0.0
         : animationValue;
 
-    // 1. Subtle central ambient pulse glow
+    // Central pulse glow
     if (isProcessing) {
-      final pulseAlpha = (14 + 10 * math.sin(safeAnim * 2 * math.pi)).round();
+      final glowPulse = 0.5 + 0.5 * math.sin(safeAnim * 2 * math.pi);
+      final glowRadius = rMid * 0.75;
+      final glowRect = Rect.fromCircle(center: center, radius: glowRadius);
       final glowPaint = Paint()
-        ..color = color.withAlpha(pulseAlpha)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, isSmall ? 10.0 : 18.0);
-      canvas.drawCircle(center, rMid * 0.75, glowPaint);
+        ..shader = RadialGradient(
+          colors: [
+            color.withAlpha((isDark ? 22 : 18) + (glowPulse * 25).round()),
+            color.withAlpha(0),
+          ],
+        ).createShader(glowRect);
+      canvas.drawCircle(center, glowRadius, glowPaint);
     }
 
-    // 2. Cincin jalur utama stroke 7.5
     final trackPaint = Paint()
       ..color = trackColor.withAlpha(isDark ? 45 : 65)
       ..strokeWidth = strokeMain
       ..style = PaintingStyle.stroke;
     canvas.drawCircle(center, rMid, trackPaint);
 
-    // 3. Cincin pemandu orbit luar (stroke 1.2 pada radius + 8)
+    // Outer orbit track and rotating arc
     final orbitRadius = rMid + (isSmall ? 5.0 : 8.0);
     final orbitTrackPaint = Paint()
       ..color = color.withAlpha(isDark ? 35 : 50)
@@ -110,7 +112,6 @@ class DualRingProgressPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     canvas.drawCircle(center, orbitRadius, orbitTrackPaint);
 
-    // 4. Busur pendaran sweep gradient 153° (0.85 * pi) berputar halus
     final rotAngle = safeAnim * 2 * math.pi;
     const arcLen = 0.85 * math.pi; // 153 degrees
     final orbitArcRect = Rect.fromCircle(center: center, radius: orbitRadius);
@@ -129,23 +130,7 @@ class DualRingProgressPainter extends CustomPainter {
       ).createShader(orbitArcRect);
     canvas.drawArc(orbitArcRect, rotAngle, arcLen, false, orbitSweepPaint);
 
-    // 5. Manik satelit orbit luar (radius 3.0)
-    final satAngle = rotAngle + arcLen;
-    final satX = center.dx + orbitRadius * math.cos(satAngle);
-    final satY = center.dy + orbitRadius * math.sin(satAngle);
-    final satRadius = isSmall ? 2.2 : 3.0;
-
-    final satGlowPaint = Paint()
-      ..color = crestColor.withAlpha(180)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, isSmall ? 2.5 : 4.0);
-    canvas.drawCircle(Offset(satX, satY), satRadius * 1.5, satGlowPaint);
-
-    final satPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(satX, satY), satRadius, satPaint);
-
-    // 6. Busur progres utama stroke 7.5 dengan round cap
+    // Progress arc
     final sweepAngle = safeProgress * 2 * math.pi;
     if (sweepAngle > 0) {
       final mainRect = Rect.fromCircle(center: center, radius: rMid);
@@ -166,28 +151,10 @@ class DualRingProgressPainter extends CustomPainter {
       }
 
       canvas.drawArc(mainRect, -math.pi / 2, sweepAngle, false, activePaint);
-
-      // 7. Manik kepala bercahaya (neon halo blur + core bead putih) di ujung progres
-      if (isProcessing && safeProgress > 0.01 && safeProgress < 0.999) {
-        final tipAngle = -math.pi / 2 + sweepAngle;
-        final tipX = center.dx + rMid * math.cos(tipAngle);
-        final tipY = center.dy + rMid * math.sin(tipAngle);
-        final tipPos = Offset(tipX, tipY);
-
-        final haloPaint = Paint()
-          ..color = crestColor.withAlpha(220)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, isSmall ? 3.5 : 5.5);
-        canvas.drawCircle(tipPos, isSmall ? 3.5 : 5.0, haloPaint);
-
-        final corePaint = Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.fill;
-        canvas.drawCircle(tipPos, isSmall ? 1.6 : 2.3, corePaint);
-      }
     }
   }
 
-  /// V2: Cincin Riak Radar & Ujung Pendaran (Asli v2.3.3)
+  /// V2: Radar Ripple Ring
   void _paintRadarRipple(Canvas canvas, Size size) {
     final diameter = math.min(size.width, size.height);
     final isSmall = diameter < 120;
@@ -202,43 +169,52 @@ class DualRingProgressPainter extends CustomPainter {
         ? 0.0
         : animationValue;
 
-    final maxRippleRadius = (diameter - 6.0) / 2.0;
-
-    // 1. Subtle central ambient glow
+    // Central ambient glow
     if (isProcessing) {
-      final pulseAlpha = (16 + 12 * math.sin(safeAnim * 2 * math.pi)).round();
+      final glowPulse = 0.5 + 0.5 * math.sin(safeAnim * 2 * math.pi);
+      final glowRadius = rMid * 0.75;
+      final glowRect = Rect.fromCircle(center: center, radius: glowRadius);
       final glowPaint = Paint()
-        ..color = color.withAlpha(pulseAlpha)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, isSmall ? 10.0 : 18.0);
-      canvas.drawCircle(center, rMid * 0.70, glowPaint);
+        ..shader = RadialGradient(
+          colors: [
+            color.withAlpha((isDark ? 20 : 16) + (glowPulse * 28).round()),
+            color.withAlpha(0),
+          ],
+        ).createShader(glowRect);
+      canvas.drawCircle(center, glowRadius, glowPaint);
     }
 
-    // 2. Cincin jalur utama stroke 7.5
     final trackPaint = Paint()
       ..color = trackColor.withAlpha(isDark ? 45 : 65)
       ..strokeWidth = strokeMain
       ..style = PaintingStyle.stroke;
     canvas.drawCircle(center, rMid, trackPaint);
 
-    // 3. 2 gelombang riak radar memancar keluar bertahap
-    if (maxRippleRadius > rMid) {
-      const rippleWaves = 2;
-      for (int w = 0; w < rippleWaves; w++) {
-        final phase = (safeAnim + w / rippleWaves) % 1.0;
-        final currentRadius = rMid + phase * (maxRippleRadius - rMid);
-        final rippleAlpha =
-            ((1.0 - phase) * (isProcessing ? (isDark ? 150 : 130) : 35))
-                .round();
+    // Radar ripples
+    if (isProcessing) {
+      final waveSpan = isSmall ? 10.0 : 16.0;
+      final waveBaseOffset = isSmall ? 3.0 : 5.0;
 
-        final ripplePaint = Paint()
-          ..color = color.withAlpha(rippleAlpha)
-          ..strokeWidth = isSmall ? 1.2 : 1.6
-          ..style = PaintingStyle.stroke;
-        canvas.drawCircle(center, currentRadius, ripplePaint);
-      }
+      final wave1Phase = safeAnim % 1.0;
+      final wave1Radius = rMid + waveBaseOffset + wave1Phase * waveSpan;
+      final wave1Alpha = ((1.0 - wave1Phase) * (isDark ? 175 : 155)).round();
+      final wave1Paint = Paint()
+        ..color = color.withAlpha(wave1Alpha)
+        ..strokeWidth = isSmall ? 1.6 : 2.2
+        ..style = PaintingStyle.stroke;
+      canvas.drawCircle(center, wave1Radius, wave1Paint);
+
+      final wave2Phase = (safeAnim + 0.5) % 1.0;
+      final wave2Radius = rMid + waveBaseOffset + wave2Phase * waveSpan;
+      final wave2Alpha = ((1.0 - wave2Phase) * (isDark ? 175 : 155)).round();
+      final wave2Paint = Paint()
+        ..color = color.withAlpha(wave2Alpha)
+        ..strokeWidth = isSmall ? 1.4 : 1.8
+        ..style = PaintingStyle.stroke;
+      canvas.drawCircle(center, wave2Radius, wave2Paint);
     }
 
-    // 4. Busur progres stroke 7.5 dengan round cap
+    // Progress arc
     final sweepAngle = safeProgress * 2 * math.pi;
     if (sweepAngle > 0) {
       final mainRect = Rect.fromCircle(center: center, radius: rMid);
@@ -259,28 +235,10 @@ class DualRingProgressPainter extends CustomPainter {
       }
 
       canvas.drawArc(mainRect, -math.pi / 2, sweepAngle, false, activePaint);
-
-      // 5. Ujung busur progres berhias manik putih menyala (halo glow blur 5.5 + white core 2.3)
-      if (isProcessing && safeProgress > 0.01 && safeProgress < 0.999) {
-        final tipAngle = -math.pi / 2 + sweepAngle;
-        final tipX = center.dx + rMid * math.cos(tipAngle);
-        final tipY = center.dy + rMid * math.sin(tipAngle);
-        final tipPos = Offset(tipX, tipY);
-
-        final haloPaint = Paint()
-          ..color = crestColor.withAlpha(220)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, isSmall ? 3.5 : 5.5);
-        canvas.drawCircle(tipPos, isSmall ? 3.5 : 5.0, haloPaint);
-
-        final corePaint = Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.fill;
-        canvas.drawCircle(tipPos, isSmall ? 1.6 : 2.3, corePaint);
-      }
     }
   }
 
-  /// V3: Lingkaran Ombak Fluida (Circular Fluid Wave Ring)
+  /// V3: Serpentine Snake Ring
   void _paintCircularWave(Canvas canvas, Size size) {
     final diameter = math.min(size.width, size.height);
     final isSmall = diameter < 120;
@@ -295,7 +253,6 @@ class DualRingProgressPainter extends CustomPainter {
         ? 0.0
         : animationValue;
 
-    // 1. Cincin jalur utama stroke 7.5
     final trackPaint = Paint()
       ..color = trackColor.withAlpha(isDark ? 45 : 65)
       ..strokeWidth = strokeMain
@@ -305,173 +262,71 @@ class DualRingProgressPainter extends CustomPainter {
     if (safeProgress <= 0.0) return;
 
     final sweepAngle = safeProgress * 2 * math.pi;
-    final isFull = safeProgress >= 0.99;
-    final halfStroke = strokeMain / 2.0;
-    final waveAmp = (strokeMain * 0.28).clamp(1.0, 2.6);
+    final isFull = safeProgress >= 0.999;
+    final cycles = isSmall ? 3.0 : 4.0;
+    final waveAmp = isSmall ? 2.0 : 4.0;
     final timePhase = safeAnim * 2 * math.pi;
 
-    double getWaveRadius(double theta, bool isLayerA, bool isOuter) {
-      final baseR = isOuter ? (rMid + halfStroke) : (rMid - halfStroke);
-      if (!isProcessing) return baseR;
+    // Sinusoidal serpentine spine
+    final spinePath = Path();
+    const startAngle = -math.pi / 2;
+    final effectiveSweep = isFull ? (2 * math.pi) : sweepAngle;
+    final steps = (effectiveSweep / (math.pi / 180)).ceil().clamp(60, 360);
 
-      double envelope = 1.0;
-      if (!isFull) {
-        const taperAngle = math.pi / 7;
-        final fromStart = math.max(0.0, theta - (-math.pi / 2));
-        final fromEnd = math.max(0.0, (-math.pi / 2 + sweepAngle) - theta);
-        final startT = (fromStart / taperAngle).clamp(0.0, 1.0);
-        final endT = (fromEnd / taperAngle).clamp(0.0, 1.0);
-        final sT = startT * startT * (3.0 - 2.0 * startT);
-        final eT = endT * endT * (3.0 - 2.0 * endT);
-        envelope = sT * eT;
-      }
-
-      final harmonic = isLayerA
-          ? (0.65 * math.sin(4 * theta + timePhase + 1.2) +
-                0.35 * math.cos(8 * theta - timePhase))
-          : (0.70 * math.sin(4 * theta - timePhase) +
-                0.30 * math.cos(8 * theta + 1.5 * timePhase));
-
-      final sign = isOuter ? 1.0 : -1.0;
-      return baseR + sign * waveAmp * envelope * (harmonic * 0.5 + 0.5);
-    }
-
-    Path buildWaveRibbon(bool isLayerA) {
-      final path = Path();
-      const startAngle = -math.pi / 2;
-      final effectiveSweep = isFull ? 2 * math.pi : sweepAngle;
-      final steps = (effectiveSweep / (math.pi / 36)).ceil().clamp(12, 90);
-
-      final outerPoints = <Offset>[];
-      final innerPoints = <Offset>[];
-
-      for (int i = 0; i <= steps; i++) {
-        final t = i / steps;
-        final theta = startAngle + t * effectiveSweep;
-        final rOut = getWaveRadius(theta, isLayerA, true);
-        final rIn = getWaveRadius(theta, isLayerA, false);
-
-        outerPoints.add(
-          Offset(
-            center.dx + rOut * math.cos(theta),
-            center.dy + rOut * math.sin(theta),
-          ),
-        );
-        innerPoints.add(
-          Offset(
-            center.dx + rIn * math.cos(theta),
-            center.dy + rIn * math.sin(theta),
-          ),
-        );
-      }
-
-      if (isFull) {
-        path.moveTo(outerPoints.first.dx, outerPoints.first.dy);
-        for (int i = 1; i < outerPoints.length; i++) {
-          path.lineTo(outerPoints[i].dx, outerPoints[i].dy);
-        }
-        path.close();
-
-        final innerPath = Path()
-          ..moveTo(innerPoints.first.dx, innerPoints.first.dy);
-        for (int i = 1; i < innerPoints.length; i++) {
-          innerPath.lineTo(innerPoints[i].dx, innerPoints[i].dy);
-        }
-        innerPath.close();
-
-        return Path.combine(PathOperation.difference, path, innerPath);
+    for (int i = 0; i <= steps; i++) {
+      final t = i / steps;
+      final theta = startAngle + t * effectiveSweep;
+      final r = isProcessing
+          ? (rMid + waveAmp * math.sin(cycles * theta - timePhase))
+          : rMid;
+      final pt = Offset(
+        center.dx + r * math.cos(theta),
+        center.dy + r * math.sin(theta),
+      );
+      if (i == 0) {
+        spinePath.moveTo(pt.dx, pt.dy);
       } else {
-        path.moveTo(outerPoints.first.dx, outerPoints.first.dy);
-        for (int i = 1; i < outerPoints.length; i++) {
-          path.lineTo(outerPoints[i].dx, outerPoints[i].dy);
-        }
-
-        // Head cap: kurva setengah lingkaran mulus melengkung ke depan searah jarum jam
-        final pOutEnd = outerPoints.last;
-        final pInEnd = innerPoints.last;
-        final capRadiusEnd = (pOutEnd - pInEnd).distance / 2.0;
-        if (capRadiusEnd > 0.1) {
-          path.arcToPoint(
-            pInEnd,
-            radius: Radius.circular(capRadiusEnd),
-            clockwise: true,
-          );
-        } else {
-          path.lineTo(pInEnd.dx, pInEnd.dy);
-        }
-
-        // Garis tepi bagian dalam kembali ke pangkal
-        for (int i = innerPoints.length - 2; i >= 0; i--) {
-          path.lineTo(innerPoints[i].dx, innerPoints[i].dy);
-        }
-
-        // Tail cap: kurva setengah lingkaran mulus melengkung ke belakang di titik awal
-        final pInStart = innerPoints.first;
-        final pOutStart = outerPoints.first;
-        final capRadiusStart = (pInStart - pOutStart).distance / 2.0;
-        if (capRadiusStart > 0.1) {
-          path.arcToPoint(
-            pOutStart,
-            radius: Radius.circular(capRadiusStart),
-            clockwise: true,
-          );
-        } else {
-          path.lineTo(pOutStart.dx, pOutStart.dy);
-        }
-
-        path.close();
-        return path;
+        spinePath.lineTo(pt.dx, pt.dy);
       }
     }
 
-    // 2. Layer A: Lapisan busa ombak belakang (translucent)
-    final pathA = buildWaveRibbon(true);
-    final paintA = Paint()
-      ..color = crestColor.withAlpha(isDark ? 100 : 130)
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(pathA, paintA);
+    if (isFull) {
+      spinePath.close();
+    }
 
-    // 3. Layer B: Pita ombak fluida depan utama (sweep gradient)
-    final pathB = buildWaveRibbon(false);
+    // Body aura glow
+    final auraStroke = strokeMain + (isSmall ? 2.5 : 3.5);
+    final auraPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = auraStroke
+      ..strokeCap = StrokeCap.round
+      ..color = crestColor.withAlpha(isDark ? 55 : 80);
+    canvas.drawPath(spinePath, auraPaint);
+
+    // Main snake body
     final bounds = Rect.fromCircle(
       center: center,
-      radius: rMid + halfStroke + waveAmp,
+      radius: rMid + waveAmp + strokeMain,
     );
-    final paintB = Paint()..style = PaintingStyle.fill;
+    final bodyPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeMain
+      ..strokeCap = StrokeCap.round;
 
     if (isProcessing) {
-      paintB.shader = SweepGradient(
+      bodyPaint.shader = SweepGradient(
         startAngle: 0.0,
         endAngle: 2 * math.pi,
         colors: [crestColor, color, deepColor, crestColor],
         transform: const GradientRotation(-math.pi / 2),
       ).createShader(bounds);
     } else {
-      paintB.color = color;
+      bodyPaint.color = color;
     }
-    canvas.drawPath(pathB, paintB);
-
-    // 4. Glowing head bead pada ujung pita saat belum penuh
-    if (isProcessing && safeProgress > 0.02 && safeProgress < 0.99) {
-      final tipAngle = -math.pi / 2 + sweepAngle;
-      final tipPos = Offset(
-        center.dx + rMid * math.cos(tipAngle),
-        center.dy + rMid * math.sin(tipAngle),
-      );
-
-      final haloPaint = Paint()
-        ..color = crestColor.withAlpha(220)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, isSmall ? 3.5 : 5.0);
-      canvas.drawCircle(tipPos, isSmall ? 3.5 : 4.8, haloPaint);
-
-      final corePaint = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(tipPos, isSmall ? 1.6 : 2.2, corePaint);
-    }
+    canvas.drawPath(spinePath, bodyPaint);
   }
 
-  /// V4: Bola Cairan Tenang (Calm Liquid Orb - Fluida Air Realistis)
+  /// V4: Calm Liquid Orb
   void _paintLiquidOrb(Canvas canvas, Size size) {
     final diameter = math.min(size.width, size.height);
     final isSmall = diameter < 120;
@@ -481,7 +336,7 @@ class DualRingProgressPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final orbRect = Rect.fromCircle(center: center, radius: radius);
 
-    // 1. Pendaran lembut tipis di belakang bola air (ambient glow)
+    // Ambient glow
     if (isProcessing) {
       final pulse = 0.5 + 0.5 * math.sin(animationValue * 2 * math.pi);
       final glowPaint = Paint()
@@ -493,7 +348,7 @@ class DualRingProgressPainter extends CustomPainter {
     canvas.save();
     canvas.clipPath(Path()..addOval(orbRect));
 
-    // 2. Latar Belakang Wadah (Basin / Container Background)
+    // Basin background
     canvas.drawRect(
       orbRect,
       Paint()
@@ -515,7 +370,7 @@ class DualRingProgressPainter extends CustomPainter {
       final amp =
           (radius * (isProcessing ? 0.075 : 0.0)).clamp(0.0, 6.5) * topTaper;
 
-      // Gelombang 1: Lapisan Air Belakang (Deep Back Water Wave - Translucent)
+      // Back fluid wave
       final backWavePath = _buildFluidWavePath(
         orbRect: orbRect,
         waterY: waterY + 1.5,
@@ -531,7 +386,7 @@ class DualRingProgressPainter extends CustomPainter {
           ..style = PaintingStyle.fill,
       );
 
-      // Gelombang 2: Lapisan Air Tengah (Mid Fluid Wave)
+      // Mid fluid wave
       final midWavePath = _buildFluidWavePath(
         orbRect: orbRect,
         waterY: waterY,
@@ -547,7 +402,7 @@ class DualRingProgressPainter extends CustomPainter {
           ..style = PaintingStyle.fill,
       );
 
-      // Gelombang 3: Lapisan Air Depan Utama (Foreground Fluid Wave dengan Gradien Kedalaman)
+      // Foreground fluid wave
       final frontWaveData = _buildFluidWavePathWithSurface(
         orbRect: orbRect,
         waterY: waterY,
@@ -559,27 +414,28 @@ class DualRingProgressPainter extends CustomPainter {
       canvas.drawPath(
         frontWaveData.bodyPath,
         Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              color.withAlpha(isDark ? 230 : 210),
-              deepColor,
-              deepColor.withAlpha(255),
-            ],
-            stops: const [0.0, 0.45, 1.0],
-          ).createShader(
-            Rect.fromLTRB(
-              orbRect.left,
-              waterY - amp,
-              orbRect.right,
-              orbRect.bottom,
-            ),
-          )
+          ..shader =
+              LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  color.withAlpha(isDark ? 230 : 210),
+                  deepColor,
+                  deepColor.withAlpha(255),
+                ],
+                stops: const [0.0, 0.45, 1.0],
+              ).createShader(
+                Rect.fromLTRB(
+                  orbRect.left,
+                  waterY - amp,
+                  orbRect.right,
+                  orbRect.bottom,
+                ),
+              )
           ..style = PaintingStyle.fill,
       );
 
-      // 4. Garis Permukaan Meniscus Air (Clean Fluid Meniscus Surface Line)
+      // Meniscus line
       if (frontWaveData.surfacePoints.length > 1) {
         final surfacePath = Path()
           ..moveTo(
@@ -593,7 +449,6 @@ class DualRingProgressPainter extends CustomPainter {
           );
         }
 
-        // Garis batas permukaan air mulus
         canvas.drawPath(
           surfacePath,
           Paint()
@@ -604,7 +459,6 @@ class DualRingProgressPainter extends CustomPainter {
         );
       }
     } else {
-      // Kondisi progress 0%
       canvas.drawRect(
         orbRect,
         Paint()
@@ -613,7 +467,7 @@ class DualRingProgressPainter extends CustomPainter {
       );
     }
 
-    // 6. Pantulan Kaca Lingkaran Atas-Kiri (Glass Sphere Specular Reflection)
+    // Specular reflection
     final glassRect = Rect.fromCircle(
       center: center,
       radius: radius - (isSmall ? 2.5 : 4.0),
@@ -642,7 +496,7 @@ class DualRingProgressPainter extends CustomPainter {
 
     canvas.restore();
 
-    // 7. Cincin Bingkai Luar Bola (Outer Ring Border)
+    // Outer ring border
     final borderStroke = isSmall ? 2.2 : 3.0;
     canvas.drawCircle(
       center,
@@ -692,7 +546,7 @@ class DualRingProgressPainter extends CustomPainter {
       final x = startX + (span * i / steps);
       final nx = (x - orbRect.left) / orbRect.width;
       final theta = nx * cycles * 2 * math.pi + phase;
-      // Komposisi Gerstner/Trochoidal Wave: puncak lebih terjal, dasar lebih landai
+      // Trochoidal wave offset
       final waveOffset =
           math.sin(theta) + harmonicRatio * math.sin(2 * theta + 0.6);
       final y = waterY + waveOffset * amp;
@@ -712,7 +566,7 @@ class DualRingProgressPainter extends CustomPainter {
     return _FluidWaveData(path, surfacePoints);
   }
 
-  /// V5: Bar Kapsul Datar (Flat Capsule Bar dengan efek shimmer sweep)
+  /// V5: Flat Capsule Bar
   void _paintCapsuleBar(Canvas canvas, Size size) {
     final fullRect = Rect.fromLTWH(0, 0, size.width, size.height);
     final cornerRadius = Radius.circular(size.height / 2.0);
@@ -733,9 +587,9 @@ class DualRingProgressPainter extends CustomPainter {
 
     if (activeWidth > 0) {
       final activeRect = Rect.fromLTWH(0, 0, activeWidth, size.height);
+      final activeRRect = RRect.fromRectAndRadius(activeRect, cornerRadius);
       final activePaint = Paint()..style = PaintingStyle.fill;
 
-      // Gradien horizontal dinamis memanjang dari deepColor ke crestColor di ujung kanan
       activePaint.shader = LinearGradient(
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
@@ -744,16 +598,14 @@ class DualRingProgressPainter extends CustomPainter {
       ).createShader(activeRect);
 
       canvas.save();
-      canvas.clipRRect(rrect);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(activeRect, cornerRadius),
-        activePaint,
-      );
+      // Clip to active progress bar
+      canvas.clipRRect(activeRRect);
+      canvas.drawRRect(activeRRect, activePaint);
 
-      // Shimmer sweep glint ke kanan sesuai pola verticalShimmerGrad di README
+      // Shimmer glint
       if (isProcessing && activeWidth > 6.0) {
         final shimmerBandWidth = (size.width * 0.35).clamp(45.0, 90.0);
-        final totalSpan = activeWidth + shimmerBandWidth * 1.5;
+        final totalSpan = activeWidth + shimmerBandWidth;
         final shimmerLeft = -shimmerBandWidth + safeAnim * totalSpan;
         final shimmerRect = Rect.fromLTWH(
           shimmerLeft,
@@ -783,17 +635,10 @@ class DualRingProgressPainter extends CustomPainter {
           ).createShader(shimmerRect);
 
         canvas.drawRect(shimmerRect, shimmerPaint);
-      }
-      canvas.restore();
 
-      // Aura pendaran glow lembut yang bergerak bersama sapuan shimmer ke arah kanan
-      if (isProcessing && activeWidth > 6.0) {
-        final shimmerBandWidth = (size.width * 0.35).clamp(45.0, 90.0);
-        final totalSpan = activeWidth + shimmerBandWidth * 1.5;
-        final shimmerLeft = -shimmerBandWidth + safeAnim * totalSpan;
+        // Ambient glow
         final glintCoreX = shimmerLeft + shimmerBandWidth * 0.5;
-
-        if (glintCoreX >= -10.0 && glintCoreX <= activeWidth + 15.0) {
+        if (glintCoreX >= -10.0 && glintCoreX <= activeWidth + 10.0) {
           final auraRect = Rect.fromCenter(
             center: Offset(glintCoreX, size.height / 2.0),
             width: shimmerBandWidth * 0.45,
@@ -810,6 +655,7 @@ class DualRingProgressPainter extends CustomPainter {
           canvas.drawOval(auraRect, auraPaint);
         }
       }
+      canvas.restore();
     }
 
     final borderPaint = Paint()
@@ -844,19 +690,19 @@ class DualRingProgressPainter extends CustomPainter {
   }
 }
 
-/// Helper internal untuk data geometri gelombang fluida dan titik permukaan
+/// Internal helper for fluid wave geometry.
 class _FluidWaveData {
   final Path bodyPath;
   final List<Offset> surfacePoints;
   const _FluidWaveData(this.bodyPath, this.surfacePoints);
 }
 
-/// Widget pratinjau animasi gaya progres (Live Animated Preview)
+/// Animated preview for progress style picker.
 class ProgressStylePreviewBox extends StatefulWidget {
   final String style;
   final ThemeData theme;
 
-  /// Flag pengontrol animasi untuk testing otomatis agar tidak memicu timeout pumpAndSettle.
+  /// Disables animation in automated tests.
   static bool enableAnimationInTests = false;
 
   const ProgressStylePreviewBox({

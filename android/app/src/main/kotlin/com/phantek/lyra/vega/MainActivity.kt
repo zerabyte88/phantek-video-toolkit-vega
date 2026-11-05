@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Copyright (C) 2026 zerabyte88
-
 package com.phantek.lyra.vega
 
 import android.Manifest
