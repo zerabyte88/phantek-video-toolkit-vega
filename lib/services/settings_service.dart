@@ -13,13 +13,16 @@ import 'device_spec_helper.dart';
 class SettingsService extends ChangeNotifier {
   static const _storageKey = 'phantek_video_toolkit_app_settings';
   static const _encodingOptionsKey = 'phantek_vega_saved_encoding_options';
+  static const _progressPreviewKey = 'phantek_vega_progress_preview_percentage';
 
   AppSettings _settings = const AppSettings();
   EncodingOptions? _savedEncodingOptions;
+  double _progressPreviewPercentage = 0.80;
   bool _isLoaded = false;
 
   AppSettings get settings => _settings;
   EncodingOptions? get savedEncodingOptions => _savedEncodingOptions;
+  double get progressPreviewPercentage => _progressPreviewPercentage;
   bool get isLoaded => _isLoaded;
 
   AppLocalizations get l10n => AppLocalizations(_settings.languageCode);
@@ -52,6 +55,9 @@ class SettingsService extends ChangeNotifier {
           debugPrint('Error loading saved encoding options: $e');
         }
       }
+
+      _progressPreviewPercentage =
+          prefs.getDouble(_progressPreviewKey) ?? 0.80;
 
       await _applyWakelock(_settings.keepScreenAwake);
     } catch (e) {
@@ -225,6 +231,16 @@ class SettingsService extends ChangeNotifier {
         audioProgressStyle: sanitized,
       ),
     );
+  }
+
+  Future<void> setProgressPreviewPercentage(double val) async {
+    _progressPreviewPercentage = val.clamp(0.0, 1.0);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_progressPreviewKey, _progressPreviewPercentage);
+    } catch (e) {
+      debugPrint('Error saving progress preview percentage: $e');
+    }
   }
 
   void setCardOpacityFast(double opacity) {

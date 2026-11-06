@@ -22,8 +22,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.5.7';
-  String _buildNumber = '84915';
+  String _appVersion = 'v2.5.9';
+  String _buildNumber = '84917';
   double? _dragCardOpacity;
 
   @override
@@ -52,14 +52,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '84915';
+              : '84917';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.5.7';
-          _buildNumber = '84915';
+          _appVersion = 'v2.5.9';
+          _buildNumber = '84917';
         });
       }
     }
@@ -1410,7 +1410,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ThemeData theme,
     AppLocalizations l10n,
   ) {
-    String currentScope = 'both'; // 'video', 'audio', 'both'
+    String currentScope = 'both';
 
     showModalBottomSheet(
       context: context,
@@ -1420,7 +1420,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        double previewProgress = 0.68;
+        double previewProgress = _settingsService.progressPreviewPercentage;
         return StatefulBuilder(
           builder: (ctx, setModalState) {
             final settings = _settingsService.settings;
@@ -1644,6 +1644,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   divisions: 100,
                                   onChanged: (val) {
                                     setModalState(() => previewProgress = val);
+                                    _settingsService
+                                        .setProgressPreviewPercentage(val);
                                   },
                                 ),
                               ),

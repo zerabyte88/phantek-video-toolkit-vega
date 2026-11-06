@@ -104,14 +104,11 @@ class DualRingProgressPainter extends CustomPainter {
         : 0.0;
     final headColor = Color.lerp(crestColor, deepColor, u) ?? crestColor;
     final effectiveSweep = isFull ? (2 * math.pi) : sweepAngle;
-
-    // Gradient stops aligned to the arc span: fade-in tail → body → bright head.
-    const tailStop = 0.08;
-    const midStop = 0.55;
+    final p = (effectiveSweep / (2 * math.pi)).clamp(0.001, 1.0);
 
     if (withGlowAura && auraStrokeWidth > 0) {
       if (isFull) {
-        // Solid aura at 100% — no seam.
+        // Full completion aura
         canvas.drawArc(
           mainRect,
           -math.pi / 2,
@@ -134,22 +131,24 @@ class DualRingProgressPainter extends CustomPainter {
             ..strokeWidth = auraStrokeWidth
             ..strokeCap = StrokeCap.round
             ..shader = SweepGradient(
-              startAngle: -math.pi / 2,
-              endAngle: -math.pi / 2 + effectiveSweep,
+              startAngle: 0.0,
+              endAngle: 2 * math.pi,
               colors: [
-                deepColor.withAlpha(0),
                 deepColor.withAlpha(isDark ? 30 : 20),
                 color.withAlpha(isDark ? 65 : 45),
                 headColor.withAlpha(isDark ? 90 : 70),
+                deepColor.withAlpha(0),
+                deepColor.withAlpha(0),
               ],
-              stops: const [0.0, tailStop, midStop, 1.0],
+              stops: [0.0, p * 0.55, p, (p + 0.001).clamp(0.0, 1.0), 1.0],
+              transform: const GradientRotation(-math.pi / 2),
             ).createShader(mainRect),
         );
       }
     }
 
     if (isFull) {
-      // Solid arc at 100% — no gradient seam at the wrap point.
+      // Full completion arc
       canvas.drawArc(
         mainRect,
         -math.pi / 2,
@@ -172,15 +171,17 @@ class DualRingProgressPainter extends CustomPainter {
           ..strokeWidth = strokeWidth
           ..strokeCap = StrokeCap.round
           ..shader = SweepGradient(
-            startAngle: -math.pi / 2,
-            endAngle: -math.pi / 2 + effectiveSweep,
+            startAngle: 0.0,
+            endAngle: 2 * math.pi,
             colors: [
-              deepColor.withAlpha(0),
               deepColor,
               color,
               headColor,
+              deepColor.withAlpha(0),
+              deepColor.withAlpha(0),
             ],
-            stops: const [0.0, tailStop, midStop, 1.0],
+            stops: [0.0, p * 0.55, p, (p + 0.001).clamp(0.0, 1.0), 1.0],
+            transform: const GradientRotation(-math.pi / 2),
           ).createShader(mainRect),
       );
     }
@@ -191,7 +192,7 @@ class DualRingProgressPainter extends CustomPainter {
     final diameter = math.min(size.width, size.height);
     final isSmall = diameter < 120;
     final rMid = isSmall ? 33.0 : 71.0;
-    final strokeMain = isSmall ? 5.5 : (strokeWidth ?? 7.5);
+    final strokeMain = isSmall ? 4.5 : (strokeWidth ?? 6.5);
     final center = Offset(size.width / 2, size.height / 2);
 
     final safeProgress = (progress.isNaN || progress.isInfinite)
@@ -201,7 +202,7 @@ class DualRingProgressPainter extends CustomPainter {
         ? 0.0
         : animationValue;
 
-    // Central soft radial pulse glow
+    // Central pulse glow
     if (isProcessing) {
       final glowPulse = 0.5 + 0.5 * math.sin(safeAnim * 2 * math.pi);
       final glowRadius = isSmall ? rMid * 0.75 : 55.0;
@@ -218,47 +219,76 @@ class DualRingProgressPainter extends CustomPainter {
       canvas.drawCircle(center, glowRadius, glowPaint);
     }
 
-    // Main Track ring
+    // Dual border tracks
+    final trackDist = isSmall ? 3.0 : 5.0;
+    final trackBorderStroke = isSmall ? 1.2 : 1.8;
     final trackPaint = Paint()
       ..color = trackColor
-      ..strokeWidth = strokeMain
+      ..strokeWidth = trackBorderStroke
       ..style = PaintingStyle.stroke;
-    canvas.drawCircle(center, rMid, trackPaint);
+    canvas.drawCircle(center, rMid - trackDist, trackPaint);
+    canvas.drawCircle(center, rMid + trackDist, trackPaint);
 
-    // Outer orbit arc (153 degrees rotating 360 degrees via canvas transform to prevent gradient branch cut glitch)
+    // Outer orbit arc
     if (isProcessing) {
       canvas.save();
       canvas.translate(center.dx, center.dy);
       canvas.rotate(safeAnim * 2 * math.pi);
-      final orbitRadius = rMid + (isSmall ? 5.0 : 8.0);
+      final orbitRadius = rMid + trackDist + (isSmall ? 4.0 : 6.0);
       const arcLen = 153.0 * math.pi / 180.0;
       final orbitArcRect = Rect.fromCircle(
         center: Offset.zero,
         radius: orbitRadius,
       );
-      final orbitStroke = isSmall ? 2.0 : 2.8;
-      final orbitAlpha = (0.65 * 255).round();
+      final orbitStroke = isSmall ? 2.2 : 3.0;
+      final orbitAlpha = (0.75 * 255).round();
+      final arcNorm = arcLen / (2 * math.pi);
+
+      final orbitHeadColor = isDark ? crestColor : deepColor;
+      final orbitMidColor = isDark ? color : deepColor;
 
       final orbitSweepPaint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = orbitStroke
         ..strokeCap = StrokeCap.butt
         ..shader = SweepGradient(
-          startAngle: -math.pi / 2,
-          endAngle: -math.pi / 2 + arcLen,
+          startAngle: 0.0,
+          endAngle: 2 * math.pi,
           colors: [
-            deepColor.withAlpha(0),
-            color.withAlpha((orbitAlpha * 0.45).round()),
-            crestColor.withAlpha(orbitAlpha),
+            orbitHeadColor.withAlpha(0),
+            orbitMidColor.withAlpha((orbitAlpha * 0.50).round()),
+            orbitHeadColor.withAlpha(orbitAlpha),
+            orbitHeadColor.withAlpha(0),
+            orbitHeadColor.withAlpha(0),
           ],
-          stops: const [0.0, 0.45, 1.0],
+          stops: [
+            0.0,
+            arcNorm * 0.40,
+            arcNorm,
+            (arcNorm + 0.001).clamp(0.0, 1.0),
+            1.0,
+          ],
+          transform: const GradientRotation(-math.pi / 2),
         ).createShader(orbitArcRect);
+
       canvas.drawArc(
         orbitArcRect,
         -math.pi / 2,
         arcLen,
         false,
         orbitSweepPaint,
+      );
+
+      // Orbit head cap
+      final headAngle = -math.pi / 2 + arcLen;
+      final headX = orbitRadius * math.cos(headAngle);
+      final headY = orbitRadius * math.sin(headAngle);
+      canvas.drawCircle(
+        Offset(headX, headY),
+        orbitStroke / 2.0,
+        Paint()
+          ..color = orbitHeadColor.withAlpha(orbitAlpha)
+          ..style = PaintingStyle.fill,
       );
 
       canvas.restore();
@@ -279,7 +309,7 @@ class DualRingProgressPainter extends CustomPainter {
     final diameter = math.min(size.width, size.height);
     final isSmall = diameter < 120;
     final rMid = isSmall ? 33.0 : 71.0;
-    final strokeMain = isSmall ? 5.5 : (strokeWidth ?? 7.5);
+    final strokeMain = isSmall ? 4.5 : (strokeWidth ?? 6.5);
     final center = Offset(size.width / 2, size.height / 2);
 
     final safeProgress = (progress.isNaN || progress.isInfinite)
@@ -289,24 +319,32 @@ class DualRingProgressPainter extends CustomPainter {
         ? 0.0
         : animationValue;
 
-    // Track
+    // Dual border tracks
+    final trackDist = isSmall ? 3.0 : 5.0;
+    final trackBorderStroke = isSmall ? 1.2 : 1.8;
     final trackPaint = Paint()
       ..color = trackColor
-      ..strokeWidth = strokeMain
+      ..strokeWidth = trackBorderStroke
       ..style = PaintingStyle.stroke;
-    canvas.drawCircle(center, rMid, trackPaint);
+    canvas.drawCircle(center, rMid - trackDist, trackPaint);
+    canvas.drawCircle(center, rMid + trackDist, trackPaint);
 
-    // 2 concentric radar ripples expanding from rMid to rMid + 16.0
+    // Radar ripples
     if (isProcessing) {
-      final waveSpan = isSmall ? 10.0 : 16.0;
-      final rippleStroke = isSmall ? 1.6 : 2.2;
+      final outerEdge = rMid + trackDist + (isSmall ? 2.0 : 3.5);
+      final waveSpan = isSmall ? 6.5 : 9.5;
+      final rippleStroke = isSmall ? 1.3 : 1.7;
 
       for (int i = 0; i < 2; i++) {
         final ripplePhase = (safeAnim + i * 0.5) % 1.0;
-        final rippleR = rMid + ripplePhase * waveSpan;
-        final alpha = ((1.0 - ripplePhase) * 0.65 * 255).round().clamp(0, 255);
-        final rippleColor =
-            Color.lerp(crestColor, deepColor, ripplePhase) ?? color;
+        final rippleR = outerEdge + ripplePhase * waveSpan;
+        final alphaMultiplier = isDark ? 0.65 : 0.85;
+        final alpha = ((1.0 - ripplePhase) * alphaMultiplier * 255)
+            .round()
+            .clamp(0, 255);
+        final rippleColor = isDark
+            ? (Color.lerp(crestColor, deepColor, ripplePhase) ?? color)
+            : (Color.lerp(deepColor, color, ripplePhase) ?? deepColor);
         final ripplePaint = Paint()
           ..color = rippleColor.withAlpha(alpha)
           ..strokeWidth = rippleStroke
@@ -325,7 +363,7 @@ class DualRingProgressPainter extends CustomPainter {
     );
   }
 
-  /// V3: Liquid Orb — dual-wave realistic water with bubble highlights and consistent 0% bg.
+  /// V3: Liquid Orb
   void _paintLiquidOrb(Canvas canvas, Size size) {
     final diameter = math.min(size.width, size.height);
     final isSmall = diameter < 120;
@@ -335,7 +373,7 @@ class DualRingProgressPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final orbRect = Rect.fromCircle(center: center, radius: radius);
 
-    // Basin background — same as all circular styles.
+    // Basin background
     canvas.drawCircle(
       center,
       radius,
@@ -344,7 +382,7 @@ class DualRingProgressPainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-    // Outer track ring — same trackColor as V1/V2/V4/V5.
+    // Outer track ring
     final borderStroke = isSmall ? 2.2 : 3.0;
     canvas.drawCircle(
       center,
@@ -355,7 +393,7 @@ class DualRingProgressPainter extends CustomPainter {
         ..style = PaintingStyle.stroke,
     );
 
-    // Clip interior for water fill.
+    // Clip interior
     canvas.save();
     canvas.clipPath(
       Path()..addOval(Rect.fromCircle(center: center, radius: radius - 1.5)),
@@ -367,11 +405,9 @@ class DualRingProgressPainter extends CustomPainter {
     final effectiveTime = _effectiveTime;
 
     if (safeProgress > 0) {
-      final waterLevelY =
-          (center.dy + radius) - (safeProgress * (2 * radius));
+      final waterLevelY = (center.dy + radius) - (safeProgress * (2 * radius));
 
-      // Two independent sinusoidal waves at different frequencies and phases
-      // to create a realistic cross-chop surface.
+      // Wave parameters
       final amp1 = isProcessing ? (isSmall ? 2.8 : 4.5) : 0.0;
       final amp2 = isProcessing ? (isSmall ? 1.4 : 2.2) : 0.0;
       final k1 = isSmall ? 0.11 : 0.055;
@@ -390,7 +426,7 @@ class DualRingProgressPainter extends CustomPainter {
       final endX = center.dx + radius + 12.0;
       final bottomY = center.dy + radius + 12.0;
 
-      // Main water body.
+      // Water body
       final wavePath = Path()..moveTo(startX, waveY(startX));
       for (double x = startX + 1.5; x <= endX; x += 1.5) {
         wavePath.lineTo(x, waveY(x));
@@ -418,7 +454,7 @@ class DualRingProgressPainter extends CustomPainter {
           ..style = PaintingStyle.fill,
       );
 
-      // Translucent shimmer layer for depth.
+      // Shimmer layer
       if (isProcessing) {
         final shimAmp = isSmall ? 1.6 : 2.5;
         final shimK = isSmall ? 0.14 : 0.07;
@@ -447,7 +483,7 @@ class DualRingProgressPainter extends CustomPainter {
         );
       }
 
-      // Meniscus highlight along the top wave.
+      // Surface highlight
       final surfacePath = Path()..moveTo(startX, waveY(startX));
       for (double x = startX + 1.5; x <= endX; x += 1.5) {
         surfacePath.lineTo(x, waveY(x));
@@ -461,7 +497,7 @@ class DualRingProgressPainter extends CustomPainter {
           ..strokeCap = StrokeCap.round,
       );
 
-      // Rising bubbles drifting upward through the water column.
+      // Bubbles
       if (isProcessing) {
         final bubbleCount = isSmall ? 3 : 4;
         final waterHeight = safeProgress * 2 * radius;
@@ -470,14 +506,14 @@ class DualRingProgressPainter extends CustomPainter {
           final vSpeed = 0.6 + b * 0.18;
           final lifePhase = (effectiveTime * vSpeed + b * 0.47) % 1.0;
           final bY = waterLevelY + waterHeight * (1.0 - lifePhase);
-          final bX = center.dx +
+          final bX =
+              center.dx +
               hOffset +
               (isSmall ? 1.5 : 2.5) * math.sin(effectiveTime * 1.8 + b * 2.1);
           final bR = (isSmall ? 1.3 : 2.0) * (0.5 + 0.5 * lifePhase);
-          final bAlpha = (lifePhase < 0.8
-                  ? lifePhase / 0.8
-                  : (1.0 - lifePhase) / 0.2)
-              .clamp(0.0, 1.0);
+          final bAlpha =
+              (lifePhase < 0.8 ? lifePhase / 0.8 : (1.0 - lifePhase) / 0.2)
+                  .clamp(0.0, 1.0);
 
           if (bY > waterLevelY + bR && bY < center.dy + radius - bR) {
             canvas.drawCircle(
@@ -498,29 +534,7 @@ class DualRingProgressPainter extends CustomPainter {
           }
         }
       }
-
-      // Glass specular glint at top-left interior.
-      final glintRect = Rect.fromLTWH(
-        center.dx - radius * 0.55,
-        center.dy - radius * 0.72,
-        radius * 0.65,
-        radius * 0.30,
-      );
-      canvas.drawOval(
-        glintRect,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.white.withAlpha(isDark ? 50 : 40),
-              Colors.white.withAlpha(0),
-            ],
-          ).createShader(glintRect)
-          ..style = PaintingStyle.fill,
-      );
     }
-    // At 0%: basinColor fill + trackColor ring (drawn above clip) is enough.
 
     canvas.restore();
   }
@@ -537,7 +551,7 @@ class DualRingProgressPainter extends CustomPainter {
         : progress.clamp(0.0, 1.0);
     final effectiveTime = _effectiveTime;
 
-    // Dual synchrotron magnetic tracks (rMid - 5 and rMid + 5)
+    // Dual border tracks
     final trackDist = isSmall ? 3.0 : 5.0;
     final trackStroke = isSmall ? 1.2 : 1.8;
     final trackPaint = Paint()
@@ -547,7 +561,7 @@ class DualRingProgressPainter extends CustomPainter {
     canvas.drawCircle(center, rMid - trackDist, trackPaint);
     canvas.drawCircle(center, rMid + trackDist, trackPaint);
 
-    // Progress plasma arc
+    // Progress arc
     _drawCircularProgressArc(
       canvas: canvas,
       center: center,
@@ -558,7 +572,7 @@ class DualRingProgressPainter extends CustomPainter {
       auraStrokeWidth: (isSmall ? 4.5 : 6.5) + (isSmall ? 4.0 : 6.0),
     );
 
-    // 3 High-speed relativistic particles with comet trails
+    // Particles with trails
     if (isProcessing) {
       const speeds = [4.2, 5.8, 7.1];
       for (int k = 0; k < 3; k++) {
@@ -569,10 +583,11 @@ class DualRingProgressPainter extends CustomPainter {
           final tAng = pAng - tr * 0.07;
           final tx = center.dx + rMid * math.cos(tAng);
           final ty = center.dy + rMid * math.sin(tAng);
-          final alpha = (1.0 - tr / 8.0) * 0.55;
+          final alpha = (1.0 - tr / 8.0) * (isDark ? 0.65 : 0.85);
           final dotR = (isSmall ? 2.0 : 3.0) * (1.0 - tr / 8.0);
-          final dotColor =
-              Color.lerp(crestColor, deepColor, tr / 8.0) ?? crestColor;
+          final dotColor = isDark
+              ? (Color.lerp(crestColor, deepColor, tr / 8.0) ?? crestColor)
+              : (Color.lerp(deepColor, color, tr / 8.0) ?? deepColor);
           final trailPaint = Paint()
             ..color = dotColor.withAlpha((alpha * 255).round().clamp(0, 255))
             ..style = PaintingStyle.fill;
@@ -580,8 +595,9 @@ class DualRingProgressPainter extends CustomPainter {
         }
         final px = center.dx + rMid * math.cos(pAng);
         final py = center.dy + rMid * math.sin(pAng);
+        final headColor = isDark ? Colors.white : deepColor;
         final headPaint = Paint()
-          ..color = Colors.white
+          ..color = headColor
           ..style = PaintingStyle.fill;
         canvas.drawCircle(Offset(px, py), isSmall ? 2.2 : 3.2, headPaint);
       }
@@ -600,7 +616,7 @@ class DualRingProgressPainter extends CustomPainter {
         : progress.clamp(0.0, 1.0);
     final effectiveTime = _effectiveTime;
 
-    // 3 Archimedean Spiral arms rotating gently towards nebula center with smooth radial gradient
+    // Spiral nebula arms
     if (isProcessing) {
       canvas.save();
       canvas.translate(center.dx, center.dy);
@@ -608,13 +624,20 @@ class DualRingProgressPainter extends CustomPainter {
       final minR = isSmall ? 10.0 : 20.0;
       final maxR = isSmall ? 26.0 : 55.0;
       final nebulaRect = Rect.fromCircle(center: Offset.zero, radius: maxR);
+      final armColors = isDark
+          ? [
+              deepColor.withAlpha((0.40 * 255).round()),
+              color.withAlpha((0.28 * 255).round()),
+              crestColor.withAlpha((0.15 * 255).round()),
+            ]
+          : [
+              deepColor.withAlpha((0.55 * 255).round()),
+              color.withAlpha((0.35 * 255).round()),
+              color.withAlpha((0.15 * 255).round()),
+            ];
       final armPaint = Paint()
         ..shader = RadialGradient(
-          colors: [
-            deepColor.withAlpha((0.40 * 255).round()),
-            color.withAlpha((0.28 * 255).round()),
-            crestColor.withAlpha((0.15 * 255).round()),
-          ],
+          colors: armColors,
           stops: const [0.0, 0.5, 1.0],
         ).createShader(nebulaRect)
         ..strokeWidth = isSmall ? 1.4 : 2.0
@@ -646,9 +669,13 @@ class DualRingProgressPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     canvas.drawCircle(center, rMid, trackPaint);
 
-    // 16 Stardust particles drifting along the orbit
+    // Orbit stardust particles
     if (isProcessing) {
       const count = 16;
+      final brightStarColor = isDark
+          ? Color.lerp(crestColor, Colors.white, 0.70)!
+          : deepColor;
+
       for (int i = 0; i < count; i++) {
         final offset = (i / count) * 2 * math.pi;
         final ang = offset + effectiveTime * 0.9;
@@ -656,19 +683,34 @@ class DualRingProgressPainter extends CustomPainter {
             rMid + (isSmall ? 2.0 : 3.5) * math.sin(ang * 4.0 + effectiveTime);
         final px = center.dx + dist * math.cos(ang);
         final py = center.dy + dist * math.sin(ang);
-        final alpha =
-            (0.20 + 0.35 * math.sin(offset * 2.0 + effectiveTime * 2.0)).clamp(
-              0.05,
-              1.0,
-            );
+        final pulse = 0.5 + 0.5 * math.sin(offset * 2.0 + effectiveTime * 2.5);
+        final alpha = isDark
+            ? (0.60 + 0.40 * pulse).clamp(0.40, 1.0)
+            : (0.75 + 0.25 * pulse).clamp(0.60, 1.0);
+        final baseR =
+            (isSmall ? 1.3 : 1.9) +
+            ((i % 3 == 0) ? (isSmall ? 0.4 : 0.7) : 0.0);
+
         final dustPaint = Paint()
-          ..color = crestColor.withAlpha((alpha * 255).round().clamp(0, 255))
+          ..color = brightStarColor.withAlpha(
+            (alpha * 255).round().clamp(0, 255),
+          )
           ..style = PaintingStyle.fill;
-        canvas.drawCircle(Offset(px, py), isSmall ? 1.0 : 1.5, dustPaint);
+        canvas.drawCircle(Offset(px, py), baseR, dustPaint);
+
+        // Specular core in dark mode
+        if (isDark && pulse > 0.4) {
+          final corePaint = Paint()
+            ..color = Colors.white.withAlpha(
+              ((pulse - 0.4) * (1.0 / 0.6) * 255).round().clamp(0, 255),
+            )
+            ..style = PaintingStyle.fill;
+          canvas.drawCircle(Offset(px, py), baseR * 0.5, corePaint);
+        }
       }
     }
 
-    // Progress Arc
+    // Progress arc
     _drawCircularProgressArc(
       canvas: canvas,
       center: center,
@@ -680,13 +722,13 @@ class DualRingProgressPainter extends CustomPainter {
     );
   }
 
-  /// V6: Zig-Zag (Border-free, pure snake animation)
+  /// V6: Zig-Zag
   void _paintSerpentineBar(Canvas canvas, Size size) {
     final safeProgress = (progress.isNaN || progress.isInfinite)
         ? 0.0
         : progress.clamp(0.0, 1.0);
 
-    // Horizontal padding to prevent head and tail clipping at canvas boundaries
+    // Padding
     const pad = 8.0;
     final usableWidth = math.max(0.0, size.width - 2 * pad);
     final rawDist = usableWidth > 0
@@ -700,11 +742,9 @@ class DualRingProgressPainter extends CustomPainter {
     final yCenter = size.height / 2.0;
 
     if (activeDist > 0 && usableWidth > 0) {
-      // Undulation wave parameters (Optimized for 280x24 dp & nimble slither)
+      // Wave parameters
       const amplitude = 5.0;
       final k = (2 * math.pi * 4.2) / usableWidth;
-      // Seamless harmonic motion: integer cycle multiplier (4 full periods per 2.4s)
-      // guarantees identical phase at wrap boundary (8*pi = 0 mod 2*pi), eliminating any stutter
       final omegaT = animTime != null
           ? (animTime! * (4.0 / 2.4) * 2 * math.pi)
           : (animationValue * 4.0 * 2 * math.pi);
@@ -714,14 +754,14 @@ class DualRingProgressPainter extends CustomPainter {
       double getSlope(double x) =>
           amplitude * k * math.cos(k * (x - pad) + omegaT);
 
-      // Continuous serpentine path from tailX to headX with dense 1.0 step
+      // Serpentine path
       final path = Path()..moveTo(tailX, getY(tailX));
       for (double x = tailX + 1.0; x < headX; x += 1.0) {
         path.lineTo(x, getY(x));
       }
       path.lineTo(headX, getY(headX));
 
-      // 1. Spine with smooth linear gradient (strokeWidth 6.0, crisp without whitish aura)
+      // Spine gradient
       final spinePaint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
@@ -736,31 +776,12 @@ class DualRingProgressPainter extends CustomPainter {
       spinePaint.shader = spineGradient.createShader(spineRect);
       canvas.drawPath(path, spinePaint);
 
-      // 2. Tail (Ekor Melonjong) rotated by wave tangent angle: width 11.0, height 6.5
-      // Harmonized with start of gradient (deepColor)
-      canvas.save();
-      canvas.translate(tailX, getY(tailX));
-      final tailTheta = math.atan(getSlope(tailX));
-      canvas.rotate(tailTheta);
-      final tailOval = Rect.fromCenter(
-        center: Offset.zero,
-        width: 11.0,
-        height: 6.5,
-      );
-      final tailPaint = Paint()
-        ..color = deepColor
-        ..style = PaintingStyle.fill;
-      canvas.drawOval(tailOval, tailPaint);
-      canvas.restore();
-
-      // 3. Head (Kepala Melonjong) rotated by wave tangent angle
-      // Harmonized with end of gradient (crestColor)
+      // Head rotated along wave tangent
       canvas.save();
       canvas.translate(headX, getY(headX));
       final headTheta = math.atan(getSlope(headX));
       canvas.rotate(headTheta);
 
-      // Solid elongated oval head: width 14.5, height 9.0 (No whitish flare halo)
       final headOval = Rect.fromCenter(
         center: Offset.zero,
         width: 14.5,
@@ -771,7 +792,7 @@ class DualRingProgressPainter extends CustomPainter {
         ..style = PaintingStyle.fill;
       canvas.drawOval(headOval, headPaint);
 
-      // Inner white glint oval: width 4.5, height 2.6 at Offset(1.2, -0.6)
+      // Inner glint
       final glintOval = Rect.fromCenter(
         center: const Offset(1.2, -0.6),
         width: 4.5,
@@ -810,7 +831,6 @@ class DualRingProgressPainter extends CustomPainter {
       final activeRRect = RRect.fromRectAndRadius(activeRect, cornerRadius);
       final activePaint = Paint()..style = PaintingStyle.fill;
 
-      // Gradient body: 0.0 -> deep, 0.5 -> primary, 1.0 -> crest
       activePaint.shader = LinearGradient(
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
@@ -819,11 +839,11 @@ class DualRingProgressPainter extends CustomPainter {
       ).createShader(activeRect);
 
       canvas.save();
-      // Clip to active progress bar
+      // Active bar fill
       canvas.clipRRect(activeRRect);
       canvas.drawRRect(activeRRect, activePaint);
 
-      // Shimmer glint sweep
+      // Shimmer glint
       if (isProcessing) {
         final shimmerPhase = safeAnim.clamp(0.0, 1.0);
         final shimX = shimmerPhase * (activeWidth + 80.0) - 40.0;
@@ -835,7 +855,7 @@ class DualRingProgressPainter extends CustomPainter {
             end: Alignment.centerRight,
             colors: [
               Colors.white.withAlpha(0),
-              Colors.white.withAlpha(115), // rgba(255, 255, 255, 0.45)
+              Colors.white.withAlpha(115),
               Colors.white.withAlpha(0),
             ],
             stops: const [0.0, 0.5, 1.0],
@@ -848,12 +868,12 @@ class DualRingProgressPainter extends CustomPainter {
     }
   }
 
-  /// V8: Equalizer (40 dynamic audio spectrum frequency bars)
+  /// V8: Equalizer
   void _paintSoundwaveBar(Canvas canvas, Size size) {
     final fullRect = Rect.fromLTWH(0, 0, size.width, size.height);
     final rrect = RRect.fromRectAndRadius(fullRect, const Radius.circular(8.0));
 
-    // Soft rounded capsule background
+    // Track background
     final trackPaint = Paint()
       ..color = trackColor
       ..style = PaintingStyle.fill;
@@ -874,10 +894,9 @@ class DualRingProgressPainter extends CustomPainter {
     final effectiveTime = _effectiveTime;
     final activeW = availW * safeProgress;
 
-    // Reference center line: white with 6% opacity
+    // Center reference line
     final linePaint = Paint()
-      ..color = Colors.white
-          .withAlpha(15) // hexToRgba('#FFFFFF', 0.06)
+      ..color = (isDark ? Colors.white : color).withAlpha(isDark ? 15 : 35)
       ..strokeWidth = 1.0;
     canvas.drawLine(Offset(pad, cy), Offset(size.width - pad, cy), linePaint);
 
@@ -897,7 +916,8 @@ class DualRingProgressPainter extends CustomPainter {
         }
       } else {
         if (isProcessing) {
-          barH = 3.0 + 1.8 * math.sin(i * 0.4 + effectiveTime * 2.0);
+          final hBase = isDark ? 3.0 : 3.2;
+          barH = hBase + 1.8 * math.sin(i * 0.4 + effectiveTime * 2.0);
         } else {
           barH = 3.0;
         }
@@ -920,9 +940,9 @@ class DualRingProgressPainter extends CustomPainter {
           stops: const [0.0, 0.5, 1.0],
         ).createShader(barRect);
       } else {
-        barPaint.color = Colors.white.withAlpha(
-          31,
-        ); // hexToRgba('#FFFFFF', 0.12)
+        barPaint.color = isDark
+            ? Colors.white.withAlpha(31)
+            : color.withAlpha(45);
       }
 
       canvas.drawLine(Offset(x, y1), Offset(x, y2), barPaint);
@@ -1070,7 +1090,7 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
         : Color.alphaBlend(primary.withAlpha(40), const Color(0xFFE2E8F0));
 
     final normalizedStyle = AppSettings.sanitizeProgressStyle(widget.style);
-    final progressVal = (widget.progress ?? 0.68).clamp(0.0, 1.0);
+    final progressVal = (widget.progress ?? 0.80).clamp(0.0, 1.0);
     final pctInt = (progressVal * 100).round();
     final pctString = '$pctInt%';
 
@@ -1122,11 +1142,11 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
 
     Widget previewContent;
     switch (normalizedStyle) {
-      case 'v1': // Orbit: enlarged 140x140 dp (180x180 canvas), center percentage 28sp
-      case 'v2': // Radar: enlarged 140x140 dp (180x180 canvas), center percentage 28sp
-      case 'v3': // Liquid: enlarged 140x140 dp (180x180 canvas), center percentage 28sp
-      case 'v4': // Particles: enlarged 140x140 dp (180x180 canvas), center percentage 28sp
-      case 'v5': // Spiral: enlarged 140x140 dp (180x180 canvas), center percentage 28sp
+      case 'v1':
+      case 'v2':
+      case 'v3':
+      case 'v4':
+      case 'v5':
         previewContent = SizedBox(
           width: 140,
           height: 140,
@@ -1175,7 +1195,7 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
         );
         break;
 
-      case 'v6': // Zig-Zag: 260x24 dp, percentage 24sp di atas bar
+      case 'v6':
         previewContent = Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1218,7 +1238,7 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
         );
         break;
 
-      case 'v7': // Capsule: enlarged 250x16 dp, percentage 24sp di atas bar
+      case 'v7':
         previewContent = Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1261,7 +1281,7 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
         );
         break;
 
-      case 'v8': // Equalizer: enlarged 250x24 dp, percentage 24sp di atas bar
+      case 'v8':
       default:
         previewContent = Column(
           mainAxisSize: MainAxisSize.min,
