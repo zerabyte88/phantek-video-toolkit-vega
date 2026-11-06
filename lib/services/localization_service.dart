@@ -48,11 +48,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Bar Kapsul Datar',
 
+      'style_v6_title': 'V6 • Bar Ular Zig-Zag',
+
       'settings_transcode_engine': 'Mesin Transcoding',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Menggunakan chip hardware GPU/SoC untuk kecepatan maksimal & hemat baterai',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Menggunakan codec software AOSP untuk stabilitas maksimal jika hardware bermasalah',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Chip GPU/SoC bawaan untuk konversi super cepat dan hemat baterai. Direkomendasikan.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Enkoder CPU AOSP murni. Lebih lambat dan memakan baterai, namun stabil jika hardware gagal.',
       'engine_fallback_toggle_title': 'Beralih Otomatis Saat Gagal (Fallback)',
       'engine_fallback_toggle_desc': 'Beralih otomatis ke engine alternatif jika engine utama mengalami error',
       'engine_fallback_notice': 'Beralih otomatis ke engine {engine}',
@@ -341,11 +343,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcoding Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Built-in GPU/SoC chip for ultra-fast conversion and low battery usage. Recommended.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Pure AOSP CPU encoder. Slower and uses more battery, but stable if hardware fails.',
       'engine_fallback_toggle_title': 'Automatic Engine Fallback',
       'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
       'engine_fallback_notice': 'Switched to {engine} engine',
@@ -640,11 +644,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': '转码引擎',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': '使用 GPU/SoC 硬件编解码芯片以获得最高速度与更低功耗',
-      'engine_software_title': 'Software',
-      'engine_software_desc': '使用 Google AOSP 软件编解码器，硬件出现兼容性异常时保证极高稳定性',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': '内置 GPU/SoC 芯片实现超快转码并大幅省电，日常推荐使用。',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': '纯 CPU 软件编码。速度较慢且耗电更多，但在硬件编码故障时提供稳定兜底。',
       'engine_fallback_toggle_title': '自动故障切换 (Fallback)',
       'engine_fallback_toggle_desc': '如果首选引擎发生错误，自动无缝切换到备用引擎继续转码',
       'engine_fallback_notice': '已自动切换至 {engine} 引擎',
@@ -919,11 +925,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': '转码引擎',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': '使用 GPU/SoC 硬件编解码芯片以获得最高速度与更低功耗',
-      'engine_software_title': 'Software',
-      'engine_software_desc': '使用 Google AOSP 软件编解码器，硬件出现兼容性异常时保证极高稳定性',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': '内置 GPU/SoC 芯片实现超快转码并大幅省电，日常推荐使用。',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': '纯 CPU 软件编码。速度较慢且耗电更多，但在硬件编码故障时提供稳定兜底。',
       'engine_fallback_toggle_title': '自动故障切换 (Fallback)',
       'engine_fallback_toggle_desc': '如果首选引擎发生错误，自动无缝切换到备用引擎继续转码',
       'engine_fallback_notice': '已自动切换至 {engine} 引擎',
@@ -1200,11 +1208,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': '轉碼引擎',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': '使用 GPU/SoC 硬體編解碼晶片以獲取最高速度與更低功耗',
-      'engine_software_title': 'Software',
-      'engine_software_desc': '使用 Google AOSP 軟體編解碼器，硬體出現相容性異常時保證極高穩定性',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': '內建 GPU/SoC 晶片實現極速轉檔並大幅節省電量，推薦使用。',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': '純 CPU 軟體編碼。速度較慢且耗電較多，但在硬體編碼故障時提供穩定相容。',
       'engine_fallback_toggle_title': '自動故障切換 (Fallback)',
       'engine_fallback_toggle_desc': '如果首選引擎發生錯誤，自動無縫切換到備用引擎繼續轉碼',
       'engine_fallback_notice': '已自動切換至 {engine} 引擎',
@@ -1481,11 +1491,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Motor de transcodificación',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Usa códecs de hardware GPU/SoC para máxima velocidad y eficiencia energética',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Usa códecs de software Google AOSP para máxima estabilidad si falla el hardware',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Chip GPU/SoC integrado para conversión ultrarrápida y bajo consumo de batería. Recomendado.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Codificador CPU AOSP puro. Más lento y consume más batería, pero estable si el hardware falla.',
       'engine_fallback_toggle_title': 'Alternancia automática (Fallback)',
       'engine_fallback_toggle_desc': 'Cambia automáticamente al motor alternativo si el motor principal falla',
       'engine_fallback_notice': 'Cambiado al motor {engine}',
@@ -1782,11 +1794,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Motor de transcodificação',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Usa codecs de hardware GPU/SoC para máxima velocidade e economia de bateria',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Usa codecs de software Google AOSP para estabilidade máxima se o hardware falhar',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Chip GPU/SoC integrado para conversão ultrarrápida e baixo consumo de bateria. Recomendado.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Codificador CPU AOSP puro. Mais lento e gasta mais bateria, mas estável se o hardware falhar.',
       'engine_fallback_toggle_title': 'Alternância automática (Fallback)',
       'engine_fallback_toggle_desc': 'Alterna automaticamente para o motor alternativo se o motor principal falhar',
       'engine_fallback_notice': 'Alternado para o motor {engine}',
@@ -2082,11 +2096,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'トランスコードエンジン',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'GPU/SoCのハードウェアコーデックを使用し、最高速度と省電力を実現',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'ハードウェアに不具合がある場合、Google AOSPソフトウェアコーデックで最大の安定性を確保',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': '内蔵GPU/SoCチップによる超高速変換と低消費電力を両立。推奨。',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'CPU処理のAOSPコーデック。低速でバッテリー消費が増えますが、ハードウェア障害時も安定。',
       'engine_fallback_toggle_title': '自動フォールバック',
       'engine_fallback_toggle_desc': 'プライマリエンジンでエラーが発生した場合、自動的に代替エンジンに切り替え',
       'engine_fallback_notice': '{engine} エンジンに切り替えました',
@@ -2369,11 +2385,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': '트랜스코딩 엔진',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'GPU/SoC 하드웨어 코덱을 사용하여 최대 속도와 배터리 효율 제공',
-      'engine_software_title': 'Software',
-      'engine_software_desc': '하드웨어 코덱 문제 발생 시 Google AOSP 소프트웨어 코덱으로 안정적인 변환 보장',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': '내장 GPU/SoC 칩을 통한 초고속 변환 및 배터리 절약. 권장.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': '순수 CPU AOSP 인코더. 속도가 느리고 배터리를 더 소모하지만 하드웨어 오류 시 안정적입니다.',
       'engine_fallback_toggle_title': '자동 폴백 (Fallback)',
       'engine_fallback_toggle_desc': '기본 엔진 오류 발생 시 대체 엔진으로 자동 전환',
       'engine_fallback_notice': '{engine} 엔진으로 전환되었습니다',
@@ -2654,11 +2672,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcoding Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'अल्ट्रा-फास्ट रूपांतरण और कम बैटरी उपयोग के लिए अंतर्निहित GPU/SoC चिप। अनुशंसित।',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'शुद्ध AOSP CPU एनकोडर। धीमा और अधिक बैटरी का उपयोग करता है, लेकिन हार्डवेयर विफल होने पर स्थिर।',
       'engine_fallback_toggle_title': 'Automatic Engine Fallback',
       'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
       'engine_fallback_notice': 'Switched to {engine} engine',
@@ -2951,11 +2971,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcoding Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'شريحة GPU/SoC مدمجة لتحويل فائق السرعة واستهلاك منخفض للبطارية. موصى به.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'مشفر CPU AOSP نقي. أبطأ ويستهلك المزيد من البطارية، ولكنه مستقر إذا فشلت الأجهزة.',
       'engine_fallback_toggle_title': 'Automatic Engine Fallback',
       'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
       'engine_fallback_notice': 'Switched to {engine} engine',
@@ -3251,11 +3273,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Moteur de transcodage',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Utilise les codecs matériels GPU/SoC pour une vitesse et une efficacité maximales',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Utilise les codecs logiciels Google AOSP pour une stabilité maximale',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Puce GPU/SoC intégrée pour une conversion ultrarapide et économe en batterie. Recommandé.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Encodeur CPU AOSP pur. Plus lent et énergivore, mais stable si le matériel échoue.',
       'engine_fallback_toggle_title': 'Bascule automatique (Fallback)',
       'engine_fallback_toggle_desc': 'Bascule automatiquement sur le moteur alternatif en cas d’échec du moteur principal',
       'engine_fallback_notice': 'Basculé sur le moteur {engine}',
@@ -3547,11 +3571,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Движок транскодирования',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Использует аппаратные кодеки GPU/SoC для максимальной скорости и энергоэффективности',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Использует программные кодеки Google AOSP для максимальной стабильности при сбоях аппаратуры',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Встроенный чип GPU/SoC для сверхбыстрой конвертации и экономии батареи. Рекомендуется.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Программный CPU-кодек AOSP. Медленнее и тратит больше батареи, но надежен при сбое аппаратуры.',
       'engine_fallback_toggle_title': 'Автоматическое переключение (Fallback)',
       'engine_fallback_toggle_desc': 'Автоматически переключаться на альтернативный движок при сбое основного',
       'engine_fallback_notice': 'Переключено на движок {engine}',
@@ -3839,11 +3865,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcodierungs-Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Nutzt GPU/SoC-Hardware-Codecs für maximale Geschwindigkeit & Akkueffizienz',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Nutzt Google AOSP-Software-Codecs für maximale Stabilität bei Hardware-Problemen',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Integrierter GPU/SoC-Chip für ultraschnelle Konvertierung und geringen Akkuverbrauch. Empfohlen.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Reiner AOSP CPU-Encoder. Langsamer und verbraucht mehr Akku, aber stabil bei Hardwarefehlern.',
       'engine_fallback_toggle_title': 'Automatischer Fallback',
       'engine_fallback_toggle_desc': 'Automatisch zur alternativen Engine wechseln, wenn primäre Engine fehlschlägt',
       'engine_fallback_notice': 'Zu {engine}-Engine gewechselt',
@@ -4139,11 +4167,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcoding Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Chip GPU/SoC integrato per conversione ultrarapida e basso consumo di batteria. Consigliato.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Encoder CPU AOSP puro. Più lento e consuma più batteria, ma stabile se l\'hardware fallisce.',
       'engine_fallback_toggle_title': 'Automatic Engine Fallback',
       'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
       'engine_fallback_notice': 'Switched to {engine} engine',
@@ -4436,11 +4466,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcoding Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Ingebouwde GPU/SoC-chip voor ultrasnelle conversie en laag batterijverbruik. Aanbevolen.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Puur AOSP CPU-encoder. Langzamer en verbruikt meer batterij, maar stabiel als hardware faalt.',
       'engine_fallback_toggle_title': 'Automatic Engine Fallback',
       'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
       'engine_fallback_notice': 'Switched to {engine} engine',
@@ -4734,11 +4766,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcoding Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Indbygget GPU/SoC-chip for ultrahurtig konvertering og lavt batteriforbrug. Anbefalet.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Ren AOSP CPU-encoder. Langsommere og bruger mere batteri, men stabil hvis hardware fejler.',
       'engine_fallback_toggle_title': 'Automatic Engine Fallback',
       'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
       'engine_fallback_notice': 'Switched to {engine} engine',
@@ -5029,11 +5063,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcoding Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Sisäänrakennettu GPU/SoC-piiri erittäin nopeaan muunnokseen ja alhaiseen akun kulutukseen. Suositeltu.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Puhdas AOSP CPU -enkooderi. Hitaampi ja kuluttaa enemmän akkua, mutta vakaa laitteistovirheissä.',
       'engine_fallback_toggle_title': 'Automatic Engine Fallback',
       'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
       'engine_fallback_notice': 'Switched to {engine} engine',
@@ -5324,11 +5360,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcoding Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Innebygd GPU/SoC-brikke for ultrarask konvertering og lavt batteriforbruk. Anbefales.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Ren AOSP CPU-koder. Tregere og bruker mer batteri, men stabil hvis maskinvaren svikter.',
       'engine_fallback_toggle_title': 'Automatic Engine Fallback',
       'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
       'engine_fallback_notice': 'Switched to {engine} engine',
@@ -5617,11 +5655,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcoding Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Inbyggt GPU/SoC-chip för ultrasnabb konvertering och låg batteriförbrukning. Rekommenderas.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Ren AOSP CPU-kodare. Långsammare och drar mer batteri, men stabil om hårdvaran misslyckas.',
       'engine_fallback_toggle_title': 'Automatic Engine Fallback',
       'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
       'engine_fallback_notice': 'Switched to {engine} engine',
@@ -5914,11 +5954,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Bar Kapsul Datar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Enjin Transcoding',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Menggunakan cip perkakasan GPU/SoC untuk kelajuan maksimum & penjimatan bateri',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Menggunakan codec perisian AOSP untuk kestabilan maksimum jika perkakasan bermasalah',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Cip GPU/SoC terbina untuk konversi sangat pantas dan jimat bateri. Disyorkan.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Pengekod CPU AOSP murni. Lebih perlahan dan guna lebih bateri, tetapi stabil jika perkakasan gagal.',
       'engine_fallback_toggle_title': 'Beralih Automatik Apabila Gagal (Fallback)',
       'engine_fallback_toggle_desc': 'Beralih secara automatik ke enjin alternatif jika enjin utama mengalami ralat',
       'engine_fallback_notice': 'Beralih secara automatik ke enjin {engine}',
@@ -6209,11 +6251,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcoding Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'Chip GPU/SoC tích hợp giúp chuyển đổi siêu nhanh và tiết kiệm pin. Khuyên dùng.',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'Bộ mã hóa CPU AOSP thuần túy. Chậm hơn và tốn pin hơn, nhưng ổn định nếu phần cứng lỗi.',
       'engine_fallback_toggle_title': 'Automatic Engine Fallback',
       'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
       'engine_fallback_notice': 'Switched to {engine} engine',
@@ -6509,11 +6553,13 @@ class AppLocalizations {
 
       'style_v5_title': 'V5 • Flat Capsule Bar',
 
+      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+
       'settings_transcode_engine': 'Transcoding Engine',
-      'engine_hardware_title': 'Hardware',
-      'engine_hardware_desc': 'Uses GPU/SoC hardware codecs for maximum speed & battery efficiency',
-      'engine_software_title': 'Software',
-      'engine_software_desc': 'Uses Google AOSP software codecs for maximum stability',
+      'engine_hardware_title': 'Hardware (Fast)',
+      'engine_hardware_desc': 'ชิป GPU/SoC ในตัวเพื่อการแปลงไฟล์ที่เร็วเป็นพิเศษและประหยัดแบตเตอรี่ แนะนำ',
+      'engine_software_title': 'Software (Slow)',
+      'engine_software_desc': 'ตัวเข้ารหัส CPU AOSP ล้วน ช้ากว่าและกินแบตเตอรี่มากกว่า แต่เสถียรหากฮาร์ดแวร์ล้มเหลว',
       'engine_fallback_toggle_title': 'Automatic Engine Fallback',
       'engine_fallback_toggle_desc': 'Automatically switch to alternative engine if primary engine fails',
       'engine_fallback_notice': 'Switched to {engine} engine',

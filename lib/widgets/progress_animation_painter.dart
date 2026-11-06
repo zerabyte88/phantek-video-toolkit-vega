@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 
 import '../models/app_settings.dart';
 
-/// Renders 5 progress animation styles:
+/// Renders 6 progress animation styles:
 /// - V1: Dual Ring Orbit
 /// - V2: Radar Ripple Ring
 /// - V3: Serpentine Snake Ring
 /// - V4: Calm Liquid Orb
 /// - V5: Flat Capsule Bar
+/// - V6: Zig-Zag Snake Bar
 class DualRingProgressPainter extends CustomPainter {
   final double progress;
   final double animationValue;
@@ -62,6 +63,9 @@ class DualRingProgressPainter extends CustomPainter {
         break;
       case 'v5':
         _paintCapsuleBar(canvas, size);
+        break;
+      case 'v6':
+        _paintSerpentineBar(canvas, size);
         break;
       default:
         _paintDualRingOrbit(canvas, size);
@@ -238,12 +242,11 @@ class DualRingProgressPainter extends CustomPainter {
     }
   }
 
-  /// V3: Serpentine Snake Ring
+  /// V3: Serpentine Snake Ring (Circular 1:1 counterpart of V6)
   void _paintCircularWave(Canvas canvas, Size size) {
     final diameter = math.min(size.width, size.height);
     final isSmall = diameter < 120;
     final rMid = isSmall ? 33.0 : 71.0;
-    final strokeMain = isSmall ? 5.5 : (strokeWidth ?? 7.5);
     final center = Offset(size.width / 2, size.height / 2);
 
     final safeProgress = (progress.isNaN || progress.isInfinite)
@@ -253,40 +256,78 @@ class DualRingProgressPainter extends CustomPainter {
         ? 0.0
         : animationValue;
 
+    // Central pulse glow (matching V1 & V2)
+    if (isProcessing) {
+      final glowPulse = 0.5 + 0.5 * math.sin(safeAnim * 2 * math.pi);
+      final glowRadius = rMid * 0.75;
+      final glowRect = Rect.fromCircle(center: center, radius: glowRadius);
+      final glowPaint = Paint()
+        ..shader = RadialGradient(
+          colors: [
+            color.withAlpha((isDark ? 22 : 18) + (glowPulse * 25).round()),
+            color.withAlpha(0),
+          ],
+        ).createShader(glowRect);
+      canvas.drawCircle(center, glowRadius, glowPaint);
+    }
+
+    // Sleek guide track circle matching V6 style
     final trackPaint = Paint()
-      ..color = trackColor.withAlpha(isDark ? 45 : 65)
-      ..strokeWidth = strokeMain
+      ..color = trackColor.withAlpha(isDark ? 35 : 50)
+      ..strokeWidth = isSmall ? 1.5 : 2.0
       ..style = PaintingStyle.stroke;
     canvas.drawCircle(center, rMid, trackPaint);
 
     if (safeProgress <= 0.0) return;
 
+    const startAngle = -math.pi / 2;
     final sweepAngle = safeProgress * 2 * math.pi;
     final isFull = safeProgress >= 0.999;
-    final cycles = isSmall ? 3.0 : 4.0;
-    final waveAmp = isSmall ? 2.0 : 4.0;
-    final timePhase = safeAnim * 2 * math.pi;
-
-    // Sinusoidal serpentine spine
-    final spinePath = Path();
-    const startAngle = -math.pi / 2;
     final effectiveSweep = isFull ? (2 * math.pi) : sweepAngle;
+    final cycles = isSmall ? 3.5 : 4.5;
+    final waveAmp = isSmall ? 2.5 : 4.5;
+    final omegaT = safeAnim * 2 * math.pi;
+
     final steps = (effectiveSweep / (math.pi / 180)).ceil().clamp(60, 360);
+    final spinePath = Path();
+
+    Offset tailPos = Offset.zero;
+    double phiTail = 0.0;
+    Offset headPos = Offset.zero;
+    double phiHead = 0.0;
 
     for (int i = 0; i <= steps; i++) {
-      final t = i / steps;
-      final theta = startAngle + t * effectiveSweep;
+      final alpha = (i / steps) * effectiveSweep;
+      final theta = startAngle + alpha;
       final r = isProcessing
-          ? (rMid + waveAmp * math.sin(cycles * theta - timePhase))
+          ? (rMid + waveAmp * math.sin(cycles * alpha + omegaT))
           : rMid;
       final pt = Offset(
         center.dx + r * math.cos(theta),
         center.dy + r * math.sin(theta),
       );
+
       if (i == 0) {
         spinePath.moveTo(pt.dx, pt.dy);
+        tailPos = pt;
+        final dr = isProcessing
+            ? (waveAmp * cycles * math.cos(cycles * alpha + omegaT))
+            : 0.0;
+        final dx = dr * math.cos(theta) - r * math.sin(theta);
+        final dy = dr * math.sin(theta) + r * math.cos(theta);
+        phiTail = math.atan2(dy, dx);
       } else {
         spinePath.lineTo(pt.dx, pt.dy);
+      }
+
+      if (i == steps) {
+        headPos = pt;
+        final dr = isProcessing
+            ? (waveAmp * cycles * math.cos(cycles * alpha + omegaT))
+            : 0.0;
+        final dx = dr * math.cos(theta) - r * math.sin(theta);
+        final dy = dr * math.sin(theta) + r * math.cos(theta);
+        phiHead = math.atan2(dy, dx);
       }
     }
 
@@ -294,36 +335,98 @@ class DualRingProgressPainter extends CustomPainter {
       spinePath.close();
     }
 
-    // Body aura glow
-    final auraStroke = strokeMain + (isSmall ? 2.5 : 3.5);
+    // 1. Aura underlayer
+    final auraStroke = isSmall ? 8.0 : 10.0;
     final auraPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = auraStroke
       ..strokeCap = StrokeCap.round
-      ..color = crestColor.withAlpha(isDark ? 55 : 80);
+      ..color = crestColor.withAlpha(isDark ? 45 : 30);
     canvas.drawPath(spinePath, auraPaint);
 
-    // Main snake body
+    // 2. Main spine with SweepGradient [deepColor, color, crestColor]
+    final spineStroke = isSmall ? 4.5 : 5.5;
     final bounds = Rect.fromCircle(
       center: center,
-      radius: rMid + waveAmp + strokeMain,
+      radius: rMid + waveAmp + spineStroke,
     );
-    final bodyPaint = Paint()
+    final spinePaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeMain
-      ..strokeCap = StrokeCap.round;
-
-    if (isProcessing) {
-      bodyPaint.shader = SweepGradient(
-        startAngle: 0.0,
-        endAngle: 2 * math.pi,
-        colors: [crestColor, color, deepColor, crestColor],
-        transform: const GradientRotation(-math.pi / 2),
+      ..strokeWidth = spineStroke
+      ..strokeCap = StrokeCap.round
+      ..shader = SweepGradient(
+        startAngle: startAngle,
+        endAngle: startAngle + effectiveSweep,
+        colors: [deepColor, color, crestColor],
+        stops: const [0.0, 0.55, 1.0],
       ).createShader(bounds);
-    } else {
-      bodyPaint.color = color;
-    }
-    canvas.drawPath(spinePath, bodyPaint);
+    canvas.drawPath(spinePath, spinePaint);
+
+    // 3. Ekor Melonjong (Tail)
+    canvas.save();
+    canvas.translate(tailPos.dx, tailPos.dy);
+    canvas.rotate(phiTail);
+    final tailOval = Rect.fromCenter(
+      center: Offset.zero,
+      width: isSmall ? 7.0 : 9.5,
+      height: isSmall ? 4.0 : 5.5,
+    );
+    final tailPaint = Paint()
+      ..color = deepColor.withAlpha(isDark ? 220 : 200)
+      ..style = PaintingStyle.fill;
+    canvas.drawOval(tailOval, tailPaint);
+    canvas.restore();
+
+    // 4. Kepala Melonjong (Head)
+    canvas.save();
+    canvas.translate(headPos.dx, headPos.dy);
+    canvas.rotate(phiHead);
+
+    // Pulsing flare oval
+    final flarePulse = 0.5 + 0.5 * math.sin(safeAnim * 4 * math.pi);
+    final flareW = (isSmall ? 15.0 : 21.0) + (isSmall ? 3.0 : 4.0) * flarePulse;
+    final flareH = (isSmall ? 10.0 : 13.5) + (isSmall ? 2.0 : 3.0) * flarePulse;
+    final flareOval = Rect.fromCenter(
+      center: Offset(isSmall ? 0.7 : 1.0, 0),
+      width: flareW,
+      height: flareH,
+    );
+    final flarePaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          crestColor.withAlpha(isDark ? 90 : 70),
+          crestColor.withAlpha(0),
+        ],
+      ).createShader(flareOval);
+    canvas.drawOval(flareOval, flarePaint);
+
+    // Solid elongated oval head
+    final headW = isSmall ? 9.5 : 13.0;
+    final headH = isSmall ? 5.5 : 7.2;
+    final headOval = Rect.fromCenter(
+      center: Offset(isSmall ? 0.7 : 1.0, 0),
+      width: headW,
+      height: headH,
+    );
+    final headPaint = Paint()
+      ..color = crestColor
+      ..style = PaintingStyle.fill;
+    canvas.drawOval(headOval, headPaint);
+
+    // Inner glint
+    final glintW = isSmall ? 3.0 : 4.0;
+    final glintH = isSmall ? 1.6 : 2.2;
+    final glintOval = Rect.fromCenter(
+      center: Offset(isSmall ? 1.4 : 2.0, isSmall ? -0.7 : -1.0),
+      width: glintW,
+      height: glintH,
+    );
+    final glintPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawOval(glintOval, glintPaint);
+
+    canvas.restore();
   }
 
   /// V4: Calm Liquid Orb
@@ -604,8 +707,8 @@ class DualRingProgressPainter extends CustomPainter {
 
       // Shimmer glint & ambient highlight
       if (isProcessing && activeWidth > 6.0) {
-        final shimmerBandWidth = (size.width * 0.4).clamp(60.0, 110.0);
-        final totalSpan = size.width + shimmerBandWidth * 1.5;
+        final shimmerBandWidth = (activeWidth * 0.45).clamp(45.0, 85.0);
+        final totalSpan = activeWidth + shimmerBandWidth;
         final shimmerLeft = -shimmerBandWidth + safeAnim * totalSpan;
         final shimmerRect = Rect.fromLTWH(
           shimmerLeft,
@@ -616,13 +719,15 @@ class DualRingProgressPainter extends CustomPainter {
 
         final shimmerPaint = Paint()
           ..shader = LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
+            begin: const Alignment(-0.2, -1.0),
+            end: const Alignment(0.2, 1.0),
             colors: [
               Colors.white.withAlpha(0),
-              crestColor.withAlpha(isDark ? 50 : 40),
-              Colors.white.withAlpha(isDark ? 230 : 210),
-              crestColor.withAlpha(isDark ? 50 : 40),
+              crestColor.withAlpha(isDark ? 55 : 40),
+              (isDark ? Colors.white : crestColor).withAlpha(
+                isDark ? 230 : 210,
+              ),
+              crestColor.withAlpha(isDark ? 55 : 40),
               Colors.white.withAlpha(0),
             ],
             stops: const [0.0, 0.28, 0.50, 0.72, 1.0],
@@ -632,17 +737,18 @@ class DualRingProgressPainter extends CustomPainter {
 
         // Ambient glow
         final glintCoreX = shimmerLeft + shimmerBandWidth * 0.5;
-        if (glintCoreX >= -10.0 && glintCoreX <= activeWidth + 10.0) {
+        if (glintCoreX >= -shimmerBandWidth * 0.3 &&
+            glintCoreX <= activeWidth + shimmerBandWidth * 0.3) {
           final auraRect = Rect.fromCenter(
             center: Offset(glintCoreX, size.height / 2.0),
-            width: shimmerBandWidth * 0.5,
+            width: shimmerBandWidth * 0.65,
             height: size.height * 2.2,
           );
           final auraPaint = Paint()
             ..shader = RadialGradient(
               center: Alignment.center,
               colors: [
-                crestColor.withAlpha(isDark ? 100 : 75),
+                crestColor.withAlpha(isDark ? 90 : 70),
                 crestColor.withAlpha(0),
               ],
             ).createShader(auraRect);
@@ -652,25 +758,30 @@ class DualRingProgressPainter extends CustomPainter {
 
       // Soft breathing glow at the leading active edge
       if (activeWidth > 8.0) {
-        final capGlowRadius = size.height * 0.9;
+        final capRadius = size.height * 0.75;
+        final capCenterX = (activeWidth - size.height / 2.0).clamp(
+          0.0,
+          size.width,
+        );
         final capGlowPulse = 0.5 + 0.5 * math.sin(safeAnim * 2 * math.pi);
         final capPaint = Paint()
-          ..shader = RadialGradient(
-            colors: [
-              crestColor.withAlpha(
-                (isDark ? 70 : 50) + (capGlowPulse * 30).round(),
-              ),
-              crestColor.withAlpha(0),
-            ],
-          ).createShader(
-            Rect.fromCircle(
-              center: Offset(activeWidth - 2, size.height / 2),
-              radius: capGlowRadius,
-            ),
-          );
+          ..shader =
+              RadialGradient(
+                colors: [
+                  crestColor.withAlpha(
+                    (isDark ? 65 : 45) + (capGlowPulse * 30).round(),
+                  ),
+                  crestColor.withAlpha(0),
+                ],
+              ).createShader(
+                Rect.fromCircle(
+                  center: Offset(capCenterX, size.height / 2),
+                  radius: capRadius,
+                ),
+              );
         canvas.drawCircle(
-          Offset(activeWidth - 2, size.height / 2),
-          capGlowRadius,
+          Offset(capCenterX, size.height / 2),
+          capRadius,
           capPaint,
         );
       }
@@ -682,6 +793,149 @@ class DualRingProgressPainter extends CustomPainter {
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
     canvas.drawRRect(rrect, borderPaint);
+  }
+
+  /// V6: Zig-Zag Snake Bar (Border-free with organic elongated head & tail)
+  void _paintSerpentineBar(Canvas canvas, Size size) {
+    final fullRect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final cornerRadius = Radius.circular(size.height / 2.0);
+    final rrect = RRect.fromRectAndRadius(fullRect, cornerRadius);
+
+    // 1. Soft track background fill (no capsule border line)
+    final trackPaint = Paint()
+      ..color = trackColor.withAlpha(isDark ? 35 : 50)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(rrect, trackPaint);
+
+    final safeProgress = (progress.isNaN || progress.isInfinite)
+        ? 0.0
+        : progress.clamp(0.0, 1.0);
+    final safeAnim = (animationValue.isNaN || animationValue.isInfinite)
+        ? 0.0
+        : animationValue;
+
+    // Horizontal padding to prevent head and tail clipping at canvas boundaries
+    const pad = 8.0;
+    final usableWidth = math.max(0.0, size.width - 2 * pad);
+    final activeDist = usableWidth > 0
+        ? (usableWidth * safeProgress).clamp(0.0, usableWidth)
+        : 0.0;
+    final headX = pad + activeDist;
+    final tailX = pad;
+    final yCenter = size.height / 2.0;
+
+    // Center guideline
+    if (usableWidth > 0) {
+      final guidePaint = Paint()
+        ..color = trackColor.withAlpha(isDark ? 25 : 35)
+        ..strokeWidth = 1.0;
+      canvas.drawLine(
+        Offset(pad, yCenter),
+        Offset(size.width - pad, yCenter),
+        guidePaint,
+      );
+    }
+
+    if (activeDist > 0 && usableWidth > 0) {
+      // Undulation wave parameters
+      const amplitude = 4.0;
+      final k = (2 * math.pi * 4.5) / usableWidth;
+      final omegaT = safeAnim * 2 * math.pi;
+
+      double getY(double x) =>
+          yCenter + amplitude * math.sin(k * (x - pad) + omegaT);
+      double getSlope(double x) =>
+          amplitude * k * math.cos(k * (x - pad) + omegaT);
+
+      // Undulating serpentine path from tailX to headX
+      final path = Path()..moveTo(tailX, getY(tailX));
+      for (double x = tailX + 1.5; x < headX; x += 1.5) {
+        path.lineTo(x, getY(x));
+      }
+      path.lineTo(headX, getY(headX));
+
+      // 1. Aura underlayer
+      final auraPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = 9.0
+        ..color = crestColor.withAlpha(isDark ? 45 : 30);
+      canvas.drawPath(path, auraPaint);
+
+      // 2. Spine with linear gradient
+      final activeRect = Rect.fromLTWH(tailX, 0, activeDist, size.height);
+      final spinePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = 5.0
+        ..shader = LinearGradient(
+          colors: [deepColor, color, crestColor],
+          stops: const [0.0, 0.55, 1.0],
+        ).createShader(activeRect);
+      canvas.drawPath(path, spinePaint);
+
+      // 3. Tail (Ekor Melonjong) rotated by wave tangent angle
+      canvas.save();
+      canvas.translate(tailX, getY(tailX));
+      final tailTheta = math.atan(getSlope(tailX));
+      canvas.rotate(tailTheta);
+      final tailOval = Rect.fromCenter(
+        center: Offset.zero,
+        width: 9.0,
+        height: 5.5,
+      );
+      final tailPaint = Paint()
+        ..color = deepColor.withAlpha(isDark ? 220 : 200)
+        ..style = PaintingStyle.fill;
+      canvas.drawOval(tailOval, tailPaint);
+      canvas.restore();
+
+      // 4. Head (Kepala Melonjong) rotated by wave tangent angle
+      canvas.save();
+      canvas.translate(headX, getY(headX));
+      final headTheta = math.atan(getSlope(headX));
+      canvas.rotate(headTheta);
+
+      // Pulsing flare oval
+      final flarePulse = 0.5 + 0.5 * math.sin(safeAnim * 4 * math.pi);
+      final flareOval = Rect.fromCenter(
+        center: const Offset(1.0, 0),
+        width: 20.0 + 4.0 * flarePulse,
+        height: 13.0 + 3.0 * flarePulse,
+      );
+      final flarePaint = Paint()
+        ..shader = RadialGradient(
+          colors: [
+            crestColor.withAlpha(isDark ? 90 : 70),
+            crestColor.withAlpha(0),
+          ],
+        ).createShader(flareOval);
+      canvas.drawOval(flareOval, flarePaint);
+
+      // Solid elongated oval head
+      final headOval = Rect.fromCenter(
+        center: const Offset(1.0, 0),
+        width: 12.5,
+        height: 7.0,
+      );
+      final headPaint = Paint()
+        ..color = crestColor
+        ..style = PaintingStyle.fill;
+      canvas.drawOval(headOval, headPaint);
+
+      // Inner glint oval
+      final glintOval = Rect.fromCenter(
+        center: const Offset(2.0, -1.0),
+        width: 4.0,
+        height: 2.2,
+      );
+      final glintPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawOval(glintOval, glintPaint);
+
+      canvas.restore();
+    }
   }
 
   @override
@@ -1047,7 +1301,6 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
         break;
 
       case 'v5': // Flat Capsule Bar: enlarged 250x16 dp capsule, percentage 24sp di atas bar
-      default:
         previewContent = Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1074,6 +1327,44 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
                       basinColor: basin,
                       trackColor: track,
                       style: 'v5',
+                      isDark: isDark,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+        break;
+
+      case 'v6': // Zig-Zag Snake Bar: enlarged 250x20 dp, percentage 24sp di atas bar
+      default:
+        previewContent = Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            topPercentage,
+            const SizedBox(height: 12),
+            SizedBox(
+              width: 250,
+              height: 20,
+              child: RepaintBoundary(
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, _) => CustomPaint(
+                    size: const Size(250, 20),
+                    painter: DualRingProgressPainter(
+                      progress: progressVal,
+                      animationValue: _controller.value,
+                      isProcessing: true,
+                      isSuccess: false,
+                      color: primary,
+                      secondaryColor: primary,
+                      deepColor: deep,
+                      crestColor: crest,
+                      basinColor: basin,
+                      trackColor: track,
+                      style: 'v6',
                       isDark: isDark,
                     ),
                   ),

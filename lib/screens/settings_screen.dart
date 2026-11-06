@@ -22,8 +22,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.5.3';
-  String _buildNumber = '25003';
+  String _appVersion = 'v2.5.4';
+  String _buildNumber = '25004';
   double? _dragCardOpacity;
 
   @override
@@ -52,14 +52,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '25003';
+              : '25004';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.5.3';
-          _buildNumber = '25003';
+          _appVersion = 'v2.5.4';
+          _buildNumber = '25004';
         });
       }
     }
@@ -1185,16 +1185,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 8),
 
-          Center(
-            child: Text(
-              isSoftware
-                  ? l10n.t('engine_software_desc')
-                  : l10n.t('engine_hardware_desc'),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11.5,
-                height: 1.35,
-                color: theme.colorScheme.onSurface.withAlpha(140),
+          SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                isSoftware
+                    ? l10n.t('engine_software_desc')
+                    : l10n.t('engine_hardware_desc'),
+                textAlign: TextAlign.center,
+                softWrap: true,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  height: 1.35,
+                  color: theme.colorScheme.onSurface.withAlpha(140),
+                ),
               ),
             ),
           ),
@@ -1455,6 +1460,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'id': 'v5',
                 'title': l10n.t('style_v5_title'),
                 'icon': Icons.view_stream_rounded,
+              },
+              {
+                'id': 'v6',
+                'title': l10n.t('style_v6_title'),
+                'icon': Icons.gesture_rounded,
               },
             ];
 

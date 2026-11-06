@@ -128,8 +128,7 @@ class AppSettings {
       transcodeEngine: transcodeEngine != null
           ? sanitizeTranscodeEngine(transcodeEngine)
           : this.transcodeEngine,
-      enableEngineFallback:
-          enableEngineFallback ?? this.enableEngineFallback,
+      enableEngineFallback: enableEngineFallback ?? this.enableEngineFallback,
       videoProgressStyle: videoProgressStyle != null
           ? sanitizeProgressStyle(videoProgressStyle)
           : this.videoProgressStyle,
@@ -181,7 +180,7 @@ class AppSettings {
     return 'hardware';
   }
 
-  /// Normalizes progress animation style to supported values ('v1'..'v5').
+  /// Normalizes progress animation style to supported values ('v1'..'v6').
   /// Maps legacy 'a1' -> 'v4', 'a3' -> 'v5'.
   static String sanitizeProgressStyle(String? style, [String fallback = 'v1']) {
     if (style == null) return fallback;
@@ -192,7 +191,8 @@ class AppSettings {
         normalized == 'v2' ||
         normalized == 'v3' ||
         normalized == 'v4' ||
-        normalized == 'v5') {
+        normalized == 'v5' ||
+        normalized == 'v6') {
       return normalized;
     }
     return fallback;

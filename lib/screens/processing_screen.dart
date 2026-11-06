@@ -862,9 +862,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                   color: progressPrimary,
                   letterSpacing: -0.5,
                   shadows: textOutlineShadows,
-                  fontFeatures: const [
-                    FontFeature.tabularFigures(),
-                  ],
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               )
             : Column(
@@ -888,9 +886,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                       color: progressPrimary,
                       letterSpacing: 0,
                       shadows: textOutlineShadows,
-                      fontFeatures: const [
-                        FontFeature.tabularFigures(),
-                      ],
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ],
@@ -1039,7 +1035,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             break;
 
           case 'v5': // Flat Capsule Bar: 280x16 dp, center percentage 38sp above bar
-          default:
             indicatorWidget = Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -1065,6 +1060,43 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                           basinColor: palette.basin,
                           trackColor: palette.track,
                           style: 'v5',
+                          isDark: isDark,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+            break;
+
+          case 'v6': // Zig-Zag Snake Bar: 280x20 dp, center percentage 38sp above bar
+          default:
+            indicatorWidget = Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                percentageWidget,
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: 280,
+                  height: 20,
+                  child: RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _pulseController,
+                      builder: (context, _) => CustomPaint(
+                        size: const Size(280, 20),
+                        painter: _DualRingProgressPainter(
+                          progress: animatedProgress,
+                          animationValue: _pulseController.value,
+                          isProcessing: _isProcessing,
+                          isSuccess: _isSuccess,
+                          color: progressPrimary,
+                          secondaryColor: progressSecondary,
+                          deepColor: palette.deep,
+                          crestColor: palette.crest,
+                          basinColor: palette.basin,
+                          trackColor: palette.track,
+                          style: 'v6',
                           isDark: isDark,
                         ),
                       ),
@@ -1864,7 +1896,9 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.redAccent.withAlpha(isDark ? 30 : 20),
+                              color: Colors.redAccent.withAlpha(
+                                isDark ? 30 : 20,
+                              ),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
                                 color: Colors.redAccent.withAlpha(70),

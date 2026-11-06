@@ -199,25 +199,24 @@ void main() {
           );
     });
 
-    testWidgets(
-      'ProcessingScreen displays progress percentage as integer',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(
-          const MaterialApp(
-            home: ProcessingScreen(
-              videoInfo: testVideo,
-              targetResolution: testResolution,
-              encodingOptions: EncodingOptions(),
-              appSettings: AppSettings(),
-            ),
+    testWidgets('ProcessingScreen displays progress percentage as integer', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ProcessingScreen(
+            videoInfo: testVideo,
+            targetResolution: testResolution,
+            encodingOptions: EncodingOptions(),
+            appSettings: AppSettings(),
           ),
-        );
+        ),
+      );
 
-        // Initial state before transcode progress should format as integer
-        await tester.pump();
-        expect(find.text('0%'), findsWidgets);
-      },
-    );
+      // Initial state before transcode progress should format as integer
+      await tester.pump();
+      expect(find.text('0%'), findsWidgets);
+    });
 
     testWidgets(
       'ProcessingScreen unifies loading ring color with percentage text across themes',
@@ -335,7 +334,8 @@ void main() {
 
         // Task updates progress to 20%
         progressCallback!(0.20, 'Size: 1 MB', 1000000);
-        await tester.pump(); // Start TweenAnimationBuilder interpolation from 0 to 0.20
+        await tester
+            .pump(); // Start TweenAnimationBuilder interpolation from 0 to 0.20
 
         // Advance 150ms (25% of 600ms linear tween -> ~0.05 / 5%)
         await tester.pump(const Duration(milliseconds: 150));
@@ -1412,19 +1412,22 @@ void main() {
       expect(temp, equals(42.5));
     });
 
-    test('returns native temperature when MethodChannel succeeds with valid temp', () async {
-      DeviceSpecHelper.isAndroidOverride = true;
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (MethodCall call) async {
-            if (call.method == 'getDeviceTemperature') {
-              return 38.6;
-            }
-            return null;
-          });
+    test(
+      'returns native temperature when MethodChannel succeeds with valid temp',
+      () async {
+        DeviceSpecHelper.isAndroidOverride = true;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (MethodCall call) async {
+              if (call.method == 'getDeviceTemperature') {
+                return 38.6;
+              }
+              return null;
+            });
 
-      final temp = await DeviceSpecHelper.getBatteryTemperature();
-      expect(temp, equals(38.6));
-    });
+        final temp = await DeviceSpecHelper.getBatteryTemperature();
+        expect(temp, equals(38.6));
+      },
+    );
 
     test('returns fallback temperature 35.0 when MethodChannel returns null or <= 0', () async {
       DeviceSpecHelper.isAndroidOverride = true;
@@ -1440,19 +1443,25 @@ void main() {
       expect(temp, equals(35.0));
     });
 
-    test('returns fallback temperature 35.0 when MethodChannel throws exception', () async {
-      DeviceSpecHelper.isAndroidOverride = true;
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (MethodCall call) async {
-            if (call.method == 'getDeviceTemperature') {
-              throw PlatformException(code: 'UNAVAILABLE', message: 'Sensor fail');
-            }
-            return null;
-          });
+    test(
+      'returns fallback temperature 35.0 when MethodChannel throws exception',
+      () async {
+        DeviceSpecHelper.isAndroidOverride = true;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (MethodCall call) async {
+              if (call.method == 'getDeviceTemperature') {
+                throw PlatformException(
+                  code: 'UNAVAILABLE',
+                  message: 'Sensor fail',
+                );
+              }
+              return null;
+            });
 
-      final temp = await DeviceSpecHelper.getBatteryTemperature();
-      expect(temp, equals(35.0));
-    });
+        final temp = await DeviceSpecHelper.getBatteryTemperature();
+        expect(temp, equals(35.0));
+      },
+    );
 
     test('returns fallback temperature 35.0 when not on Android', () async {
       DeviceSpecHelper.isAndroidOverride = false;
@@ -1461,7 +1470,7 @@ void main() {
     });
   });
 
-  group('Progress Animation Styles (V1-V5) ProcessingScreen Rendering Tests', () {
+  group('Progress Animation Styles (V1-V6) ProcessingScreen Rendering Tests', () {
     const testVideo = VideoInfo(
       filePath: '/storage/test_video.mp4',
       fileName: 'test_video.mp4',
@@ -1485,224 +1494,329 @@ void main() {
       FlutterForegroundTask.skipServiceResponseCheck = true;
     });
 
-    testWidgets('V1 (Dual Ring Orbit) renders 180x180 dp with center percentage 38sp', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: ProcessingScreen(
-            videoInfo: testVideo,
-            targetResolution: testResolution,
-            appSettings: AppSettings(videoProgressStyle: 'v1'),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      final customPaintFinder = find.byWidgetPredicate(
-        (widget) =>
-            widget is CustomPaint &&
-            widget.painter.runtimeType.toString() == '_DualRingProgressPainter' &&
-            (widget.painter as dynamic).style == 'v1',
-      );
-      expect(customPaintFinder, findsOneWidget);
-
-      final customPaint = tester.widget<CustomPaint>(customPaintFinder);
-      expect(customPaint.size, equals(const Size(180, 180)));
-
-      expect(
-        find.ancestor(of: customPaintFinder, matching: find.byType(RepaintBoundary)),
-        findsWidgets,
-      );
-
-      final textFinder = find.text('0%');
-      expect(textFinder, findsWidgets);
-      final textWidget = tester.widgetList<Text>(textFinder).firstWhere(
-        (w) => w.style?.fontSize == 38,
-      );
-      expect(textWidget.style?.fontWeight, equals(FontWeight.w700));
-
-      final dynamic painter = customPaint.painter;
-      final recorder = ui.PictureRecorder();
-      final canvas = Canvas(recorder);
-      expect(() => painter.paint(canvas, const Size(180, 180)), returnsNormally);
-      expect(() => painter.paint(canvas, const Size(20, 20)), returnsNormally);
-      expect(() => painter.paint(canvas, Size.zero), returnsNormally);
-    });
-
-    testWidgets('V2 (Radar Ripple Ring) renders 180x180 dp with center percentage 38sp', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: ProcessingScreen(
-            videoInfo: testVideo,
-            targetResolution: testResolution,
-            appSettings: AppSettings(videoProgressStyle: 'v2'),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      final customPaintFinder = find.byWidgetPredicate(
-        (widget) =>
-            widget is CustomPaint &&
-            widget.painter.runtimeType.toString() == '_DualRingProgressPainter' &&
-            (widget.painter as dynamic).style == 'v2',
-      );
-      expect(customPaintFinder, findsOneWidget);
-
-      final customPaint = tester.widget<CustomPaint>(customPaintFinder);
-      expect(customPaint.size, equals(const Size(180, 180)));
-
-      final textFinder = find.text('0%');
-      expect(textFinder, findsWidgets);
-      final textWidget = tester.widgetList<Text>(textFinder).firstWhere(
-        (w) => w.style?.fontSize == 38,
-      );
-      expect(textWidget.style?.fontWeight, equals(FontWeight.w700));
-
-      final dynamic painter = customPaint.painter;
-      final recorder = ui.PictureRecorder();
-      final canvas = Canvas(recorder);
-      expect(() => painter.paint(canvas, const Size(180, 180)), returnsNormally);
-      expect(() => painter.paint(canvas, const Size(20, 20)), returnsNormally);
-      expect(() => painter.paint(canvas, Size.zero), returnsNormally);
-    });
-
-    testWidgets('V3 (Circular Fluid Wave) renders 180x180 dp with center percentage 38sp', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: ProcessingScreen(
-            videoInfo: testVideo,
-            targetResolution: testResolution,
-            appSettings: AppSettings(videoProgressStyle: 'v3'),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      final customPaintFinder = find.byWidgetPredicate(
-        (widget) =>
-            widget is CustomPaint &&
-            widget.painter.runtimeType.toString() == '_DualRingProgressPainter' &&
-            (widget.painter as dynamic).style == 'v3',
-      );
-      expect(customPaintFinder, findsOneWidget);
-
-      final customPaint = tester.widget<CustomPaint>(customPaintFinder);
-      expect(customPaint.size, equals(const Size(180, 180)));
-
-      final textFinder = find.text('0%');
-      expect(textFinder, findsWidgets);
-      final textWidget = tester.widgetList<Text>(textFinder).firstWhere(
-        (w) => w.style?.fontSize == 38,
-      );
-      expect(textWidget.style?.fontWeight, equals(FontWeight.w700));
-
-      final dynamic painter = customPaint.painter;
-      final recorder = ui.PictureRecorder();
-      final canvas = Canvas(recorder);
-      expect(() => painter.paint(canvas, const Size(180, 180)), returnsNormally);
-      expect(() => painter.paint(canvas, const Size(20, 20)), returnsNormally);
-      expect(() => painter.paint(canvas, Size.zero), returnsNormally);
-    });
-
-    testWidgets('V4 (Calm Liquid Orb) renders 180x180 dp with center percentage 38sp', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: ProcessingScreen(
-            videoInfo: testVideo,
-            targetResolution: testResolution,
-            appSettings: AppSettings(videoProgressStyle: 'v4'),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      final customPaintFinder = find.byWidgetPredicate(
-        (widget) =>
-            widget is CustomPaint &&
-            widget.painter.runtimeType.toString() == '_DualRingProgressPainter' &&
-            (widget.painter as dynamic).style == 'v4',
-      );
-      expect(customPaintFinder, findsOneWidget);
-
-      final customPaint = tester.widget<CustomPaint>(customPaintFinder);
-      expect(customPaint.size, equals(const Size(180, 180)));
-
-      final textFinder = find.text('0%');
-      expect(textFinder, findsWidgets);
-      final textWidget = tester.widgetList<Text>(textFinder).firstWhere(
-        (w) => w.style?.fontSize == 38,
-      );
-      expect(textWidget.style?.fontWeight, equals(FontWeight.w700));
-
-      final dynamic painter = customPaint.painter;
-      final recorder = ui.PictureRecorder();
-      final canvas = Canvas(recorder);
-      expect(() => painter.paint(canvas, const Size(180, 180)), returnsNormally);
-      expect(() => painter.paint(canvas, const Size(20, 20)), returnsNormally);
-      expect(() => painter.paint(canvas, Size.zero), returnsNormally);
-    });
-
-    testWidgets('V5 (Flat Capsule Bar) renders 280x16 dp with center percentage 38sp above bar', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: ProcessingScreen(
-            videoInfo: testVideo,
-            targetResolution: testResolution,
-            appSettings: AppSettings(videoProgressStyle: 'v5'),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      final customPaintFinder = find.byWidgetPredicate(
-        (widget) =>
-            widget is CustomPaint &&
-            widget.painter.runtimeType.toString() == '_DualRingProgressPainter' &&
-            (widget.painter as dynamic).style == 'v5',
-      );
-      expect(customPaintFinder, findsOneWidget);
-
-      final customPaint = tester.widget<CustomPaint>(customPaintFinder);
-      expect(customPaint.size, equals(const Size(280, 16)));
-
-      final textFinder = find.text('0%');
-      expect(textFinder, findsWidgets);
-      final textWidget = tester.widgetList<Text>(textFinder).firstWhere(
-        (w) => w.style?.fontSize == 38,
-      );
-      expect(textWidget.style?.fontWeight, equals(FontWeight.w700));
-
-      final dynamic painter = customPaint.painter;
-      final recorder = ui.PictureRecorder();
-      final canvas = Canvas(recorder);
-      expect(() => painter.paint(canvas, const Size(280, 16)), returnsNormally);
-      expect(() => painter.paint(canvas, const Size(20, 10)), returnsNormally);
-      expect(() => painter.paint(canvas, Size.zero), returnsNormally);
-    });
-
-    testWidgets('Audio extraction respects audioProgressStyle independently from videoProgressStyle', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: ProcessingScreen(
-            videoInfo: testVideo,
-            targetResolution: testResolution,
-            appSettings: AppSettings(
-              videoProgressStyle: 'v1',
-              audioProgressStyle: 'v4',
+    testWidgets(
+      'V1 (Dual Ring Orbit) renders 180x180 dp with center percentage 38sp',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ProcessingScreen(
+              videoInfo: testVideo,
+              targetResolution: testResolution,
+              appSettings: AppSettings(videoProgressStyle: 'v1'),
             ),
-            isAudioExtraction: true,
           ),
-        ),
-      );
-      await tester.pump();
+        );
+        await tester.pump();
 
-      final customPaintFinder = find.byWidgetPredicate(
-        (widget) =>
-            widget is CustomPaint &&
-            widget.painter.runtimeType.toString() == '_DualRingProgressPainter' &&
-            (widget.painter as dynamic).style == 'v4',
-      );
-      expect(customPaintFinder, findsOneWidget);
-    });
+        final customPaintFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is CustomPaint &&
+              widget.painter.runtimeType.toString() ==
+                  '_DualRingProgressPainter' &&
+              (widget.painter as dynamic).style == 'v1',
+        );
+        expect(customPaintFinder, findsOneWidget);
+
+        final customPaint = tester.widget<CustomPaint>(customPaintFinder);
+        expect(customPaint.size, equals(const Size(180, 180)));
+
+        expect(
+          find.ancestor(
+            of: customPaintFinder,
+            matching: find.byType(RepaintBoundary),
+          ),
+          findsWidgets,
+        );
+
+        final textFinder = find.text('0%');
+        expect(textFinder, findsWidgets);
+        final textWidget = tester
+            .widgetList<Text>(textFinder)
+            .firstWhere((w) => w.style?.fontSize == 38);
+        expect(textWidget.style?.fontWeight, equals(FontWeight.w700));
+
+        final dynamic painter = customPaint.painter;
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        expect(
+          () => painter.paint(canvas, const Size(180, 180)),
+          returnsNormally,
+        );
+        expect(
+          () => painter.paint(canvas, const Size(20, 20)),
+          returnsNormally,
+        );
+        expect(() => painter.paint(canvas, Size.zero), returnsNormally);
+      },
+    );
+
+    testWidgets(
+      'V2 (Radar Ripple Ring) renders 180x180 dp with center percentage 38sp',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ProcessingScreen(
+              videoInfo: testVideo,
+              targetResolution: testResolution,
+              appSettings: AppSettings(videoProgressStyle: 'v2'),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final customPaintFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is CustomPaint &&
+              widget.painter.runtimeType.toString() ==
+                  '_DualRingProgressPainter' &&
+              (widget.painter as dynamic).style == 'v2',
+        );
+        expect(customPaintFinder, findsOneWidget);
+
+        final customPaint = tester.widget<CustomPaint>(customPaintFinder);
+        expect(customPaint.size, equals(const Size(180, 180)));
+
+        final textFinder = find.text('0%');
+        expect(textFinder, findsWidgets);
+        final textWidget = tester
+            .widgetList<Text>(textFinder)
+            .firstWhere((w) => w.style?.fontSize == 38);
+        expect(textWidget.style?.fontWeight, equals(FontWeight.w700));
+
+        final dynamic painter = customPaint.painter;
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        expect(
+          () => painter.paint(canvas, const Size(180, 180)),
+          returnsNormally,
+        );
+        expect(
+          () => painter.paint(canvas, const Size(20, 20)),
+          returnsNormally,
+        );
+        expect(() => painter.paint(canvas, Size.zero), returnsNormally);
+      },
+    );
+
+    testWidgets(
+      'V3 (Circular Fluid Wave) renders 180x180 dp with center percentage 38sp',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ProcessingScreen(
+              videoInfo: testVideo,
+              targetResolution: testResolution,
+              appSettings: AppSettings(videoProgressStyle: 'v3'),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final customPaintFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is CustomPaint &&
+              widget.painter.runtimeType.toString() ==
+                  '_DualRingProgressPainter' &&
+              (widget.painter as dynamic).style == 'v3',
+        );
+        expect(customPaintFinder, findsOneWidget);
+
+        final customPaint = tester.widget<CustomPaint>(customPaintFinder);
+        expect(customPaint.size, equals(const Size(180, 180)));
+
+        final textFinder = find.text('0%');
+        expect(textFinder, findsWidgets);
+        final textWidget = tester
+            .widgetList<Text>(textFinder)
+            .firstWhere((w) => w.style?.fontSize == 38);
+        expect(textWidget.style?.fontWeight, equals(FontWeight.w700));
+
+        final dynamic painter = customPaint.painter;
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        expect(
+          () => painter.paint(canvas, const Size(180, 180)),
+          returnsNormally,
+        );
+        expect(
+          () => painter.paint(canvas, const Size(20, 20)),
+          returnsNormally,
+        );
+        expect(() => painter.paint(canvas, Size.zero), returnsNormally);
+      },
+    );
+
+    testWidgets(
+      'V4 (Calm Liquid Orb) renders 180x180 dp with center percentage 38sp',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ProcessingScreen(
+              videoInfo: testVideo,
+              targetResolution: testResolution,
+              appSettings: AppSettings(videoProgressStyle: 'v4'),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final customPaintFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is CustomPaint &&
+              widget.painter.runtimeType.toString() ==
+                  '_DualRingProgressPainter' &&
+              (widget.painter as dynamic).style == 'v4',
+        );
+        expect(customPaintFinder, findsOneWidget);
+
+        final customPaint = tester.widget<CustomPaint>(customPaintFinder);
+        expect(customPaint.size, equals(const Size(180, 180)));
+
+        final textFinder = find.text('0%');
+        expect(textFinder, findsWidgets);
+        final textWidget = tester
+            .widgetList<Text>(textFinder)
+            .firstWhere((w) => w.style?.fontSize == 38);
+        expect(textWidget.style?.fontWeight, equals(FontWeight.w700));
+
+        final dynamic painter = customPaint.painter;
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        expect(
+          () => painter.paint(canvas, const Size(180, 180)),
+          returnsNormally,
+        );
+        expect(
+          () => painter.paint(canvas, const Size(20, 20)),
+          returnsNormally,
+        );
+        expect(() => painter.paint(canvas, Size.zero), returnsNormally);
+      },
+    );
+
+    testWidgets(
+      'V5 (Flat Capsule Bar) renders 280x16 dp with center percentage 38sp above bar',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ProcessingScreen(
+              videoInfo: testVideo,
+              targetResolution: testResolution,
+              appSettings: AppSettings(videoProgressStyle: 'v5'),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final customPaintFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is CustomPaint &&
+              widget.painter.runtimeType.toString() ==
+                  '_DualRingProgressPainter' &&
+              (widget.painter as dynamic).style == 'v5',
+        );
+        expect(customPaintFinder, findsOneWidget);
+
+        final customPaint = tester.widget<CustomPaint>(customPaintFinder);
+        expect(customPaint.size, equals(const Size(280, 16)));
+
+        final textFinder = find.text('0%');
+        expect(textFinder, findsWidgets);
+        final textWidget = tester
+            .widgetList<Text>(textFinder)
+            .firstWhere((w) => w.style?.fontSize == 38);
+        expect(textWidget.style?.fontWeight, equals(FontWeight.w700));
+
+        final dynamic painter = customPaint.painter;
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        expect(
+          () => painter.paint(canvas, const Size(280, 16)),
+          returnsNormally,
+        );
+        expect(
+          () => painter.paint(canvas, const Size(20, 10)),
+          returnsNormally,
+        );
+        expect(() => painter.paint(canvas, Size.zero), returnsNormally);
+      },
+    );
+
+    testWidgets(
+      'V6 (Zig-Zag Snake Bar) renders 280x20 dp with center percentage 38sp above bar',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ProcessingScreen(
+              videoInfo: testVideo,
+              targetResolution: testResolution,
+              appSettings: AppSettings(videoProgressStyle: 'v6'),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final customPaintFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is CustomPaint &&
+              widget.painter.runtimeType.toString() ==
+                  '_DualRingProgressPainter' &&
+              (widget.painter as dynamic).style == 'v6',
+        );
+        expect(customPaintFinder, findsOneWidget);
+
+        final customPaint = tester.widget<CustomPaint>(customPaintFinder);
+        expect(customPaint.size, equals(const Size(280, 20)));
+
+        final textFinder = find.text('0%');
+        expect(textFinder, findsWidgets);
+        final textWidget = tester
+            .widgetList<Text>(textFinder)
+            .firstWhere((w) => w.style?.fontSize == 38);
+        expect(textWidget.style?.fontWeight, equals(FontWeight.w700));
+
+        final dynamic painter = customPaint.painter;
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        expect(
+          () => painter.paint(canvas, const Size(280, 20)),
+          returnsNormally,
+        );
+        expect(
+          () => painter.paint(canvas, const Size(20, 10)),
+          returnsNormally,
+        );
+        expect(() => painter.paint(canvas, Size.zero), returnsNormally);
+      },
+    );
+
+    testWidgets(
+      'Audio extraction respects audioProgressStyle independently from videoProgressStyle',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ProcessingScreen(
+              videoInfo: testVideo,
+              targetResolution: testResolution,
+              appSettings: AppSettings(
+                videoProgressStyle: 'v1',
+                audioProgressStyle: 'v4',
+              ),
+              isAudioExtraction: true,
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final customPaintFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is CustomPaint &&
+              widget.painter.runtimeType.toString() ==
+                  '_DualRingProgressPainter' &&
+              (widget.painter as dynamic).style == 'v4',
+        );
+        expect(customPaintFinder, findsOneWidget);
+      },
+    );
   });
 }
