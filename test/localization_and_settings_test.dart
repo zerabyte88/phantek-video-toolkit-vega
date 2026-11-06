@@ -5552,6 +5552,11 @@ void main() {
       });
 
       testWidgets('SettingsScreen displays progress style tile and opens bottom sheet with scope toggle and styles', (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
         SharedPreferences.setMockInitialValues({});
         final service = SettingsService();
         await service.init();
@@ -5574,7 +5579,23 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(ProgressStylePreviewBox), findsOneWidget);
-        expect(find.text('68%'), findsOneWidget);
+        expect(find.text('68%'), findsWidgets);
+        final previewSliderFinder = find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byType(Slider),
+        );
+        expect(previewSliderFinder, findsOneWidget);
+
+        // Slide the interactive slider and verify preview and slider text update
+        final slider = tester.widget<Slider>(previewSliderFinder);
+        slider.onChanged?.call(0.45);
+        await tester.pumpAndSettle();
+        expect(find.text('45%'), findsWidgets);
+
+        slider.onChanged?.call(0.68);
+        await tester.pumpAndSettle();
+        expect(find.text('68%'), findsWidgets);
+
         expect(find.text(l10n.t('scope_video')), findsOneWidget);
         expect(find.text(l10n.t('scope_audio')), findsOneWidget);
         expect(find.text(l10n.t('scope_both')), findsOneWidget);
@@ -5582,11 +5603,6 @@ void main() {
         expect(find.text(l10n.t('style_v1_title')), findsOneWidget);
         expect(find.text(l10n.t('style_v2_title')), findsOneWidget);
         expect(find.text(l10n.t('style_v3_title')), findsOneWidget);
-        expect(find.text(l10n.t('style_v4_title')), findsOneWidget);
-
-        final v5Finder = find.text(l10n.t('style_v5_title'));
-        await tester.scrollUntilVisible(v5Finder, 50, scrollable: find.byType(Scrollable).last);
-        expect(v5Finder, findsOneWidget);
 
         final v3Finder = find.text(l10n.t('style_v3_title'));
         await tester.scrollUntilVisible(v3Finder, 50, scrollable: find.byType(Scrollable).last);
@@ -5601,8 +5617,7 @@ void main() {
         await tester.pumpAndSettle();
 
         final v1Finder = find.text(l10n.t('style_v1_title'));
-        await tester.ensureVisible(v1Finder);
-        await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(v1Finder, -50, scrollable: find.byType(Scrollable).last);
         await tester.tap(v1Finder);
         await tester.pumpAndSettle();
         expect(service.settings.videoProgressStyle, equals('v1'));
@@ -5613,8 +5628,13 @@ void main() {
         await tester.tap(find.text(l10n.t('scope_audio')));
         await tester.pumpAndSettle();
 
-        await tester.ensureVisible(v5Finder);
-        await tester.pumpAndSettle();
+        final v4Finder = find.text(l10n.t('style_v4_title'));
+        await tester.scrollUntilVisible(v4Finder, 50, scrollable: find.byType(Scrollable).last);
+        expect(v4Finder, findsOneWidget);
+
+        final v5Finder = find.text(l10n.t('style_v5_title'));
+        await tester.scrollUntilVisible(v5Finder, 50, scrollable: find.byType(Scrollable).last);
+        expect(v5Finder, findsOneWidget);
         await tester.tap(v5Finder);
         await tester.pumpAndSettle();
         expect(service.settings.videoProgressStyle, equals('v1'));
@@ -5672,6 +5692,33 @@ void main() {
 
         expect(find.byType(ProgressStylePreviewBox), findsOneWidget);
         expect(find.text('68%'), findsOneWidget);
+      });
+
+      testWidgets('ProgressStylePreviewBox renders correctly with custom progress values (0.0, 0.45, 1.0)', (tester) async {
+        final theme = AppTheme.getTheme('vega_default');
+
+        for (final progress in [0.0, 0.45, 1.0]) {
+          final expectedPct = '${(progress * 100).round()}%';
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: theme,
+              home: Scaffold(
+                body: Center(
+                  child: ProgressStylePreviewBox(
+                    style: 'v1',
+                    theme: theme,
+                    progress: progress,
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(find.byType(ProgressStylePreviewBox), findsOneWidget);
+          expect(find.text(expectedPct), findsOneWidget);
+          expect(find.byType(CustomPaint), findsWidgets);
+        }
       });
     });
 

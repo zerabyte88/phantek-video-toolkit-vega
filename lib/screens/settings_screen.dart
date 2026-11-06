@@ -22,8 +22,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.5.2';
-  String _buildNumber = '25002';
+  String _appVersion = 'v2.5.3';
+  String _buildNumber = '25003';
   double? _dragCardOpacity;
 
   @override
@@ -52,14 +52,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '25002';
+              : '25003';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.5.2';
-          _buildNumber = '25002';
+          _appVersion = 'v2.5.3';
+          _buildNumber = '25003';
         });
       }
     }
@@ -389,7 +389,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-
   Widget _buildSectionTitle({
     required IconData icon,
     required String title,
@@ -438,7 +437,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
 
   Widget _buildLanguageTile(
     BuildContext context,
@@ -722,7 +720,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-
   Widget _buildThemeGrid(
     ThemeData theme,
     AppSettings settings,
@@ -985,7 +982,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-
   Widget _buildCardOpacitySlider(
     ThemeData theme,
     AppSettings settings,
@@ -1132,7 +1128,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-
   Widget _buildTranscodeEngineCard(
     ThemeData theme,
     AppSettings settings,
@@ -1259,7 +1254,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-
   Widget _buildWakelockTile(
     ThemeData theme,
     AppSettings settings,
@@ -1321,7 +1315,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ],
     );
   }
-
 
   Widget _buildProgressStyleTile(
     BuildContext context,
@@ -1422,6 +1415,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
+        double previewProgress = 0.68;
         return StatefulBuilder(
           builder: (ctx, setModalState) {
             final settings = _settingsService.settings;
@@ -1431,10 +1425,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             final activeStyle = currentScope == 'video'
                 ? settings.videoProgressStyle
                 : currentScope == 'audio'
-                    ? settings.audioProgressStyle
-                    : (settings.videoProgressStyle == settings.audioProgressStyle
-                        ? settings.videoProgressStyle
-                        : null);
+                ? settings.audioProgressStyle
+                : (settings.videoProgressStyle == settings.audioProgressStyle
+                      ? settings.videoProgressStyle
+                      : null);
 
             final styles = [
               {
@@ -1567,6 +1561,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ProgressStylePreviewBox(
                       style: activeStyle ?? settings.videoProgressStyle,
                       theme: theme,
+                      progress: previewProgress,
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF1E293B).withAlpha(120)
+                              : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF334155).withAlpha(180)
+                                : const Color(0xFFE2E8F0),
+                            width: 1.0,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.tune_rounded, size: 18, color: primary),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              width: 38,
+                              child: Text(
+                                '${(previewProgress * 100).round()}%',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: primary,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 3.5,
+                                  thumbShape: const RoundSliderThumbShape(
+                                    enabledThumbRadius: 6.5,
+                                  ),
+                                  overlayShape: const RoundSliderOverlayShape(
+                                    overlayRadius: 14,
+                                  ),
+                                  activeTrackColor: primary,
+                                  inactiveTrackColor: isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFCBD5E1),
+                                  thumbColor: primary,
+                                ),
+                                child: Slider(
+                                  value: previewProgress,
+                                  min: 0.0,
+                                  max: 1.0,
+                                  divisions: 100,
+                                  onChanged: (val) {
+                                    setModalState(() => previewProgress = val);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Expanded(
@@ -1591,18 +1655,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               color: isSelected
                                   ? primary.withAlpha(25)
                                   : isDark
-                                      ? const Color(0xFF1E293B).withAlpha(120)
-                                      : const Color(0xFFF8FAFC),
+                                  ? const Color(0xFF1E293B).withAlpha(120)
+                                  : const Color(0xFFF8FAFC),
                               borderRadius: BorderRadius.circular(14),
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(14),
                                 onTap: () async {
                                   if (currentScope == 'video') {
-                                    await _settingsService.setVideoProgressStyle(id);
+                                    await _settingsService
+                                        .setVideoProgressStyle(id);
                                   } else if (currentScope == 'audio') {
-                                    await _settingsService.setAudioProgressStyle(id);
+                                    await _settingsService
+                                        .setAudioProgressStyle(id);
                                   } else {
-                                    await _settingsService.setBothProgressStyles(id);
+                                    await _settingsService
+                                        .setBothProgressStyles(id);
                                   }
                                   setModalState(() {});
                                   if (mounted) setState(() {});
@@ -1618,8 +1685,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       color: isSelected
                                           ? primary
                                           : isDark
-                                              ? const Color(0xFF334155)
-                                              : const Color(0xFFE2E8F0),
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFE2E8F0),
                                       width: isSelected ? 1.8 : 1.0,
                                     ),
                                   ),
@@ -1631,8 +1698,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           color: isSelected
                                               ? primary.withAlpha(30)
                                               : primary.withAlpha(15),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
                                         child: Icon(
                                           icon,
@@ -1640,7 +1708,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           color: isSelected
                                               ? primary
                                               : theme.colorScheme.onSurface
-                                                  .withAlpha(180),
+                                                    .withAlpha(180),
                                         ),
                                       ),
                                       const SizedBox(width: 14),
@@ -1661,12 +1729,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       Icon(
                                         isSelected
                                             ? Icons.check_circle_rounded
-                                            : Icons.radio_button_unchecked_rounded,
+                                            : Icons
+                                                  .radio_button_unchecked_rounded,
                                         size: 22,
                                         color: isSelected
                                             ? primary
                                             : theme.colorScheme.onSurface
-                                                .withAlpha(80),
+                                                  .withAlpha(80),
                                       ),
                                     ],
                                   ),
@@ -1724,7 +1793,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
 
   Widget _buildFileNamingSection(
     ThemeData theme,
@@ -1803,7 +1871,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-
   Widget _buildPreserveMediaDateTile(
     ThemeData theme,
     AppSettings settings,
@@ -1865,7 +1932,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ],
     );
   }
-
 
   Widget _buildFolderTile({
     required IconData icon,
@@ -1971,7 +2037,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ],
     );
   }
-
 
   Widget _buildAboutCard(ThemeData theme, AppLocalizations l10n) {
     return _buildModernCard(
@@ -2261,7 +2326,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
 
   Widget _buildChoiceChip({
     required ThemeData theme,

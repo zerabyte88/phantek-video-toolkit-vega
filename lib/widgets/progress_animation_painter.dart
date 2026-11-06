@@ -602,10 +602,10 @@ class DualRingProgressPainter extends CustomPainter {
       canvas.clipRRect(activeRRect);
       canvas.drawRRect(activeRRect, activePaint);
 
-      // Shimmer glint
+      // Shimmer glint & ambient highlight
       if (isProcessing && activeWidth > 6.0) {
-        final shimmerBandWidth = (size.width * 0.35).clamp(45.0, 90.0);
-        final totalSpan = activeWidth + shimmerBandWidth;
+        final shimmerBandWidth = (size.width * 0.4).clamp(60.0, 110.0);
+        final totalSpan = size.width + shimmerBandWidth * 1.5;
         final shimmerLeft = -shimmerBandWidth + safeAnim * totalSpan;
         final shimmerRect = Rect.fromLTWH(
           shimmerLeft,
@@ -620,18 +620,12 @@ class DualRingProgressPainter extends CustomPainter {
             end: Alignment.centerRight,
             colors: [
               Colors.white.withAlpha(0),
-              crestColor.withAlpha(isDark ? 45 : 35),
-              crestColor.withAlpha(isDark ? 215 : 185),
-              Colors.white.withAlpha(isDark ? 255 : 240),
-              (secondaryColor != color ? secondaryColor : crestColor).withAlpha(
-                isDark ? 215 : 185,
-              ),
-              (secondaryColor != color ? secondaryColor : crestColor).withAlpha(
-                isDark ? 45 : 35,
-              ),
+              crestColor.withAlpha(isDark ? 50 : 40),
+              Colors.white.withAlpha(isDark ? 230 : 210),
+              crestColor.withAlpha(isDark ? 50 : 40),
               Colors.white.withAlpha(0),
             ],
-            stops: const [0.0, 0.38, 0.47, 0.50, 0.53, 0.62, 1.0],
+            stops: const [0.0, 0.28, 0.50, 0.72, 1.0],
           ).createShader(shimmerRect);
 
         canvas.drawRect(shimmerRect, shimmerPaint);
@@ -641,19 +635,44 @@ class DualRingProgressPainter extends CustomPainter {
         if (glintCoreX >= -10.0 && glintCoreX <= activeWidth + 10.0) {
           final auraRect = Rect.fromCenter(
             center: Offset(glintCoreX, size.height / 2.0),
-            width: shimmerBandWidth * 0.45,
+            width: shimmerBandWidth * 0.5,
             height: size.height * 2.2,
           );
           final auraPaint = Paint()
             ..shader = RadialGradient(
+              center: Alignment.center,
               colors: [
-                crestColor.withAlpha(isDark ? 110 : 85),
+                crestColor.withAlpha(isDark ? 100 : 75),
                 crestColor.withAlpha(0),
               ],
-            ).createShader(auraRect)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
+            ).createShader(auraRect);
           canvas.drawOval(auraRect, auraPaint);
         }
+      }
+
+      // Soft breathing glow at the leading active edge
+      if (activeWidth > 8.0) {
+        final capGlowRadius = size.height * 0.9;
+        final capGlowPulse = 0.5 + 0.5 * math.sin(safeAnim * 2 * math.pi);
+        final capPaint = Paint()
+          ..shader = RadialGradient(
+            colors: [
+              crestColor.withAlpha(
+                (isDark ? 70 : 50) + (capGlowPulse * 30).round(),
+              ),
+              crestColor.withAlpha(0),
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(activeWidth - 2, size.height / 2),
+              radius: capGlowRadius,
+            ),
+          );
+        canvas.drawCircle(
+          Offset(activeWidth - 2, size.height / 2),
+          capGlowRadius,
+          capPaint,
+        );
       }
       canvas.restore();
     }
@@ -701,6 +720,7 @@ class _FluidWaveData {
 class ProgressStylePreviewBox extends StatefulWidget {
   final String style;
   final ThemeData theme;
+  final double? progress;
 
   /// Disables animation in automated tests.
   static bool enableAnimationInTests = false;
@@ -709,6 +729,7 @@ class ProgressStylePreviewBox extends StatefulWidget {
     super.key,
     required this.style,
     required this.theme,
+    this.progress,
   });
 
   @override
@@ -802,7 +823,9 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
     final track = isDark ? primary.withAlpha(40) : primary.withAlpha(30);
 
     final normalizedStyle = AppSettings.sanitizeProgressStyle(widget.style);
-    const progressVal = 0.68;
+    final progressVal = (widget.progress ?? 0.68).clamp(0.0, 1.0);
+    final pctInt = (progressVal * 100).round();
+    final pctString = '$pctInt%';
 
     final textOutlineShadows = [
       Shadow(
@@ -828,9 +851,9 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
     ];
 
     final centerPercentage = Text(
-      '68%',
+      pctString,
       style: TextStyle(
-        fontSize: 22,
+        fontSize: 28,
         fontWeight: FontWeight.w700,
         color: primary,
         letterSpacing: -0.4,
@@ -840,9 +863,9 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
     );
 
     final topPercentage = Text(
-      '68%',
+      pctString,
       style: TextStyle(
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: FontWeight.w700,
         color: primary,
         letterSpacing: -0.4,
@@ -852,165 +875,193 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
 
     Widget previewContent;
     switch (normalizedStyle) {
-      case 'v1': // Dual Ring Orbit: 88x88 dp, center percentage 22sp
+      case 'v1': // Dual Ring Orbit: enlarged 140x140 dp (180x180 canvas), center percentage 28sp
         previewContent = SizedBox(
-          width: 88,
-          height: 88,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              RepaintBoundary(
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, _) => CustomPaint(
-                    size: const Size(88, 88),
-                    painter: DualRingProgressPainter(
-                      progress: progressVal,
-                      animationValue: _controller.value,
-                      isProcessing: true,
-                      isSuccess: false,
-                      color: primary,
-                      secondaryColor: primary,
-                      deepColor: deep,
-                      crestColor: crest,
-                      basinColor: basin,
-                      trackColor: track,
-                      style: 'v1',
-                      isDark: isDark,
-                      strokeWidth: 5.5,
+          width: 140,
+          height: 140,
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: SizedBox(
+              width: 180,
+              height: 180,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, _) => CustomPaint(
+                        size: const Size(180, 180),
+                        painter: DualRingProgressPainter(
+                          progress: progressVal,
+                          animationValue: _controller.value,
+                          isProcessing: true,
+                          isSuccess: false,
+                          color: primary,
+                          secondaryColor: primary,
+                          deepColor: deep,
+                          crestColor: crest,
+                          basinColor: basin,
+                          trackColor: track,
+                          style: 'v1',
+                          isDark: isDark,
+                          strokeWidth: 7.5,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  centerPercentage,
+                ],
               ),
-              centerPercentage,
-            ],
+            ),
           ),
         );
         break;
 
-      case 'v2': // Radar Ripple Ring: 88x88 dp, center percentage 22sp
+      case 'v2': // Radar Ripple Ring: enlarged 140x140 dp (180x180 canvas), center percentage 28sp
         previewContent = SizedBox(
-          width: 88,
-          height: 88,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              RepaintBoundary(
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, _) => CustomPaint(
-                    size: const Size(88, 88),
-                    painter: DualRingProgressPainter(
-                      progress: progressVal,
-                      animationValue: _controller.value,
-                      isProcessing: true,
-                      isSuccess: false,
-                      color: primary,
-                      secondaryColor: primary,
-                      deepColor: deep,
-                      crestColor: crest,
-                      basinColor: basin,
-                      trackColor: track,
-                      style: 'v2',
-                      isDark: isDark,
-                      strokeWidth: 5.5,
+          width: 140,
+          height: 140,
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: SizedBox(
+              width: 180,
+              height: 180,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, _) => CustomPaint(
+                        size: const Size(180, 180),
+                        painter: DualRingProgressPainter(
+                          progress: progressVal,
+                          animationValue: _controller.value,
+                          isProcessing: true,
+                          isSuccess: false,
+                          color: primary,
+                          secondaryColor: primary,
+                          deepColor: deep,
+                          crestColor: crest,
+                          basinColor: basin,
+                          trackColor: track,
+                          style: 'v2',
+                          isDark: isDark,
+                          strokeWidth: 7.5,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  centerPercentage,
+                ],
               ),
-              centerPercentage,
-            ],
+            ),
           ),
         );
         break;
 
-      case 'v3': // Circular Fluid Wave: 88x88 dp, center percentage 22sp
+      case 'v3': // Circular Fluid Wave: enlarged 140x140 dp (180x180 canvas), center percentage 28sp
         previewContent = SizedBox(
-          width: 88,
-          height: 88,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              RepaintBoundary(
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, _) => CustomPaint(
-                    size: const Size(88, 88),
-                    painter: DualRingProgressPainter(
-                      progress: progressVal,
-                      animationValue: _controller.value,
-                      isProcessing: true,
-                      isSuccess: false,
-                      color: primary,
-                      secondaryColor: primary,
-                      deepColor: deep,
-                      crestColor: crest,
-                      basinColor: basin,
-                      trackColor: track,
-                      style: 'v3',
-                      isDark: isDark,
-                      strokeWidth: 5.5,
+          width: 140,
+          height: 140,
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: SizedBox(
+              width: 180,
+              height: 180,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, _) => CustomPaint(
+                        size: const Size(180, 180),
+                        painter: DualRingProgressPainter(
+                          progress: progressVal,
+                          animationValue: _controller.value,
+                          isProcessing: true,
+                          isSuccess: false,
+                          color: primary,
+                          secondaryColor: primary,
+                          deepColor: deep,
+                          crestColor: crest,
+                          basinColor: basin,
+                          trackColor: track,
+                          style: 'v3',
+                          isDark: isDark,
+                          strokeWidth: 7.5,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  centerPercentage,
+                ],
               ),
-              centerPercentage,
-            ],
+            ),
           ),
         );
         break;
 
-      case 'v4': // Calm Liquid Orb: 88x88 dp, center percentage 22sp
+      case 'v4': // Calm Liquid Orb: enlarged 140x140 dp (180x180 canvas), center percentage 28sp
         previewContent = SizedBox(
-          width: 88,
-          height: 88,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              RepaintBoundary(
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, _) => CustomPaint(
-                    size: const Size(88, 88),
-                    painter: DualRingProgressPainter(
-                      progress: progressVal,
-                      animationValue: _controller.value,
-                      isProcessing: true,
-                      isSuccess: false,
-                      color: primary,
-                      secondaryColor: primary,
-                      deepColor: deep,
-                      crestColor: crest,
-                      basinColor: basin,
-                      trackColor: track,
-                      style: 'v4',
-                      isDark: isDark,
+          width: 140,
+          height: 140,
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: SizedBox(
+              width: 180,
+              height: 180,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, _) => CustomPaint(
+                        size: const Size(180, 180),
+                        painter: DualRingProgressPainter(
+                          progress: progressVal,
+                          animationValue: _controller.value,
+                          isProcessing: true,
+                          isSuccess: false,
+                          color: primary,
+                          secondaryColor: primary,
+                          deepColor: deep,
+                          crestColor: crest,
+                          basinColor: basin,
+                          trackColor: track,
+                          style: 'v4',
+                          isDark: isDark,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  centerPercentage,
+                ],
               ),
-              centerPercentage,
-            ],
+            ),
           ),
         );
         break;
 
-      case 'v5': // Flat Capsule Bar: 200x12 dp capsule, percentage 20sp di atas bar
+      case 'v5': // Flat Capsule Bar: enlarged 250x16 dp capsule, percentage 24sp di atas bar
       default:
         previewContent = Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             topPercentage,
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             SizedBox(
-              width: 200,
-              height: 12,
+              width: 250,
+              height: 16,
               child: RepaintBoundary(
                 child: AnimatedBuilder(
                   animation: _controller,
                   builder: (context, _) => CustomPaint(
-                    size: const Size(200, 12),
+                    size: const Size(250, 16),
                     painter: DualRingProgressPainter(
                       progress: progressVal,
                       animationValue: _controller.value,
@@ -1035,7 +1086,7 @@ class ProgressStylePreviewBoxState extends State<ProgressStylePreviewBox>
     }
 
     return Container(
-      height: 124,
+      height: 168,
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
