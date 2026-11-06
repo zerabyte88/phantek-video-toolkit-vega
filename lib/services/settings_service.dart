@@ -285,6 +285,11 @@ class SettingsService extends ChangeNotifier {
     final currentLang = _settings.languageCode;
     final initialTheme = resolveInitialTheme();
     _settings = AppSettings(languageCode: currentLang, themeMode: initialTheme);
+    _progressPreviewPercentage = 0.80;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_progressPreviewKey, 0.80);
+    } catch (_) {}
     notifyListeners();
     await _saveSettings();
     await _applyWakelock(_settings.keepScreenAwake);

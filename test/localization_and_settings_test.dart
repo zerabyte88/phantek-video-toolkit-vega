@@ -5592,7 +5592,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(ProgressStylePreviewBox), findsOneWidget);
-        expect(find.text('68%'), findsWidgets);
+        expect(find.text('80%'), findsWidgets);
         final previewSliderFinder = find.descendant(
           of: find.byType(BottomSheet),
           matching: find.byType(Slider),
@@ -5605,9 +5605,9 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('45%'), findsWidgets);
 
-        slider.onChanged?.call(0.68);
+        slider.onChanged?.call(0.80);
         await tester.pumpAndSettle();
-        expect(find.text('68%'), findsWidgets);
+        expect(find.text('80%'), findsWidgets);
 
         expect(find.text(l10n.t('scope_video')), findsOneWidget);
         expect(find.text(l10n.t('scope_audio')), findsOneWidget);
@@ -5715,7 +5715,7 @@ void main() {
           await tester.pumpAndSettle();
 
           expect(find.byType(ProgressStylePreviewBox), findsOneWidget);
-          expect(find.text('68%'), findsOneWidget);
+          expect(find.text('80%'), findsOneWidget);
           expect(find.byType(CustomPaint), findsWidgets);
         }
       });
@@ -5742,7 +5742,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byType(ProgressStylePreviewBox), findsOneWidget);
-        expect(find.text('68%'), findsOneWidget);
+        expect(find.text('80%'), findsOneWidget);
       });
 
       testWidgets('ProgressStylePreviewBox renders correctly with custom progress values (0.0, 0.45, 1.0)', (tester) async {
