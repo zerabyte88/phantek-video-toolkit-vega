@@ -84,7 +84,7 @@ class DualRingProgressPainter extends CustomPainter {
     }
   }
 
-  /// Shared renderer for circular progress arcs with zero white-tail artifact and smooth 100% color unification
+  /// Shared renderer for circular progress arcs with smooth gradient and seamless 100% fill.
   void _drawCircularProgressArc({
     required Canvas canvas,
     required Offset center,
@@ -103,47 +103,87 @@ class DualRingProgressPainter extends CustomPainter {
         ? ((safeProgress - 0.88) / 0.12).clamp(0.0, 1.0)
         : 0.0;
     final headColor = Color.lerp(crestColor, deepColor, u) ?? crestColor;
-
-    const capPad = 0.12;
     final effectiveSweep = isFull ? (2 * math.pi) : sweepAngle;
-    final totalSpan = capPad + effectiveSweep;
-    final stopTail = (capPad / totalSpan).clamp(0.0, 1.0);
-    final stopMid = ((capPad + effectiveSweep * 0.5) / totalSpan).clamp(
-      0.0,
-      1.0,
-    );
+
+    // Gradient stops aligned to the arc span: fade-in tail → body → bright head.
+    const tailStop = 0.08;
+    const midStop = 0.55;
 
     if (withGlowAura && auraStrokeWidth > 0) {
-      final auraPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = auraStrokeWidth
-        ..strokeCap = StrokeCap.round
-        ..shader = SweepGradient(
-          startAngle: -math.pi / 2 - capPad,
-          endAngle: -math.pi / 2 + math.max(effectiveSweep, 0.001),
-          colors: [
-            deepColor.withAlpha(isDark ? 40 : 25),
-            deepColor.withAlpha(isDark ? 40 : 25),
-            color.withAlpha(isDark ? 65 : 45),
-            headColor.withAlpha(isDark ? 90 : 70),
-          ],
-          stops: [0.0, stopTail, stopMid, 1.0],
-        ).createShader(mainRect);
-      canvas.drawArc(mainRect, -math.pi / 2, effectiveSweep, false, auraPaint);
+      if (isFull) {
+        // Solid aura at 100% — no seam.
+        canvas.drawArc(
+          mainRect,
+          -math.pi / 2,
+          effectiveSweep,
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = auraStrokeWidth
+            ..strokeCap = StrokeCap.round
+            ..color = headColor.withAlpha(isDark ? 70 : 50),
+        );
+      } else {
+        canvas.drawArc(
+          mainRect,
+          -math.pi / 2,
+          effectiveSweep,
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = auraStrokeWidth
+            ..strokeCap = StrokeCap.round
+            ..shader = SweepGradient(
+              startAngle: -math.pi / 2,
+              endAngle: -math.pi / 2 + effectiveSweep,
+              colors: [
+                deepColor.withAlpha(0),
+                deepColor.withAlpha(isDark ? 30 : 20),
+                color.withAlpha(isDark ? 65 : 45),
+                headColor.withAlpha(isDark ? 90 : 70),
+              ],
+              stops: const [0.0, tailStop, midStop, 1.0],
+            ).createShader(mainRect),
+        );
+      }
     }
 
-    final activePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round
-      ..shader = SweepGradient(
-        startAngle: -math.pi / 2 - capPad,
-        endAngle: -math.pi / 2 + math.max(effectiveSweep, 0.001),
-        colors: [deepColor, deepColor, color, headColor],
-        stops: [0.0, stopTail, stopMid, 1.0],
-      ).createShader(mainRect);
-
-    canvas.drawArc(mainRect, -math.pi / 2, effectiveSweep, false, activePaint);
+    if (isFull) {
+      // Solid arc at 100% — no gradient seam at the wrap point.
+      canvas.drawArc(
+        mainRect,
+        -math.pi / 2,
+        effectiveSweep,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round
+          ..color = headColor,
+      );
+    } else {
+      canvas.drawArc(
+        mainRect,
+        -math.pi / 2,
+        effectiveSweep,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round
+          ..shader = SweepGradient(
+            startAngle: -math.pi / 2,
+            endAngle: -math.pi / 2 + effectiveSweep,
+            colors: [
+              deepColor.withAlpha(0),
+              deepColor,
+              color,
+              headColor,
+            ],
+            stops: const [0.0, tailStop, midStop, 1.0],
+          ).createShader(mainRect),
+      );
+    }
   }
 
   /// V1: Orbit
@@ -221,13 +261,6 @@ class DualRingProgressPainter extends CustomPainter {
         orbitSweepPaint,
       );
 
-      final headAngle = -math.pi / 2 + arcLen;
-      final headX = orbitRadius * math.cos(headAngle);
-      final headY = orbitRadius * math.sin(headAngle);
-      final headCapPaint = Paint()
-        ..color = crestColor.withAlpha(orbitAlpha)
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(Offset(headX, headY), orbitStroke / 2.0, headCapPaint);
       canvas.restore();
     }
 
@@ -292,7 +325,7 @@ class DualRingProgressPainter extends CustomPainter {
     );
   }
 
-  /// V3: Liquid (Calm Liquid Orb matching renderV3 in conversion_bar_mockups.html)
+  /// V3: Liquid Orb — dual-wave realistic water with bubble highlights and consistent 0% bg.
   void _paintLiquidOrb(Canvas canvas, Size size) {
     final diameter = math.min(size.width, size.height);
     final isSmall = diameter < 120;
@@ -302,7 +335,7 @@ class DualRingProgressPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final orbRect = Rect.fromCircle(center: center, radius: radius);
 
-    // Basin background
+    // Basin background — same as all circular styles.
     canvas.drawCircle(
       center,
       radius,
@@ -311,7 +344,7 @@ class DualRingProgressPainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-    // Outer track border (stroke 3.0 matching mockup)
+    // Outer track ring — same trackColor as V1/V2/V4/V5.
     final borderStroke = isSmall ? 2.2 : 3.0;
     canvas.drawCircle(
       center,
@@ -322,6 +355,7 @@ class DualRingProgressPainter extends CustomPainter {
         ..style = PaintingStyle.stroke,
     );
 
+    // Clip interior for water fill.
     canvas.save();
     canvas.clipPath(
       Path()..addOval(Rect.fromCircle(center: center, radius: radius - 1.5)),
@@ -330,40 +364,45 @@ class DualRingProgressPainter extends CustomPainter {
     final safeProgress = (progress.isNaN || progress.isInfinite)
         ? 0.0
         : progress.clamp(0.0, 1.0);
-    final safeAnim = (animationValue.isNaN || animationValue.isInfinite)
-        ? 0.0
-        : animationValue;
+    final effectiveTime = _effectiveTime;
 
     if (safeProgress > 0) {
-      final waterLevelY = (center.dy + radius) - (safeProgress * (2 * radius));
-      final amp = isProcessing ? (isSmall ? 2.5 : 4.0) : 0.0;
-      final waveFreq = isSmall ? 0.10 : 0.05;
-      final phase = safeAnim * 2 * math.pi;
+      final waterLevelY =
+          (center.dy + radius) - (safeProgress * (2 * radius));
 
-      final wavePath = Path();
-      final surfacePoints = <Offset>[];
-      final startX = center.dx - radius - 10.0;
-      final endX = center.dx + radius + 10.0;
-      final bottomY = center.dy + radius + 10.0;
+      // Two independent sinusoidal waves at different frequencies and phases
+      // to create a realistic cross-chop surface.
+      final amp1 = isProcessing ? (isSmall ? 2.8 : 4.5) : 0.0;
+      final amp2 = isProcessing ? (isSmall ? 1.4 : 2.2) : 0.0;
+      final k1 = isSmall ? 0.11 : 0.055;
+      final k2 = isSmall ? 0.19 : 0.095;
+      final phase1 = effectiveTime * 2.1;
+      final phase2 = effectiveTime * 3.4 + math.pi * 0.6;
 
-      for (double x = startX; x <= endX; x += 2.0) {
-        final wave = amp * math.sin((x - center.dx) * waveFreq + phase);
-        final y = waterLevelY + wave;
-        surfacePoints.add(Offset(x, y));
-        if (x == startX) {
-          wavePath.moveTo(x, y);
-        } else {
-          wavePath.lineTo(x, y);
-        }
+      double waveY(double x) {
+        final rel = x - center.dx;
+        return waterLevelY +
+            amp1 * math.sin(k1 * rel + phase1) +
+            amp2 * math.sin(k2 * rel - phase2);
+      }
+
+      final startX = center.dx - radius - 12.0;
+      final endX = center.dx + radius + 12.0;
+      final bottomY = center.dy + radius + 12.0;
+
+      // Main water body.
+      final wavePath = Path()..moveTo(startX, waveY(startX));
+      for (double x = startX + 1.5; x <= endX; x += 1.5) {
+        wavePath.lineTo(x, waveY(x));
       }
       wavePath.lineTo(endX, bottomY);
       wavePath.lineTo(startX, bottomY);
       wavePath.close();
 
-      // Fluid wave gradient (crest -> color -> deep)
+      final gradTop = waterLevelY - amp1 - amp2 - 4.0;
       final gradRect = Rect.fromLTRB(
         orbRect.left,
-        waterLevelY - 10,
+        gradTop,
         orbRect.right,
         center.dy + radius,
       );
@@ -374,37 +413,114 @@ class DualRingProgressPainter extends CustomPainter {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [crestColor, color, deepColor],
-            stops: const [0.0, 0.30, 1.0],
+            stops: const [0.0, 0.28, 1.0],
           ).createShader(gradRect)
           ..style = PaintingStyle.fill,
       );
 
-      // Meniscus line (crisp white 60% alpha per mockup)
-      if (surfacePoints.length > 1) {
-        final surfacePath = Path()
-          ..moveTo(surfacePoints.first.dx, surfacePoints.first.dy);
-        for (int i = 1; i < surfacePoints.length; i++) {
-          surfacePath.lineTo(surfacePoints[i].dx, surfacePoints[i].dy);
+      // Translucent shimmer layer for depth.
+      if (isProcessing) {
+        final shimAmp = isSmall ? 1.6 : 2.5;
+        final shimK = isSmall ? 0.14 : 0.07;
+        final shimPhase = effectiveTime * 2.9 + math.pi;
+
+        double shimY(double x) {
+          final rel = x - center.dx;
+          return waterLevelY +
+              amp1 * 0.5 * math.sin(k1 * rel + phase1) +
+              shimAmp * math.sin(shimK * rel + shimPhase);
         }
 
+        final shimPath = Path()..moveTo(startX, shimY(startX));
+        for (double x = startX + 1.5; x <= endX; x += 1.5) {
+          shimPath.lineTo(x, shimY(x));
+        }
+        shimPath.lineTo(endX, bottomY);
+        shimPath.lineTo(startX, bottomY);
+        shimPath.close();
+
         canvas.drawPath(
-          surfacePath,
+          shimPath,
           Paint()
-            ..color = Colors.white
-                .withAlpha(153) // hexToRgba('#FFFFFF', 0.6)
-            ..strokeWidth = isSmall ? 1.4 : 1.9
-            ..style = PaintingStyle.stroke
-            ..strokeCap = StrokeCap.round,
+            ..color = crestColor.withAlpha(isDark ? 38 : 30)
+            ..style = PaintingStyle.fill,
         );
       }
-    } else {
-      canvas.drawRect(
-        orbRect,
+
+      // Meniscus highlight along the top wave.
+      final surfacePath = Path()..moveTo(startX, waveY(startX));
+      for (double x = startX + 1.5; x <= endX; x += 1.5) {
+        surfacePath.lineTo(x, waveY(x));
+      }
+      canvas.drawPath(
+        surfacePath,
         Paint()
-          ..color = color.withAlpha(isDark ? 28 : 20)
+          ..color = Colors.white.withAlpha(160)
+          ..strokeWidth = isSmall ? 1.3 : 1.8
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round,
+      );
+
+      // Rising bubbles drifting upward through the water column.
+      if (isProcessing) {
+        final bubbleCount = isSmall ? 3 : 4;
+        final waterHeight = safeProgress * 2 * radius;
+        for (int b = 0; b < bubbleCount; b++) {
+          final hOffset = (b * 0.37 + 0.15) * 2 * radius - radius;
+          final vSpeed = 0.6 + b * 0.18;
+          final lifePhase = (effectiveTime * vSpeed + b * 0.47) % 1.0;
+          final bY = waterLevelY + waterHeight * (1.0 - lifePhase);
+          final bX = center.dx +
+              hOffset +
+              (isSmall ? 1.5 : 2.5) * math.sin(effectiveTime * 1.8 + b * 2.1);
+          final bR = (isSmall ? 1.3 : 2.0) * (0.5 + 0.5 * lifePhase);
+          final bAlpha = (lifePhase < 0.8
+                  ? lifePhase / 0.8
+                  : (1.0 - lifePhase) / 0.2)
+              .clamp(0.0, 1.0);
+
+          if (bY > waterLevelY + bR && bY < center.dy + radius - bR) {
+            canvas.drawCircle(
+              Offset(bX, bY),
+              bR,
+              Paint()
+                ..color = Colors.white.withAlpha((bAlpha * 110).round())
+                ..style = PaintingStyle.fill,
+            );
+            canvas.drawCircle(
+              Offset(bX, bY),
+              bR,
+              Paint()
+                ..color = Colors.white.withAlpha((bAlpha * 60).round())
+                ..strokeWidth = 0.6
+                ..style = PaintingStyle.stroke,
+            );
+          }
+        }
+      }
+
+      // Glass specular glint at top-left interior.
+      final glintRect = Rect.fromLTWH(
+        center.dx - radius * 0.55,
+        center.dy - radius * 0.72,
+        radius * 0.65,
+        radius * 0.30,
+      );
+      canvas.drawOval(
+        glintRect,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white.withAlpha(isDark ? 50 : 40),
+              Colors.white.withAlpha(0),
+            ],
+          ).createShader(glintRect)
           ..style = PaintingStyle.fill,
       );
     }
+    // At 0%: basinColor fill + trackColor ring (drawn above clip) is enough.
 
     canvas.restore();
   }
