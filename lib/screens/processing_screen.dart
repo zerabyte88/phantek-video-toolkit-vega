@@ -894,7 +894,11 @@ class _ProcessingScreenState extends State<ProcessingScreen>
 
         Widget indicatorWidget;
         switch (activeStyle) {
-          case 'v1': // Dual Ring Orbit: 180x180 dp, center percentage 38sp
+          case 'v1': // Orbit: 180x180 dp, center percentage 38sp
+          case 'v2': // Radar: 180x180 dp, center percentage 38sp
+          case 'v3': // Liquid: 180x180 dp, center percentage 38sp
+          case 'v4': // Particles: 180x180 dp, center percentage 38sp
+          case 'v5': // Spiral: 180x180 dp, center percentage 38sp
             indicatorWidget = SizedBox(
               width: 180,
               height: 180,
@@ -904,23 +908,32 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                   RepaintBoundary(
                     child: AnimatedBuilder(
                       animation: _pulseController,
-                      builder: (context, _) => CustomPaint(
-                        size: const Size(180, 180),
-                        painter: _DualRingProgressPainter(
-                          progress: animatedProgress,
-                          animationValue: _pulseController.value,
-                          isProcessing: _isProcessing,
-                          isSuccess: _isSuccess,
-                          color: progressPrimary,
-                          secondaryColor: progressSecondary,
-                          deepColor: palette.deep,
-                          crestColor: palette.crest,
-                          basinColor: palette.basin,
-                          trackColor: palette.track,
-                          style: 'v1',
-                          isDark: isDark,
-                        ),
-                      ),
+                      builder: (context, _) {
+                        final animTime = _startTime != null
+                            ? DateTime.now()
+                                      .difference(_startTime!)
+                                      .inMicroseconds /
+                                  1000000.0
+                            : _pulseController.value * 2.4;
+                        return CustomPaint(
+                          size: const Size(180, 180),
+                          painter: _DualRingProgressPainter(
+                            progress: animatedProgress,
+                            animationValue: _pulseController.value,
+                            animTime: animTime,
+                            isProcessing: _isProcessing,
+                            isSuccess: _isSuccess,
+                            color: progressPrimary,
+                            secondaryColor: progressSecondary,
+                            deepColor: palette.deep,
+                            crestColor: palette.crest,
+                            basinColor: palette.basin,
+                            trackColor: palette.track,
+                            style: activeStyle,
+                            isDark: isDark,
+                          ),
+                        );
+                      },
                     ),
                   ),
                   percentageWidget,
@@ -929,112 +942,52 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             );
             break;
 
-          case 'v2': // Radar Ripple Ring: 180x180 dp, center percentage 38sp
-            indicatorWidget = SizedBox(
-              width: 180,
-              height: 180,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  RepaintBoundary(
+          case 'v6': // Zig-Zag: 280x24 dp, center percentage 38sp above bar
+            indicatorWidget = Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                percentageWidget,
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: 280,
+                  height: 24,
+                  child: RepaintBoundary(
                     child: AnimatedBuilder(
                       animation: _pulseController,
-                      builder: (context, _) => CustomPaint(
-                        size: const Size(180, 180),
-                        painter: _DualRingProgressPainter(
-                          progress: animatedProgress,
-                          animationValue: _pulseController.value,
-                          isProcessing: _isProcessing,
-                          isSuccess: _isSuccess,
-                          color: progressPrimary,
-                          secondaryColor: progressSecondary,
-                          deepColor: palette.deep,
-                          crestColor: palette.crest,
-                          basinColor: palette.basin,
-                          trackColor: palette.track,
-                          style: 'v2',
-                          isDark: isDark,
-                        ),
-                      ),
+                      builder: (context, _) {
+                        final animTime = _startTime != null
+                            ? DateTime.now()
+                                      .difference(_startTime!)
+                                      .inMicroseconds /
+                                  1000000.0
+                            : _pulseController.value * 2.4;
+                        return CustomPaint(
+                          size: const Size(280, 24),
+                          painter: _DualRingProgressPainter(
+                            progress: animatedProgress,
+                            animationValue: _pulseController.value,
+                            animTime: animTime,
+                            isProcessing: _isProcessing,
+                            isSuccess: _isSuccess,
+                            color: progressPrimary,
+                            secondaryColor: progressSecondary,
+                            deepColor: palette.deep,
+                            crestColor: palette.crest,
+                            basinColor: palette.basin,
+                            trackColor: palette.track,
+                            style: 'v6',
+                            isDark: isDark,
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  percentageWidget,
-                ],
-              ),
+                ),
+              ],
             );
             break;
 
-          case 'v3': // Circular Fluid Wave: 180x180 dp, center percentage 38sp
-            indicatorWidget = SizedBox(
-              width: 180,
-              height: 180,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  RepaintBoundary(
-                    child: AnimatedBuilder(
-                      animation: _pulseController,
-                      builder: (context, _) => CustomPaint(
-                        size: const Size(180, 180),
-                        painter: _DualRingProgressPainter(
-                          progress: animatedProgress,
-                          animationValue: _pulseController.value,
-                          isProcessing: _isProcessing,
-                          isSuccess: _isSuccess,
-                          color: progressPrimary,
-                          secondaryColor: progressSecondary,
-                          deepColor: palette.deep,
-                          crestColor: palette.crest,
-                          basinColor: palette.basin,
-                          trackColor: palette.track,
-                          style: 'v3',
-                          isDark: isDark,
-                        ),
-                      ),
-                    ),
-                  ),
-                  percentageWidget,
-                ],
-              ),
-            );
-            break;
-
-          case 'v4': // Calm Liquid Orb: 180x180 dp, center percentage 38sp
-            indicatorWidget = SizedBox(
-              width: 180,
-              height: 180,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  RepaintBoundary(
-                    child: AnimatedBuilder(
-                      animation: _pulseController,
-                      builder: (context, _) => CustomPaint(
-                        size: const Size(180, 180),
-                        painter: _DualRingProgressPainter(
-                          progress: animatedProgress,
-                          animationValue: _pulseController.value,
-                          isProcessing: _isProcessing,
-                          isSuccess: _isSuccess,
-                          color: progressPrimary,
-                          secondaryColor: progressSecondary,
-                          deepColor: palette.deep,
-                          crestColor: palette.crest,
-                          basinColor: palette.basin,
-                          trackColor: palette.track,
-                          style: 'v4',
-                          isDark: isDark,
-                        ),
-                      ),
-                    ),
-                  ),
-                  percentageWidget,
-                ],
-              ),
-            );
-            break;
-
-          case 'v5': // Flat Capsule Bar: 280x16 dp, center percentage 38sp above bar
+          case 'v7': // Capsule: 280x16 dp, center percentage 38sp above bar
             indicatorWidget = Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -1046,23 +999,32 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                   child: RepaintBoundary(
                     child: AnimatedBuilder(
                       animation: _pulseController,
-                      builder: (context, _) => CustomPaint(
-                        size: const Size(280, 16),
-                        painter: _DualRingProgressPainter(
-                          progress: animatedProgress,
-                          animationValue: _pulseController.value,
-                          isProcessing: _isProcessing,
-                          isSuccess: _isSuccess,
-                          color: progressPrimary,
-                          secondaryColor: progressSecondary,
-                          deepColor: palette.deep,
-                          crestColor: palette.crest,
-                          basinColor: palette.basin,
-                          trackColor: palette.track,
-                          style: 'v5',
-                          isDark: isDark,
-                        ),
-                      ),
+                      builder: (context, _) {
+                        final animTime = _startTime != null
+                            ? DateTime.now()
+                                      .difference(_startTime!)
+                                      .inMicroseconds /
+                                  1000000.0
+                            : _pulseController.value * 2.4;
+                        return CustomPaint(
+                          size: const Size(280, 16),
+                          painter: _DualRingProgressPainter(
+                            progress: animatedProgress,
+                            animationValue: _pulseController.value,
+                            animTime: animTime,
+                            isProcessing: _isProcessing,
+                            isSuccess: _isSuccess,
+                            color: progressPrimary,
+                            secondaryColor: progressSecondary,
+                            deepColor: palette.deep,
+                            crestColor: palette.crest,
+                            basinColor: palette.basin,
+                            trackColor: palette.track,
+                            style: 'v7',
+                            isDark: isDark,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -1070,7 +1032,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             );
             break;
 
-          case 'v6': // Zig-Zag Snake Bar: 280x20 dp, center percentage 38sp above bar
+          case 'v8': // Equalizer: 280x24 dp, center percentage 38sp above bar
           default:
             indicatorWidget = Column(
               mainAxisSize: MainAxisSize.min,
@@ -1079,27 +1041,36 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                 const SizedBox(height: 14),
                 SizedBox(
                   width: 280,
-                  height: 20,
+                  height: 24,
                   child: RepaintBoundary(
                     child: AnimatedBuilder(
                       animation: _pulseController,
-                      builder: (context, _) => CustomPaint(
-                        size: const Size(280, 20),
-                        painter: _DualRingProgressPainter(
-                          progress: animatedProgress,
-                          animationValue: _pulseController.value,
-                          isProcessing: _isProcessing,
-                          isSuccess: _isSuccess,
-                          color: progressPrimary,
-                          secondaryColor: progressSecondary,
-                          deepColor: palette.deep,
-                          crestColor: palette.crest,
-                          basinColor: palette.basin,
-                          trackColor: palette.track,
-                          style: 'v6',
-                          isDark: isDark,
-                        ),
-                      ),
+                      builder: (context, _) {
+                        final animTime = _startTime != null
+                            ? DateTime.now()
+                                      .difference(_startTime!)
+                                      .inMicroseconds /
+                                  1000000.0
+                            : _pulseController.value * 2.4;
+                        return CustomPaint(
+                          size: const Size(280, 24),
+                          painter: _DualRingProgressPainter(
+                            progress: animatedProgress,
+                            animationValue: _pulseController.value,
+                            animTime: animTime,
+                            isProcessing: _isProcessing,
+                            isSuccess: _isSuccess,
+                            color: progressPrimary,
+                            secondaryColor: progressSecondary,
+                            deepColor: palette.deep,
+                            crestColor: palette.crest,
+                            basinColor: palette.basin,
+                            trackColor: palette.track,
+                            style: 'v8',
+                            isDark: isDark,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -2431,6 +2402,7 @@ class _DualRingProgressPainter extends DualRingProgressPainter {
   _DualRingProgressPainter({
     required super.progress,
     required super.animationValue,
+    super.animTime,
     required super.isProcessing,
     required super.isSuccess,
     required super.color,

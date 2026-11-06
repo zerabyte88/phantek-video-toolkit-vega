@@ -5451,7 +5451,7 @@ void main() {
       });
     });
 
-    group('Progress Animation Styles (V1-V6) & Localization Tests', () {
+    group('Progress Animation Styles (V1-V8) & Localization Tests', () {
       test('AppSettings has default v1 progress style for video and audio', () {
         const settings = AppSettings();
         expect(settings.videoProgressStyle, equals('v1'));
@@ -5466,6 +5466,10 @@ void main() {
         expect(AppSettings.sanitizeProgressStyle('V5'), equals('v5'));
         expect(AppSettings.sanitizeProgressStyle('v6'), equals('v6'));
         expect(AppSettings.sanitizeProgressStyle('V6'), equals('v6'));
+        expect(AppSettings.sanitizeProgressStyle('v7'), equals('v7'));
+        expect(AppSettings.sanitizeProgressStyle('V7'), equals('v7'));
+        expect(AppSettings.sanitizeProgressStyle('v8'), equals('v8'));
+        expect(AppSettings.sanitizeProgressStyle('V8'), equals('v8'));
         expect(AppSettings.sanitizeProgressStyle('a1'), equals('v4'));
         expect(AppSettings.sanitizeProgressStyle('A1'), equals('v4'));
         expect(AppSettings.sanitizeProgressStyle('a3'), equals('v5'));
@@ -5524,6 +5528,10 @@ void main() {
         expect(service.settings.videoProgressStyle, equals('v5'));
         expect(service.settings.audioProgressStyle, equals('v5'));
 
+        await service.setBothProgressStyles('v8');
+        expect(service.settings.videoProgressStyle, equals('v8'));
+        expect(service.settings.audioProgressStyle, equals('v8'));
+
         await service.resetToDefaults();
         expect(service.settings.videoProgressStyle, equals('v1'));
         expect(service.settings.audioProgressStyle, equals('v1'));
@@ -5542,6 +5550,8 @@ void main() {
           'style_v4_title',
           'style_v5_title',
           'style_v6_title',
+          'style_v7_title',
+          'style_v8_title',
         ];
 
         for (final code in supportedCodes) {
@@ -5603,6 +5613,14 @@ void main() {
         expect(find.text(l10n.t('scope_audio')), findsOneWidget);
         expect(find.text(l10n.t('scope_both')), findsOneWidget);
 
+        expect(find.byType(GridView), findsOneWidget);
+        final gridView = tester.widget<GridView>(find.byType(GridView));
+        final gridDelegate =
+            gridView.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
+        expect(gridDelegate.crossAxisCount, equals(4));
+        expect(gridDelegate.mainAxisSpacing, equals(8));
+        expect(gridDelegate.crossAxisSpacing, equals(8));
+
         expect(find.text(l10n.t('style_v1_title')), findsOneWidget);
         expect(find.text(l10n.t('style_v2_title')), findsOneWidget);
         expect(find.text(l10n.t('style_v3_title')), findsOneWidget);
@@ -5654,10 +5672,30 @@ void main() {
         expect(service.settings.audioProgressStyle, equals('v6'));
         final previewV6 = tester.widget<ProgressStylePreviewBox>(find.byType(ProgressStylePreviewBox));
         expect(previewV6.style, equals('v6'));
+
+        final v7Finder = find.text(l10n.t('style_v7_title'));
+        await tester.scrollUntilVisible(v7Finder, 50, scrollable: find.byType(Scrollable).last);
+        expect(v7Finder, findsOneWidget);
+        await tester.tap(v7Finder);
+        await tester.pumpAndSettle();
+        expect(service.settings.videoProgressStyle, equals('v1'));
+        expect(service.settings.audioProgressStyle, equals('v7'));
+        final previewV7 = tester.widget<ProgressStylePreviewBox>(find.byType(ProgressStylePreviewBox));
+        expect(previewV7.style, equals('v7'));
+
+        final v8Finder = find.text(l10n.t('style_v8_title'));
+        await tester.scrollUntilVisible(v8Finder, 50, scrollable: find.byType(Scrollable).last);
+        expect(v8Finder, findsOneWidget);
+        await tester.tap(v8Finder);
+        await tester.pumpAndSettle();
+        expect(service.settings.videoProgressStyle, equals('v1'));
+        expect(service.settings.audioProgressStyle, equals('v8'));
+        final previewV8 = tester.widget<ProgressStylePreviewBox>(find.byType(ProgressStylePreviewBox));
+        expect(previewV8.style, equals('v8'));
       });
 
-      testWidgets('ProgressStylePreviewBox renders active style preview correctly for all styles (v1 - v6)', (tester) async {
-        final styles = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6'];
+      testWidgets('ProgressStylePreviewBox renders active style preview correctly for all styles (v1 - v8)', (tester) async {
+        final styles = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8'];
         final theme = AppTheme.getTheme('vega_default');
 
         for (final style in styles) {

@@ -38,17 +38,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Keduanya',
-      'style_v1_title': 'V1 • Cincin Orbit Ganda',
-
-      'style_v2_title': 'V2 • Cincin Riak Radar',
-
-      'style_v3_title': 'V3 • Lingkaran Ombak Fluida',
-
-      'style_v4_title': 'V4 • Bola Cairan Tenang',
-
-      'style_v5_title': 'V5 • Bar Kapsul Datar',
-
-      'style_v6_title': 'V6 • Bar Ular Zig-Zag',
+            'style_v1_title': 'V1 • Orbit',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Cairan',
+      'style_v4_title': 'V4 • Partikel',
+      'style_v5_title': 'V5 • Spiral',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Kapsul',
+      'style_v8_title': 'V8 • Equalizer',
 
       'settings_transcode_engine': 'Mesin Transcoding',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -333,17 +330,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Orbit',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Liquid',
+      'style_v4_title': 'V4 • Particles',
+      'style_v5_title': 'V5 • Spiral',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Capsule',
+      'style_v8_title': 'V8 • Equalizer',
 
       'settings_transcode_engine': 'Transcoding Engine',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -634,17 +628,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • 轨道',
+      'style_v2_title': 'V2 • 雷达',
+      'style_v3_title': 'V3 • 液体',
+      'style_v4_title': 'V4 • 粒子',
+      'style_v5_title': 'V5 • 螺旋',
+      'style_v6_title': 'V6 • 折线',
+      'style_v7_title': 'V7 • 胶囊',
+      'style_v8_title': 'V8 • 均衡器',
 
       'settings_transcode_engine': '转码引擎',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -915,17 +906,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • 轨道',
+      'style_v2_title': 'V2 • 雷达',
+      'style_v3_title': 'V3 • 液体',
+      'style_v4_title': 'V4 • 粒子',
+      'style_v5_title': 'V5 • 螺旋',
+      'style_v6_title': 'V6 • 折线',
+      'style_v7_title': 'V7 • 胶囊',
+      'style_v8_title': 'V8 • 均衡器',
 
       'settings_transcode_engine': '转码引擎',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -1198,17 +1186,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • 軌道',
+      'style_v2_title': 'V2 • 雷達',
+      'style_v3_title': 'V3 • 液體',
+      'style_v4_title': 'V4 • 粒子',
+      'style_v5_title': 'V5 • 螺旋',
+      'style_v6_title': 'V6 • 折線',
+      'style_v7_title': 'V7 • 膠囊',
+      'style_v8_title': 'V8 • 等化器',
 
       'settings_transcode_engine': '轉碼引擎',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -1481,17 +1466,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Órbita',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Líquido',
+      'style_v4_title': 'V4 • Partículas',
+      'style_v5_title': 'V5 • Espiral',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Cápsula',
+      'style_v8_title': 'V8 • Ecualizador',
 
       'settings_transcode_engine': 'Motor de transcodificación',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -1784,17 +1766,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Órbita',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Líquido',
+      'style_v4_title': 'V4 • Partículas',
+      'style_v5_title': 'V5 • Espiral',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Cápsula',
+      'style_v8_title': 'V8 • Equalizador',
 
       'settings_transcode_engine': 'Motor de transcodificação',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -2086,17 +2065,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • オービット',
+      'style_v2_title': 'V2 • レーダー',
+      'style_v3_title': 'V3 • リキッド',
+      'style_v4_title': 'V4 • パーティクル',
+      'style_v5_title': 'V5 • スパイラル',
+      'style_v6_title': 'V6 • ジグザグ',
+      'style_v7_title': 'V7 • カプセル',
+      'style_v8_title': 'V8 • イコライザー',
 
       'settings_transcode_engine': 'トランスコードエンジン',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -2375,17 +2351,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • 궤도',
+      'style_v2_title': 'V2 • 레이더',
+      'style_v3_title': 'V3 • 액체',
+      'style_v4_title': 'V4 • 파티클',
+      'style_v5_title': 'V5 • 나선',
+      'style_v6_title': 'V6 • 지그재그',
+      'style_v7_title': 'V7 • 캡슐',
+      'style_v8_title': 'V8 • 이퀄라이저',
 
       'settings_transcode_engine': '트랜스코딩 엔진',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -2662,17 +2635,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • ऑर्बिट',
+      'style_v2_title': 'V2 • रडार',
+      'style_v3_title': 'V3 • तरल',
+      'style_v4_title': 'V4 • कण',
+      'style_v5_title': 'V5 • सर्पिल',
+      'style_v6_title': 'V6 • ज़िग-ज़ैग',
+      'style_v7_title': 'V7 • कैप्सूल',
+      'style_v8_title': 'V8 • इक्वलाइज़र',
 
       'settings_transcode_engine': 'Transcoding Engine',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -2961,17 +2931,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • مدار',
+      'style_v2_title': 'V2 • رادار',
+      'style_v3_title': 'V3 • سائل',
+      'style_v4_title': 'V4 • جسيمات',
+      'style_v5_title': 'V5 • حلزوني',
+      'style_v6_title': 'V6 • متعرج',
+      'style_v7_title': 'V7 • كبسولة',
+      'style_v8_title': 'V8 • معادل',
 
       'settings_transcode_engine': 'Transcoding Engine',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -3263,17 +3230,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Orbite',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Liquide',
+      'style_v4_title': 'V4 • Particules',
+      'style_v5_title': 'V5 • Spirale',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Capsule',
+      'style_v8_title': 'V8 • Égaliseur',
 
       'settings_transcode_engine': 'Moteur de transcodage',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -3561,17 +3525,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Орбита',
+      'style_v2_title': 'V2 • Радар',
+      'style_v3_title': 'V3 • Жидкость',
+      'style_v4_title': 'V4 • Частицы',
+      'style_v5_title': 'V5 • Спираль',
+      'style_v6_title': 'V6 • Зигзаг',
+      'style_v7_title': 'V7 • Капсула',
+      'style_v8_title': 'V8 • Эквалайзер',
 
       'settings_transcode_engine': 'Движок транскодирования',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -3855,17 +3816,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Orbit',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Flüssigkeit',
+      'style_v4_title': 'V4 • Partikel',
+      'style_v5_title': 'V5 • Spirale',
+      'style_v6_title': 'V6 • Zickzack',
+      'style_v7_title': 'V7 • Kapsel',
+      'style_v8_title': 'V8 • Equalizer',
 
       'settings_transcode_engine': 'Transcodierungs-Engine',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -4157,17 +4115,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Orbita',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Liquido',
+      'style_v4_title': 'V4 • Particelle',
+      'style_v5_title': 'V5 • Spirale',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Capsula',
+      'style_v8_title': 'V8 • Equalizzatore',
 
       'settings_transcode_engine': 'Transcoding Engine',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -4456,17 +4411,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Orbit',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Vloeistof',
+      'style_v4_title': 'V4 • Deeltjes',
+      'style_v5_title': 'V5 • Spiraal',
+      'style_v6_title': 'V6 • Zigzag',
+      'style_v7_title': 'V7 • Capsule',
+      'style_v8_title': 'V8 • Equalizer',
 
       'settings_transcode_engine': 'Transcoding Engine',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -4756,17 +4708,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Orbit',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Væske',
+      'style_v4_title': 'V4 • Partikler',
+      'style_v5_title': 'V5 • Spiral',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Kapsel',
+      'style_v8_title': 'V8 • Equalizer',
 
       'settings_transcode_engine': 'Transcoding Engine',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -5053,17 +5002,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Orbit',
+      'style_v2_title': 'V2 • Tutka',
+      'style_v3_title': 'V3 • Neste',
+      'style_v4_title': 'V4 • Hiukkaset',
+      'style_v5_title': 'V5 • Spiraali',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Kapseli',
+      'style_v8_title': 'V8 • Equalizer',
 
       'settings_transcode_engine': 'Transcoding Engine',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -5350,17 +5296,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Orbit',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Væske',
+      'style_v4_title': 'V4 • Partikler',
+      'style_v5_title': 'V5 • Spiral',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Kapsel',
+      'style_v8_title': 'V8 • Equalizer',
 
       'settings_transcode_engine': 'Transcoding Engine',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -5645,17 +5588,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Orbit',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Vätska',
+      'style_v4_title': 'V4 • Partiklar',
+      'style_v5_title': 'V5 • Spiral',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Kapsel',
+      'style_v8_title': 'V8 • Equalizer',
 
       'settings_transcode_engine': 'Transcoding Engine',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -5944,17 +5884,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Keduanya',
-      'style_v1_title': 'V1 • Cincin Orbit Ganda',
-
-      'style_v2_title': 'V2 • Cincin Riak Radar',
-
-      'style_v3_title': 'V3 • Lingkaran Ombak Fluida',
-
-      'style_v4_title': 'V4 • Bola Cairan Tenang',
-
-      'style_v5_title': 'V5 • Bar Kapsul Datar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Orbit',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Cecair',
+      'style_v4_title': 'V4 • Partikel',
+      'style_v5_title': 'V5 • Spiral',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Kapsul',
+      'style_v8_title': 'V8 • Equalizer',
 
       'settings_transcode_engine': 'Enjin Transcoding',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -6241,17 +6178,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • Quỹ đạo',
+      'style_v2_title': 'V2 • Radar',
+      'style_v3_title': 'V3 • Chất lỏng',
+      'style_v4_title': 'V4 • Hạt',
+      'style_v5_title': 'V5 • Xoắn ốc',
+      'style_v6_title': 'V6 • Zig-Zag',
+      'style_v7_title': 'V7 • Viên nang',
+      'style_v8_title': 'V8 • Equalizer',
 
       'settings_transcode_engine': 'Transcoding Engine',
       'engine_hardware_title': 'Hardware (Fast)',
@@ -6543,17 +6477,14 @@ class AppLocalizations {
       'scope_video': 'Video',
       'scope_audio': 'Audio',
       'scope_both': 'Both',
-      'style_v1_title': 'V1 • Dual Ring Orbit',
-
-      'style_v2_title': 'V2 • Radar Ripple Ring',
-
-      'style_v3_title': 'V3 • Circular Fluid Wave',
-
-      'style_v4_title': 'V4 • Calm Liquid Orb',
-
-      'style_v5_title': 'V5 • Flat Capsule Bar',
-
-      'style_v6_title': 'V6 • Zig-Zag Snake Bar',
+            'style_v1_title': 'V1 • วงโคจร',
+      'style_v2_title': 'V2 • เรดาร์',
+      'style_v3_title': 'V3 • ของเหลว',
+      'style_v4_title': 'V4 • อนุภาค',
+      'style_v5_title': 'V5 • เกลียว',
+      'style_v6_title': 'V6 • ซิกแซก',
+      'style_v7_title': 'V7 • แคปซูล',
+      'style_v8_title': 'V8 • อีควอไลเซอร์',
 
       'settings_transcode_engine': 'Transcoding Engine',
       'engine_hardware_title': 'Hardware (Fast)',

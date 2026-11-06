@@ -5,7 +5,7 @@
 
   **Offline video transcoding, downscaling, trimming, and audio extraction for Android.**
 
-  [![Version](https://img.shields.io/badge/Version-v2.5.4-3b82f6?style=flat-square)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
+  [![Version](https://img.shields.io/badge/Version-v2.5.7-3b82f6?style=flat-square)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
   [![Platform](https://img.shields.io/badge/Platform-Android%207.0+-10b981?style=flat-square&logo=android&logoColor=white)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
   [![Architecture](https://img.shields.io/badge/Arch-arm64--v8a-8b5cf6?style=flat-square&logo=arm&logoColor=white)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
   [![Engine](https://img.shields.io/badge/Engine-Flutter%20%7C%20Media3-6366f1?style=flat-square)](https://developer.android.com/media/media3)
@@ -29,7 +29,7 @@
 - **Video Trimmer** : Keyframe-accurate trimming range slider with interactive video preview, start/end timestamps, and duration calculation.
 - **Rate Control** : Constant Quality (CQ/VBR) or custom target bitrate (1-35 Mbps) with framerate clamping (24-60 FPS).
 - **Audio Extraction** : Extract audio tracks to M4A/AAC (64-320 kbps or direct copy), MP3 (direct bitstream copy from source), or 16-bit uncompressed PCM WAV.
-- **Progress Visualizers** : 6 animation styles (Orbit, Radar, Snake Ring, Liquid, Capsule, Zig-Zag Snake) with reduced-motion support.
+- **Progress Visualizers** : 8 animation styles (Orbit, Radar, Liquid, Particles, Spiral, Zig-Zag, Capsule, Equalizer) with reduced-motion support.
 - **System Integration** : Receive shared video files directly from Android Gallery or File Manager via native Send intent (`SEND` / `SEND_MULTIPLE`).
 - **Telemetry & Battery Monitoring** : Live encoding speed, elapsed/estimated remaining time, storage I/O throughput, device battery temperature, and thermal throttling status.
 - **Foreground Execution** : Android Foreground Service with CPU `WakeLock`, persistent notification bar with interactive Cancel action, and crash-recovery job markers.

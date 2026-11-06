@@ -22,8 +22,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.5.4';
-  String _buildNumber = '25004';
+  String _appVersion = 'v2.5.7';
+  String _buildNumber = '84915';
   double? _dragCardOpacity;
 
   @override
@@ -52,14 +52,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '25004';
+              : '84915';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.5.4';
-          _buildNumber = '25004';
+          _appVersion = 'v2.5.7';
+          _buildNumber = '84915';
         });
       }
     }
@@ -1449,22 +1449,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
               {
                 'id': 'v3',
                 'title': l10n.t('style_v3_title'),
-                'icon': Icons.waves_rounded,
+                'icon': Icons.water_drop_rounded,
               },
               {
                 'id': 'v4',
                 'title': l10n.t('style_v4_title'),
-                'icon': Icons.water_drop_rounded,
+                'icon': Icons.all_inclusive_rounded,
               },
               {
                 'id': 'v5',
                 'title': l10n.t('style_v5_title'),
-                'icon': Icons.view_stream_rounded,
+                'icon': Icons.cyclone_rounded,
               },
               {
                 'id': 'v6',
                 'title': l10n.t('style_v6_title'),
                 'icon': Icons.gesture_rounded,
+              },
+              {
+                'id': 'v7',
+                'title': l10n.t('style_v7_title'),
+                'icon': Icons.view_stream_rounded,
+              },
+              {
+                'id': 'v8',
+                'title': l10n.t('style_v8_title'),
+                'icon': Icons.graphic_eq_rounded,
               },
             ];
 
@@ -1644,7 +1654,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 12),
                     Expanded(
-                      child: ListView(
+                      child: GridView.builder(
                         controller: scrollController,
                         physics: const BouncingScrollPhysics(
                           parent: AlwaysScrollableScrollPhysics(),
@@ -1653,107 +1663,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           horizontal: 16,
                           vertical: 4,
                         ),
-                        children: styles.map((item) {
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 4,
+                              mainAxisSpacing: 8,
+                              crossAxisSpacing: 8,
+                              childAspectRatio: 0.95,
+                            ),
+                        itemCount: styles.length,
+                        itemBuilder: (context, index) {
+                          final item = styles[index];
                           final id = item['id'] as String;
                           final title = item['title'] as String;
                           final icon = item['icon'] as IconData;
                           final isSelected = activeStyle == id;
 
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Material(
-                              color: isSelected
-                                  ? primary.withAlpha(25)
-                                  : isDark
-                                  ? const Color(0xFF1E293B).withAlpha(120)
-                                  : const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(14),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(14),
-                                onTap: () async {
-                                  if (currentScope == 'video') {
-                                    await _settingsService
-                                        .setVideoProgressStyle(id);
-                                  } else if (currentScope == 'audio') {
-                                    await _settingsService
-                                        .setAudioProgressStyle(id);
-                                  } else {
-                                    await _settingsService
-                                        .setBothProgressStyles(id);
-                                  }
-                                  setModalState(() {});
-                                  if (mounted) setState(() {});
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 10,
+                          return Material(
+                            color: isSelected
+                                ? primary.withAlpha(25)
+                                : theme.colorScheme.surfaceContainerHighest
+                                      .withAlpha(35),
+                            borderRadius: BorderRadius.circular(12),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () async {
+                                if (currentScope == 'video') {
+                                  await _settingsService.setVideoProgressStyle(
+                                    id,
+                                  );
+                                } else if (currentScope == 'audio') {
+                                  await _settingsService.setAudioProgressStyle(
+                                    id,
+                                  );
+                                } else {
+                                  await _settingsService.setBothProgressStyles(
+                                    id,
+                                  );
+                                }
+                                setModalState(() {});
+                                if (mounted) setState(() {});
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? primary
+                                        : theme.colorScheme.outline.withAlpha(
+                                            30,
+                                          ),
+                                    width: isSelected ? 1.6 : 1.0,
                                   ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      icon,
+                                      size: 22,
                                       color: isSelected
                                           ? primary
-                                          : isDark
-                                          ? const Color(0xFF334155)
-                                          : const Color(0xFFE2E8F0),
-                                      width: isSelected ? 1.8 : 1.0,
+                                          : theme.colorScheme.onSurface,
                                     ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? primary.withAlpha(30)
-                                              : primary.withAlpha(15),
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          icon,
-                                          size: 20,
+                                    const SizedBox(height: 4),
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        title,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w700
+                                              : FontWeight.w600,
                                           color: isSelected
                                               ? primary
-                                              : theme.colorScheme.onSurface
-                                                    .withAlpha(180),
+                                              : theme.colorScheme.onSurface,
                                         ),
                                       ),
-                                      const SizedBox(width: 14),
-                                      Expanded(
-                                        child: Text(
-                                          title,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: isSelected
-                                                ? FontWeight.w700
-                                                : FontWeight.w500,
-                                            color: isSelected
-                                                ? primary
-                                                : theme.colorScheme.onSurface,
-                                          ),
-                                        ),
-                                      ),
-                                      Icon(
-                                        isSelected
-                                            ? Icons.check_circle_rounded
-                                            : Icons
-                                                  .radio_button_unchecked_rounded,
-                                        size: 22,
-                                        color: isSelected
-                                            ? primary
-                                            : theme.colorScheme.onSurface
-                                                  .withAlpha(80),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           );
-                        }).toList(),
+                        },
                       ),
                     ),
                   ],

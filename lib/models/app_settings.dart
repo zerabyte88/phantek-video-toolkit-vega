@@ -52,10 +52,10 @@ class AppSettings {
   /// Automatically switch to alternative engine on error.
   final bool enableEngineFallback;
 
-  /// Active progress style for video transcoding ('v1'..'v5').
+  /// Active progress style for video transcoding ('v1'..'v8').
   final String videoProgressStyle;
 
-  /// Active progress style for audio extraction ('v1'..'v5').
+  /// Active progress style for audio extraction ('v1'..'v8').
   final String audioProgressStyle;
 
   const AppSettings({
@@ -180,7 +180,7 @@ class AppSettings {
     return 'hardware';
   }
 
-  /// Normalizes progress animation style to supported values ('v1'..'v6').
+  /// Normalizes progress animation style to supported values ('v1'..'v8').
   /// Maps legacy 'a1' -> 'v4', 'a3' -> 'v5'.
   static String sanitizeProgressStyle(String? style, [String fallback = 'v1']) {
     if (style == null) return fallback;
@@ -192,7 +192,9 @@ class AppSettings {
         normalized == 'v3' ||
         normalized == 'v4' ||
         normalized == 'v5' ||
-        normalized == 'v6') {
+        normalized == 'v6' ||
+        normalized == 'v7' ||
+        normalized == 'v8') {
       return normalized;
     }
     return fallback;
