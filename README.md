@@ -27,7 +27,7 @@
 - **System Integration** : Receive shared video files directly from Android Gallery or File Manager via native Send intent (`SEND` / `SEND_MULTIPLE`).
 - **Telemetry & Battery Monitoring** : Live encoding speed, elapsed/estimated remaining time, storage I/O throughput, device battery temperature, and thermal throttling status.
 - **Foreground Execution** : Android Foreground Service with CPU `WakeLock`, persistent notification bar with interactive Cancel action, and crash-recovery job markers.
-- **AMOLED Themes** : 6 visual themes (*Dark Mode*, *Light Mode*, *Snowfall*, *Clean Light*, *Midnight*, *Sakura*).
+- **AMOLED Themes** : 6 visual themes (*Dark Mode*, *Light Mode*, *Snowfall*, *Daylight*, *Midnight*, *Sakura*).
 - **100% Offline & Private** : Zero network permissions, zero telemetry, and zero external trackers.
 
 ---
