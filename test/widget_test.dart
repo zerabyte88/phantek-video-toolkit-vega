@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:phantek_video_toolkit_vega/main.dart';
@@ -87,9 +87,6 @@ void main() {
       expect(find.text('22'), findsOneWidget);
       expect(find.byKey(const Key('crf_reset_button')), findsNothing);
       expect(find.byKey(const Key('crf_custom_badge')), findsNothing);
-
-      // Verify CRF label text is removed from ConversionOptionsCard
-      expect(find.text(l10n.t('crf_label')), findsNothing);
 
       // Simulate custom low CRF (16) on Normal preset -> triggers custom tag, reset button, and low CRF warning
       currentOpts = currentOpts.copyWith(

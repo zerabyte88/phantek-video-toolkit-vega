@@ -5,7 +5,7 @@
 
   **Offline video transcoding, downscaling, trimming, and audio extraction for Android.**
 
-  [![Version](https://img.shields.io/badge/Version-v2.5.9-3b82f6?style=flat-square)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
+  [![Version](https://img.shields.io/badge/Version-v2.6.0-3b82f6?style=flat-square)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
   [![Platform](https://img.shields.io/badge/Platform-Android%207.0+-10b981?style=flat-square&logo=android&logoColor=white)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
   [![Architecture](https://img.shields.io/badge/Arch-arm64--v8a-8b5cf6?style=flat-square&logo=arm&logoColor=white)](https://github.com/zerabyte88/phantek-video-toolkit-vega/releases)
   [![Engine](https://img.shields.io/badge/Engine-Flutter%20%7C%20Media3-6366f1?style=flat-square)](https://developer.android.com/media/media3)
@@ -55,7 +55,7 @@
 
 | Layer | Package / Tool | Role |
 | :---: | :---: | :---: |
-| **Framework** | Flutter (Dart SDK `^3.13`) | Core UI, state management, and localization |
+| **Framework** | Flutter `3.50.0` (Dart SDK `^3.14.0`) | Core UI, state management, and localization |
 | **Media Engine** | AndroidX Media3 (`1.11.1`) | `Transformer`, `MediaCodec`, `GlEffect`, and `Muxer` pipeline |
 | **Preview** | `video_player` (`^2.14.1`) | Hardware-accelerated video trimmer preview |
 | **Background** | `flutter_foreground_task`, `wakelock_plus` | Foreground service execution and CPU wake lock |
@@ -70,7 +70,7 @@
 
 ### Prerequisites
 
-- Flutter SDK `^3.13`
+- Flutter SDK `^3.50.0`
 - Android SDK & Java 17+
 
 ### Steps

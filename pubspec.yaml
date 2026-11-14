@@ -2,14 +2,16 @@ name: phantek_video_toolkit_vega
 description: "Offline video transcoding, downscaling, trimming, and audio extraction for Android."
 publish_to: 'none'
 
-version: 2.5.9+84917
+version: 2.6.0+84918
 
 environment:
-  sdk: ^3.13.0
+  sdk: ^3.14.0
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  material_ui: ^1.11.0
 
   device_info_plus: ^13.3.0
   file_picker: ^13.3.1

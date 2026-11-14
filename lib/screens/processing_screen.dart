@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:open_filex/open_filex.dart';
@@ -791,7 +791,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                 });
               },
               child: Text(
-                'OK',
+                l10n.t('dialog_ok'),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -820,7 +820,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     ];
   }
 
-  Widget _buildProgressSection(ThemeData theme, l10n) {
+  Widget _buildProgressSection(ThemeData theme, AppLocalizations l10n) {
     final isDark = theme.brightness == Brightness.dark;
     final palette = _getThemePalette();
     final textOutlineShadows = _buildTextOutlineShadows(palette.basin);
@@ -879,7 +879,9 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _isSuccess ? _formatPercentage(1.0) : 'Error',
+                    _isSuccess
+                        ? _formatPercentage(1.0)
+                        : l10n.t('proc_status_error'),
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,

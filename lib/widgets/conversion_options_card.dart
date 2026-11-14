@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../models/encoding_options.dart';
 import '../models/video_info.dart';
@@ -742,7 +742,9 @@ class _ConversionOptionsCardState extends State<ConversionOptionsCard>
             children: RateControlMode.values.map((mode) {
               final isSelected = widget.encodingOptions.rateControlMode == mode;
               return _buildChoiceChip(
-                label: mode.displayName,
+                label: mode == RateControlMode.crf
+                    ? l10n.t('rate_control_crf')
+                    : l10n.t('rate_control_bitrate'),
                 isSelected: isSelected,
                 isEnabled: true,
                 onSelected: (selected) {

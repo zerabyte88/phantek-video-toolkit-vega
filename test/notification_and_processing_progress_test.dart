@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -432,7 +432,10 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 5));
       expect(find.byIcon(Icons.error_rounded), findsOneWidget);
-      expect(find.text('Error'), findsOneWidget);
+      expect(
+        find.text(SettingsService().l10n.t('proc_status_error')),
+        findsOneWidget,
+      );
     });
 
     test('ProcessingScreen.formatProgressPercentage formats integers and handles edge cases', () {
@@ -615,18 +618,16 @@ void main() {
         await tester.pump(const Duration(seconds: 1));
         await tester.pump();
 
-        // Banner elements should be present
+        final okLabel = SettingsService().l10n.t('dialog_ok');
         expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
         expect(find.textContaining('47.5'), findsWidgets);
-        expect(find.text('OK'), findsOneWidget);
+        expect(find.text(okLabel), findsOneWidget);
 
-        // Tap the OK button to dismiss the banner
-        await tester.tap(find.text('OK'));
+        await tester.tap(find.text(okLabel));
         await tester.pump();
 
-        // Banner should disappear
         expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
-        expect(find.text('OK'), findsNothing);
+        expect(find.text(okLabel), findsNothing);
 
         completer.complete(null);
         await tester.pump();

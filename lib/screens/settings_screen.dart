@@ -1,5 +1,5 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -22,8 +22,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.5.9';
-  String _buildNumber = '84917';
+  String _appVersion = 'v2.6.0';
+  String _buildNumber = '84918';
   double? _dragCardOpacity;
 
   @override
@@ -52,14 +52,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '84917';
+              : '84918';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.5.9';
-          _buildNumber = '84917';
+          _appVersion = 'v2.6.0';
+          _buildNumber = '84918';
         });
       }
     }
@@ -261,6 +261,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               }
                             }
                           : null,
+                      resetLabel: l10n.t('settings_audio_reset_folder'),
                       l10n: l10n,
                     ),
 
@@ -1114,7 +1115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               Text(
-                '100% (Default)',
+                l10n.t('opacity_default_label'),
                 style: TextStyle(
                   fontSize: 11,
                   color: theme.colorScheme.onSurface.withAlpha(120),
@@ -1955,6 +1956,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required ThemeData theme,
     required VoidCallback onChange,
     required VoidCallback? onReset,
+    String? resetLabel,
     required AppLocalizations l10n,
   }) {
     final isCustom = currentPath.isNotEmpty;
@@ -2032,7 +2034,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 TextButton.icon(
                   onPressed: onReset,
                   icon: const Icon(Icons.restore_rounded, size: 15),
-                  label: Text(l10n.t('settings_reset_folder')),
+                  label: Text(resetLabel ?? l10n.t('settings_reset_folder')),
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
                     padding: const EdgeInsets.symmetric(
@@ -2086,7 +2088,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             theme,
             l10n.t('license_label'),
             'MIT License',
-            onTap: () => _showAppLicensePage(context, theme),
+            onTap: () => _showAppLicensePage(context, theme, l10n),
           ),
 
           const SizedBox(height: 12),
@@ -2134,7 +2136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Developer: zerabyte88',
+                        l10n.t('developer_label'),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -2211,11 +2213,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showAppLicensePage(BuildContext context, ThemeData theme) {
+  void _showAppLicensePage(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
     LicenseService.registerCustomLicenses();
     showLicensePage(
       context: context,
-      applicationName: 'Phantek - Video Toolkit Vega',
+      applicationName: l10n.t('app_long_title'),
       applicationVersion: '',
       applicationLegalese: '',
       applicationIcon: Column(
@@ -2254,7 +2260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildLicenseLinkTile(
             theme: theme,
             icon: Icons.code_rounded,
-            label: 'Source code',
+            label: l10n.t('source_code_label'),
             url: 'https://github.com/zerabyte88/phantek-video-toolkit-vega',
           ),
 

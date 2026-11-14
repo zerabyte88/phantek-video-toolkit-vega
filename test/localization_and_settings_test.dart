@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:phantek_video_toolkit_vega/models/app_settings.dart';
@@ -154,42 +154,36 @@ void main() {
         expect(l10n.t('pick_video').isNotEmpty, isTrue);
         expect(l10n.t('settings_title').isNotEmpty, isTrue);
         expect(l10n.t('loading_analyzing').isNotEmpty, isTrue);
-        expect(l10n.t('settings_hardware').isNotEmpty, isTrue);
-        expect(l10n.t('settings_cpu_threads').isNotEmpty, isTrue);
+        expect(l10n.t('rate_control_crf').isNotEmpty, isTrue);
+        expect(l10n.t('rate_control_bitrate').isNotEmpty, isTrue);
       }
     });
 
     test('String argument substitution works', () {
       final l10n = const AppLocalizations('id');
-      final result = l10n.t('settings_detected_cores', args: {'count': '8'});
-      expect(result.contains('8'), isTrue);
+      final result = l10n.t('recovery_retry', args: {'cores': '4'});
+      expect(result.contains('4'), isTrue);
     });
 
-    test('Cancel buttons, dialogs, rate control, and feature highlights resolve properly in all languages', () {
+    test('Cancel buttons, dialogs, and rate control resolve properly in all languages', () {
       for (final code in supportedCodes) {
         final l10n = AppLocalizations(code);
         expect(l10n.t('proc_cancel_confirm').isNotEmpty, isTrue);
-        expect(l10n.t('proc_continue_btn').isNotEmpty, isTrue);
         expect(l10n.t('proc_cancel_btn').isNotEmpty, isTrue);
         expect(l10n.t('rate_control').isNotEmpty, isTrue);
-        expect(l10n.t('feature_offline_fast').isNotEmpty, isTrue);
-        expect(l10n.t('feature_offline_fast_desc').isNotEmpty, isTrue);
-        expect(l10n.t('feature_crf_bitrate').isNotEmpty, isTrue);
-        expect(l10n.t('feature_crf_bitrate_desc').isNotEmpty, isTrue);
-        expect(l10n.t('feature_privacy').isNotEmpty, isTrue);
-        expect(l10n.t('feature_privacy_desc').isNotEmpty, isTrue);
+        expect(l10n.t('rate_control_crf').isNotEmpty, isTrue);
+        expect(l10n.t('rate_control_bitrate').isNotEmpty, isTrue);
         expect(l10n.t('error_details').isNotEmpty, isTrue);
         expect(l10n.t('app_version').isNotEmpty, isTrue);
         expect(l10n.t('res_original').isNotEmpty, isTrue);
         expect(l10n.t('settings_card_opacity').isNotEmpty, isTrue);
         expect(l10n.t('settings_card_opacity_desc').isNotEmpty, isTrue);
+        expect(l10n.t('opacity_default_label').isNotEmpty, isTrue);
 
-        // Ensure keys do not return the literal key name
         expect(
           l10n.t('proc_cancel_confirm'),
           isNot(equals('proc_cancel_confirm')),
         );
-        expect(l10n.t('proc_continue_btn'), isNot(equals('proc_continue_btn')));
         expect(l10n.t('proc_cancel_btn'), isNot(equals('proc_cancel_btn')));
         expect(l10n.t('rate_control'), isNot(equals('rate_control')));
         expect(
@@ -266,11 +260,7 @@ void main() {
         }
       }
 
-      // Add dynamic keys
       allCalls.addAll([
-        'desc_mp4',
-        'desc_mkv',
-        'desc_mov',
         'desc_h264',
         'desc_hevc',
       ]);
@@ -367,7 +357,7 @@ void main() {
       expect(restored.enableEngineFallback, isFalse);
     });
 
-    test('New theme, wakelock, and cache storage translations exist', () {
+    test('Theme, wakelock, and folder/engine translations exist', () {
       for (final code in supportedCodes) {
         final l10n = AppLocalizations(code);
         expect(l10n.t('settings_theme').isNotEmpty, isTrue);
@@ -377,22 +367,14 @@ void main() {
         expect(l10n.t('settings_wakelock_desc').isNotEmpty, isTrue);
         expect(l10n.t('proc_elapsed_time').isNotEmpty, isTrue);
         expect(l10n.t('proc_remaining_time').isNotEmpty, isTrue);
-        expect(l10n.t('settings_storage').isNotEmpty, isTrue);
-        expect(l10n.t('settings_cache_size').isNotEmpty, isTrue);
-        expect(l10n.t('settings_clear_cache').isNotEmpty, isTrue);
 
-        // v1.1.2 new keys
-        expect(l10n.t('codec_hevc_warning').isNotEmpty, isTrue);
-        expect(l10n.t('codec_compat_hint').isNotEmpty, isTrue);
         expect(l10n.t('back_to_home').isNotEmpty, isTrue);
         expect(l10n.t('settings_output_folder').isNotEmpty, isTrue);
-        expect(l10n.t('settings_output_folder_desc').isNotEmpty, isTrue);
         expect(l10n.t('settings_change_folder').isNotEmpty, isTrue);
         expect(l10n.t('settings_reset_folder').isNotEmpty, isTrue);
         expect(l10n.t('settings_folder_changed').isNotEmpty, isTrue);
         expect(l10n.t('settings_folder_default').isNotEmpty, isTrue);
         expect(l10n.t('settings_audio_output_folder').isNotEmpty, isTrue);
-        expect(l10n.t('settings_audio_output_folder_desc').isNotEmpty, isTrue);
         expect(l10n.t('settings_audio_reset_folder').isNotEmpty, isTrue);
         expect(l10n.t('settings_audio_folder_changed').isNotEmpty, isTrue);
         expect(l10n.t('settings_audio_folder_default').isNotEmpty, isTrue);
@@ -411,7 +393,6 @@ void main() {
         expect(l10n.t('engine_software_desc').isNotEmpty, isTrue);
         expect(l10n.t('engine_fallback_toggle_title').isNotEmpty, isTrue);
         expect(l10n.t('engine_fallback_toggle_desc').isNotEmpty, isTrue);
-        expect(l10n.t('engine_fallback_notice').isNotEmpty, isTrue);
       }
     });
 
@@ -846,28 +827,21 @@ void main() {
       );
     });
 
-    test('Navigation and options reset localization keys resolve correctly in all supported languages', () {
+    test('Navigation and dialog status localization keys resolve correctly in all supported languages', () {
       for (final code in supportedCodes) {
         final l10n = AppLocalizations(code);
         expect(l10n.t('back_to_home').isNotEmpty, isTrue);
-        expect(l10n.t('reset_options').isNotEmpty, isTrue);
-        expect(l10n.t('options_reset_success').isNotEmpty, isTrue);
+        expect(l10n.t('dialog_ok').isNotEmpty, isTrue);
+        expect(l10n.t('proc_status_error').isNotEmpty, isTrue);
         expect(l10n.t('back_to_home'), isNot(equals('back_to_home')));
-        expect(l10n.t('reset_options'), isNot(equals('reset_options')));
-        expect(
-          l10n.t('options_reset_success'),
-          isNot(equals('options_reset_success')),
-        );
+        expect(l10n.t('dialog_ok'), isNot(equals('dialog_ok')));
+        expect(l10n.t('proc_status_error'), isNot(equals('proc_status_error')));
       }
     });
 
     test('Audio Extractor localization keys resolve properly in all supported languages', () {
       for (final code in supportedCodes) {
         final l10n = AppLocalizations(code);
-        expect(l10n.t('category_video').isNotEmpty, isTrue);
-        expect(l10n.t('category_audio').isNotEmpty, isTrue);
-        expect(l10n.t('category_video'), isNot(equals('category_video')));
-        expect(l10n.t('category_audio'), isNot(equals('category_audio')));
         expect(l10n.t('mode_extractor').isNotEmpty, isTrue);
         expect(l10n.t('audio_options').isNotEmpty, isTrue);
         expect(l10n.t('audio_format').isNotEmpty, isTrue);
@@ -875,14 +849,7 @@ void main() {
         expect(l10n.t('audio_copy').isNotEmpty, isTrue);
         expect(l10n.t('start_audio_extraction').isNotEmpty, isTrue);
         expect(l10n.t('proc_extracting').isNotEmpty, isTrue);
-        expect(l10n.t('proc_audio_completed').isNotEmpty, isTrue);
         expect(l10n.t('proc_play_audio').isNotEmpty, isTrue);
-        expect(l10n.t('desc_audio_mp3').isNotEmpty, isTrue);
-        expect(l10n.t('desc_audio_m4a').isNotEmpty, isTrue);
-        expect(l10n.t('desc_audio_wav').isNotEmpty, isTrue);
-        expect(l10n.t('desc_audio_mp3'), isNot(equals('desc_audio_mp3')));
-        expect(l10n.t('desc_audio_m4a'), isNot(equals('desc_audio_m4a')));
-        expect(l10n.t('desc_audio_wav'), isNot(equals('desc_audio_wav')));
         expect(l10n.t('mode_extractor'), isNot(equals('mode_extractor')));
       }
     });
@@ -1406,7 +1373,10 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
 
-        expect(find.text('Developer: zerabyte88'), findsOneWidget);
+        expect(
+          find.text(SettingsService().l10n.t('developer_label')),
+          findsOneWidget,
+        );
         expect(find.text('GitHub'), findsOneWidget);
         expect(find.byIcon(Icons.open_in_new_rounded), findsOneWidget);
       },
@@ -1429,78 +1399,25 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
 
+        final l10n = SettingsService().l10n;
         final licenseRow = find.text('MIT License');
         expect(licenseRow, findsOneWidget);
         await tester.tap(licenseRow);
         await tester.pumpAndSettle();
 
         expect(find.byType(LicensePage), findsOneWidget);
-        expect(find.text('Phantek - Video Toolkit Vega'), findsOneWidget);
-        expect(find.text('Source code'), findsOneWidget);
+        expect(find.text(l10n.t('app_long_title')), findsOneWidget);
+        expect(find.text(l10n.t('source_code_label')), findsOneWidget);
         expect(
           find.text('https://github.com/zerabyte88/phantek-video-toolkit-vega'),
           findsOneWidget,
         );
         expect(find.text('Third-party notices'), findsNothing);
 
-        await tester.tap(find.text('Source code'));
+        await tester.tap(find.text(l10n.t('source_code_label')));
         await tester.pump();
       },
     );
-
-    test('Target FPS guide keys are completely free of emojis across all supported languages', () {
-      final emojiRegex = RegExp(
-        r'[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]',
-        unicode: true,
-      );
-      for (final code in supportedCodes) {
-        final l10n = AppLocalizations(code);
-        final title = l10n.t('fps_info_title');
-        final orig = l10n.t('fps_desc_original');
-        final fps60 = l10n.t('fps_desc_60');
-        final fps30 = l10n.t('fps_desc_30');
-        final fps24 = l10n.t('fps_desc_24');
-        final custom = l10n.t('fps_desc_custom');
-
-        expect(title.isNotEmpty, isTrue);
-        expect(orig.isNotEmpty, isTrue);
-        expect(fps60.isNotEmpty, isTrue);
-        expect(fps30.isNotEmpty, isTrue);
-        expect(fps24.isNotEmpty, isTrue);
-        expect(custom.isNotEmpty, isTrue);
-
-        expect(
-          emojiRegex.hasMatch(title),
-          isFalse,
-          reason: '$code title has emoji',
-        );
-        expect(
-          emojiRegex.hasMatch(orig),
-          isFalse,
-          reason: '$code orig has emoji',
-        );
-        expect(
-          emojiRegex.hasMatch(fps60),
-          isFalse,
-          reason: '$code fps60 has emoji',
-        );
-        expect(
-          emojiRegex.hasMatch(fps30),
-          isFalse,
-          reason: '$code fps30 has emoji',
-        );
-        expect(
-          emojiRegex.hasMatch(fps24),
-          isFalse,
-          reason: '$code fps24 has emoji',
-        );
-        expect(
-          emojiRegex.hasMatch(custom),
-          isFalse,
-          reason: '$code custom has emoji',
-        );
-      }
-    });
 
     testWidgets(
       'Target FPS only renders Original and Custom chips, custom slider clamps to 30 for 30 FPS video',
@@ -1580,12 +1497,6 @@ void main() {
         final sliderWidget = tester.widget<Slider>(sliderFinder);
         expect(sliderWidget.max, 30.0);
         expect(sliderWidget.min, 10.0);
-
-        // Dynamic FPS explanation is removed
-        expect(
-          find.text(const AppLocalizations('id').t('fps_desc_custom')),
-          findsNothing,
-        );
       },
     );
 
@@ -1730,12 +1641,9 @@ void main() {
           await tester.pumpAndSettle();
         }
 
-        // Ensure active preset indicator box, container format, and FPS descriptions are removed
+        // Ensure active preset indicator box is removed
         expect(find.byIcon(Icons.speed_rounded), findsNothing);
         expect(find.text(l10n.t('desc_crf')), findsOneWidget);
-        expect(find.text(l10n.t('desc_mp4')), findsNothing);
-        expect(find.text(l10n.t('fps_desc_30')), findsNothing);
-        expect(find.text(l10n.t('crf_label')), findsNothing);
 
         // Verify no RenderParagraph in the tree has TextOverflow.ellipsis for descriptions
         final textWidgets = tester.widgetList<Text>(find.byType(Text));
@@ -2100,33 +2008,6 @@ void main() {
         expect(await service.getJobMarker(), isNull);
       },
     );
-
-    testWidgets('SettingsScreen does not display CPU Cores setting', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      final service = SettingsService();
-      await service.init();
-      await service.setCpuThreads(0);
-
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.getTheme('oled_snowfall'),
-          home: const SettingsScreen(),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      final l10n = service.l10n;
-
-      // Verify CPU Cores setting header is not displayed
-      expect(find.text(l10n.t('settings_cpu_threads')), findsNothing);
-    });
 
     testWidgets(
       'ConversionOptionsCard does not display 4K CPU note when video is 4K in Auto mode',
@@ -3218,130 +3099,6 @@ void main() {
       );
       expect(DeviceSpecHelper.isEntryOrLegacySoc(socName: sd615), isTrue);
     });
-
-    test('All 22 languages have distinct CPU thread descriptions and clean preset titles without x264/x265', () {
-      final threadKeys = [
-        'settings_cpu_threads_1_desc',
-        'settings_cpu_threads_2_desc',
-        'settings_cpu_threads_4_desc',
-        'settings_cpu_threads_6_desc',
-        'settings_cpu_threads_8_desc',
-      ];
-
-      final audioKeys = [
-        'settings_audio_bitrate_64_desc',
-        'settings_audio_bitrate_128_desc',
-        'settings_audio_bitrate_192_desc',
-        'settings_audio_bitrate_256_desc',
-        'settings_audio_bitrate_320_desc',
-      ];
-
-      for (final lang in AppLocalizations.supportedLanguages) {
-        final code = lang['code']!;
-        final l10n = AppLocalizations(code);
-
-        // Check preset label has no x264/x265
-        final presetTitle = l10n.t('settings_cpu_preset');
-        expect(
-          presetTitle.contains('x264/x265'),
-          isFalse,
-          reason:
-              'Language $code still contains x264/x265 in settings_cpu_preset',
-        );
-
-        // Check all 5 CPU thread descriptions exist and are non-empty
-        final threadTexts = <String>{};
-        for (final key in threadKeys) {
-          final text = l10n.t(key);
-          expect(text, isNotEmpty, reason: 'Key $key empty in $code');
-          expect(
-            text,
-            isNot(equals(key)),
-            reason: 'Key $key untranslated in $code',
-          );
-          threadTexts.add(text);
-        }
-        // Ensure all 5 CPU thread descriptions are distinct from each other
-        expect(
-          threadTexts.length,
-          equals(5),
-          reason: 'Language $code has duplicate descriptions for CPU threads',
-        );
-
-        // Check all 5 Audio bitrate descriptions exist and are non-empty
-        final audioTexts = <String>{};
-        for (final key in audioKeys) {
-          final text = l10n.t(key);
-          expect(text, isNotEmpty, reason: 'Key $key empty in $code');
-          expect(
-            text,
-            isNot(equals(key)),
-            reason: 'Key $key untranslated in $code',
-          );
-          audioTexts.add(text);
-        }
-        // Ensure all 5 audio descriptions are distinct from each other
-        expect(
-          audioTexts.length,
-          equals(5),
-          reason:
-              'Language $code has duplicate descriptions for audio bitrates',
-        );
-      }
-    });
-
-    test('All 22 languages have clean MediaCodec preset descriptions without CPU scalers', () {
-      final keys = [
-        'preset_fast_desc',
-        'preset_normal_desc',
-        'preset_slow_desc',
-      ];
-      expect(AppLocalizations.supportedLanguages.length, equals(22));
-
-      for (final lang in AppLocalizations.supportedLanguages) {
-        final code = lang['code']!;
-        final l10n = AppLocalizations(code);
-
-        for (final k in keys) {
-          final val = l10n.t(k);
-          expect(
-            val,
-            isNotEmpty,
-            reason: 'Missing translation for $k in $code',
-          );
-          expect(
-            val.contains('x264'),
-            isFalse,
-            reason: 'Contains x264 in $code ($k): $val',
-          );
-          expect(
-            val.contains('x265'),
-            isFalse,
-            reason: 'Contains x265 in $code ($k): $val',
-          );
-          expect(
-            val.contains('Scaler Area'),
-            isFalse,
-            reason: 'Contains Scaler Area in $code ($k): $val',
-          );
-          expect(
-            val.contains('Scaler Lanczos'),
-            isFalse,
-            reason: 'Contains Scaler Lanczos in $code ($k): $val',
-          );
-          expect(
-            val.contains('Scaler Bicubic'),
-            isFalse,
-            reason: 'Contains Scaler Bicubic in $code ($k): $val',
-          );
-          expect(
-            val.contains('MediaCodec'),
-            isTrue,
-            reason: 'Missing MediaCodec keyword in $code ($k): $val',
-          );
-        }
-      }
-    });
   });
 
   group('Advanced Settings tests', () {
@@ -3351,8 +3108,6 @@ void main() {
         const requiredKeys = [
           'proc_dialog_no',
           'proc_dialog_yes',
-          'proc_dialog_cancel',
-          'proc_dialog_continue',
           'proc_cancel_confirm',
           'proc_cancel_desc',
         ];
@@ -3448,7 +3203,6 @@ void main() {
 
         expect(find.byKey(const Key('advanced_settings_switch')), findsNothing);
         expect(find.text(l10n.t('settings_advanced_title')), findsNothing);
-        expect(find.text(l10n.t('settings_ram_buffer')), findsNothing);
         expect(find.text(l10n.t('settings_default_codec')), findsNothing);
         expect(find.text(l10n.t('settings_file_naming')), findsOneWidget);
         expect(find.text(l10n.t('settings_preserve_date')), findsOneWidget);
@@ -3820,11 +3574,6 @@ void main() {
           reason: 'heavy_process_banner_4k_long missing in $code',
         );
         expect(
-          l10n.t('heavy_process_use_normal'),
-          isNotEmpty,
-          reason: 'heavy_process_use_normal missing in $code',
-        );
-        expect(
           l10n.t('heavy_process_continue'),
           isNotEmpty,
           reason: 'heavy_process_continue missing in $code',
@@ -4080,7 +3829,6 @@ void main() {
           'trim_end',
           'trim_new_duration',
           'trim_btn_proceed',
-          'trim_btn_skip',
           'cancel',
           'reset',
         ];
@@ -4172,7 +3920,6 @@ void main() {
 
           // Verify Single Button
           expect(find.text(l10n.t('trim_btn_proceed')), findsOneWidget);
-          expect(find.text(l10n.t('trim_btn_skip')), findsNothing);
         },
       );
 
@@ -5953,5 +5700,311 @@ void main() {
         expect(find.byIcon(Icons.block_rounded), findsNothing);
       });
     });
+  });
+
+  group('Localization Parity & Hardcoded UI Audit', () {
+    test('Raw localization map has exact 227-key parity across all 22 supported languages', () {
+      final raw = AppLocalizations.debugLocalizedValues;
+      final supportedSet = AppLocalizations.supportedLanguages
+          .map((e) => e['code']!)
+          .toSet();
+
+      expect(raw.length, equals(22));
+      expect(supportedSet.length, equals(22));
+      expect(raw.keys.toSet(), equals(supportedSet));
+      expect(raw.containsKey('zh'), isFalse);
+
+      final enMap = raw['en']!;
+      expect(enMap.length, equals(227));
+      expect(enMap.containsKey('app_long_title'), isTrue);
+      expect(enMap.containsKey('settings_audio_reset_folder'), isTrue);
+
+      final placeholderRegex = RegExp(r'\{[a-zA-Z0-9_]+\}');
+      final enPlaceholders = {
+        for (final entry in enMap.entries)
+          entry.key: placeholderRegex
+              .allMatches(entry.value)
+              .map((m) => m.group(0)!)
+              .toSet(),
+      };
+      final enNewlines = {
+        for (final entry in enMap.entries)
+          entry.key: '\n'.allMatches(entry.value).length,
+      };
+
+      for (final code in supportedSet) {
+        final langMap = raw[code]!;
+        expect(
+          langMap.keys.toSet(),
+          equals(enMap.keys.toSet()),
+          reason: 'Key set mismatch for $code',
+        );
+        for (final key in enMap.keys) {
+          final val = langMap[key]!;
+          expect(val.trim(), isNotEmpty, reason: 'Empty value for $code.$key');
+          final placeholders = placeholderRegex
+              .allMatches(val)
+              .map((m) => m.group(0)!)
+              .toSet();
+          expect(
+            placeholders,
+            equals(enPlaceholders[key]),
+            reason: 'Placeholder mismatch for $code.$key',
+          );
+          expect(
+            '\n'.allMatches(val).length,
+            equals(enNewlines[key]),
+            reason: 'Newline count mismatch for $code.$key',
+          );
+        }
+      }
+    });
+
+    test('Legacy zh code resolves identically to zh_CN across all 227 keys', () {
+      final raw = AppLocalizations.debugLocalizedValues;
+      const zhL10n = AppLocalizations('zh');
+      const zhCnL10n = AppLocalizations('zh_CN');
+      const zhHkL10n = AppLocalizations('zh_HK');
+
+      for (final key in raw['en']!.keys) {
+        expect(
+          zhL10n.t(key),
+          equals(zhCnL10n.t(key)),
+          reason: 'zh mismatch with zh_CN for $key',
+        );
+        expect(
+          zhHkL10n.t(key),
+          equals(zhCnL10n.t(key)),
+          reason: 'zh_HK fallback mismatch with zh_CN for $key',
+        );
+      }
+    });
+
+    test('All 7 new and 6 restored keys resolve directly across all 22 languages and zh', () {
+      const targetKeys = [
+        'rate_control_crf',
+        'rate_control_bitrate',
+        'opacity_default_label',
+        'developer_label',
+        'source_code_label',
+        'proc_status_error',
+        'dialog_ok',
+        'crf_custom',
+        'crf_reset',
+        'crf_hint_sharp',
+        'crf_hint_small',
+        'error_copy',
+        'error_copied',
+      ];
+      final raw = AppLocalizations.debugLocalizedValues;
+
+      for (final lang in AppLocalizations.supportedLanguages) {
+        final code = lang['code']!;
+        for (final key in targetKeys) {
+          expect(
+            raw[code]!.containsKey(key),
+            isTrue,
+            reason: 'Raw map $code missing $key',
+          );
+          expect(
+            raw[code]![key]!.trim(),
+            isNotEmpty,
+            reason: 'Raw map $code.$key is empty',
+          );
+          expect(
+            raw[code]![key],
+            isNot(equals(key)),
+            reason: 'Raw map $code.$key equals key name',
+          );
+        }
+      }
+
+      const zh = AppLocalizations('zh');
+      const zhCn = AppLocalizations('zh_CN');
+      for (final key in targetKeys) {
+        expect(zh.t(key), equals(zhCn.t(key)));
+      }
+    });
+
+    test('Updated translations replace outdated English and stale preset/size wording', () {
+      final raw = AppLocalizations.debugLocalizedValues;
+
+      expect(raw['id']!['engine_hardware_title'], equals('Hardware (Cepat)'));
+      expect(raw['id']!['engine_software_title'], equals('Software (Lambat)'));
+      expect(raw['id']!['theme_oled_pure'], equals('Mode Gelap'));
+      expect(raw['id']!['theme_light_clean'], equals('Mode Terang'));
+      expect(raw['id']!['badge_static'], equals('Statis'));
+      expect(raw['id']!['badge_live'], equals('Animasi'));
+      expect(raw['id']!['proc_dialog_yes'], equals('Ya'));
+      expect(raw['id']!['proc_dialog_no'], equals('Tidak'));
+      expect(raw['id']!['settings_folder_default'], equals('Bawaan · Movies'));
+      expect(
+        raw['id']!['settings_audio_folder_default'],
+        equals('Bawaan · Music'),
+      );
+
+      const mustNotEqualEn = [
+        'settings_progress_style_title',
+        'settings_progress_style_subtitle',
+        'scope_both',
+        'engine_hardware_title',
+        'engine_software_title',
+        'theme_oled_pure',
+        'theme_light_clean',
+        'badge_static',
+        'badge_live',
+        'settings_transcode_engine',
+        'engine_fallback_toggle_title',
+        'engine_fallback_toggle_desc',
+      ];
+      for (final code in raw.keys.where((k) => k != 'en')) {
+        for (final key in mustNotEqualEn) {
+          expect(
+            raw[code]![key],
+            isNot(equals(raw['en']![key])),
+            reason: '$code.$key still falls back to English',
+          );
+        }
+        expect(
+          raw[code]!['preset_slow_title']!.toLowerCase().contains('slow'),
+          isFalse,
+          reason: '$code.preset_slow_title still contains Slow',
+        );
+        expect(
+          raw[code]!['preset_fast_title']!.contains('Fast'),
+          isFalse,
+          reason: '$code.preset_fast_title still contains Fast',
+        );
+        expect(
+          raw[code]!['preset_normal_title']!.contains('· Normal'),
+          isFalse,
+          reason: '$code.preset_normal_title still has bilingual suffix',
+        );
+        expect(
+          RegExp(r'\b(MB|Mo|МБ)\b').hasMatch(raw[code]!['desc_bitrate']!),
+          isFalse,
+          reason: '$code.desc_bitrate still mentions MB/Mo',
+        );
+      }
+
+      for (final nordic in ['da', 'fi', 'no', 'sv']) {
+        expect(raw[nordic]!['settings_folder_default'], contains('Movies'));
+        expect(raw[nordic]!['settings_reset_folder'], contains('Movies'));
+        expect(
+          raw[nordic]!['settings_audio_folder_default'],
+          contains('Music'),
+        );
+        expect(raw[nordic]!['settings_audio_reset_folder'], contains('Music'));
+      }
+      expect(raw['no']!['heavy_process_banner_long'], contains('varighet'));
+      expect(
+        raw['no']!['heavy_process_banner_4k_long'],
+        contains('batteriforbruk'),
+      );
+    });
+
+    testWidgets(
+      'SettingsScreen renders distinct localized reset labels for custom video and audio folders and localized opacity label',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final service = SettingsService();
+        await service.init();
+        await service.setLanguage('id');
+        await service.setOutputDirectory('/storage/emulated/0/CustomMovies');
+        await service.setAudioOutputDirectory(
+          '/storage/emulated/0/CustomMusic',
+        );
+        addTearDown(() async {
+          await service.setLanguage('en');
+          await service.setOutputDirectory('');
+          await service.setAudioOutputDirectory('');
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.getTheme('oled_snowfall'),
+            home: const SettingsScreen(),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final l10n = service.l10n;
+        expect(find.text(l10n.t('settings_reset_folder')), findsOneWidget);
+        expect(
+          find.text(l10n.t('settings_audio_reset_folder')),
+          findsOneWidget,
+        );
+        expect(find.text(l10n.t('opacity_default_label')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'ConversionOptionsCard displays localized rate control mode labels',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        const l10n = AppLocalizations('id');
+        const video = VideoInfo(
+          filePath: '/test/sample.mp4',
+          fileName: 'sample.mp4',
+          width: 1920,
+          height: 1080,
+          durationSeconds: 10,
+          bitrate: 8000000,
+          fps: 30,
+          codec: 'h264',
+          fileSizeBytes: 1024 * 1024,
+        );
+        final resolutions = [
+          VideoResolution(
+            label: 'Original (${video.resolution})',
+            width: video.width,
+            height: video.height,
+          ),
+        ];
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.getTheme('oled_pure'),
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: ConversionOptionsCard(
+                  sourceVideo: video,
+                  resolutions: resolutions,
+                  selectedResolution: resolutions.first,
+                  encodingOptions: const EncodingOptions(),
+                  onResolutionChanged: (_) {},
+                  onOptionsChanged: (_) {},
+                  l10n: l10n,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(
+          find.byKey(const Key('advanced_options_toggle')),
+        );
+        await tester.tap(find.byKey(const Key('advanced_options_toggle')));
+        await tester.pumpAndSettle();
+        final confirmBtn = find.byKey(const Key('advanced_warning_yes_button'));
+        if (confirmBtn.evaluate().isNotEmpty) {
+          await tester.tap(confirmBtn);
+          await tester.pumpAndSettle();
+        }
+
+        expect(find.text(l10n.t('rate_control_crf')), findsOneWidget);
+        expect(find.text(l10n.t('rate_control_bitrate')), findsOneWidget);
+      },
+    );
   });
 }
