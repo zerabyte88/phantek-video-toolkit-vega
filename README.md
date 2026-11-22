@@ -18,17 +18,17 @@
 
 ## Features
 
-- **Dual Transcoding Engine** : Switch between Hardware and Software encoders with automatic fallback, 10-bit HEVC (`Main 10`) pre-flight decoder checks, and fast zero-frame stall detection.
-- **Resolution Downscaling** : Scale 4K (2160p) down to 2K (1440p), 1080p, 720p, 480p, or 360p with OpenGL aspect-ratio preservation and even-pixel alignment. Includes hardware resolution capability detection.
-- **Video Trimmer** : Keyframe-accurate trimming range slider with interactive video preview, start/end timestamps, and duration calculation.
-- **Rate Control** : Constant Quality (CQ/VBR) or custom target bitrate (1-35 Mbps) with framerate clamping (24-60 FPS).
-- **Audio Extraction** : Extract audio tracks to M4A/AAC (64-320 kbps or direct copy), MP3 (direct bitstream copy from source), or 16-bit uncompressed PCM WAV.
-- **Progress Visualizers** : 8 animation styles (Orbit, Radar, Liquid, Particles, Spiral, Zig-Zag, Capsule, Equalizer) with reduced-motion support.
-- **System Integration** : Receive shared video files directly from Android Gallery or File Manager via native Send intent (`SEND` / `SEND_MULTIPLE`).
-- **Telemetry & Battery Monitoring** : Live encoding speed, elapsed/estimated remaining time, real output storage I/O throughput, device battery temperature, and thermal throttling status.
-- **Foreground Execution** : Android Foreground Service with CPU `WakeLock`, persistent notification bar with interactive Cancel action, and crash-recovery job markers.
-- **AMOLED & Adaptive Themes** : 7 visual theme options (*System Auto*, *Clean Light*, *AMOLED Pure*, *Snowfall*, *Sunlight*, *Midnight*, *Sakura*).
-- **100% Offline & Private** : Zero network permissions, zero telemetry, and zero external trackers.
+- **Dual Transcoding Engine**: Switch between Hardware and Software encoders with automatic fallback, 10-bit HEVC (`Main 10`) pre-flight decoder checks, and fast zero-frame stall detection.
+- **Resolution Downscaling**: Scale 4K (2160p) down to 2K (1440p), 1080p, 720p, 480p, or 360p with OpenGL aspect-ratio preservation and even-pixel alignment. Includes hardware resolution capability detection.
+- **Video Trimmer**: Keyframe-accurate trimming range slider with interactive video preview, start/end timestamps, and duration calculation.
+- **Rate Control**: Constant Quality (CQ/VBR) or custom target bitrate (1-35 Mbps) with framerate clamping (24-60 FPS).
+- **Audio Extraction**: Extract audio tracks to M4A/AAC (64-320 kbps or direct copy), MP3 (direct bitstream copy from source), or 16-bit uncompressed PCM WAV.
+- **Progress Visualizers**: 8 animation styles (Orbit, Radar, Liquid, Particles, Spiral, Zig-Zag, Capsule, Equalizer) with reduced-motion support.
+- **System Integration**: Receive shared video files directly from Android Gallery or File Manager via native Send intent (`SEND` / `SEND_MULTIPLE`).
+- **Telemetry & Battery Monitoring**: Live encoding speed, elapsed/estimated remaining time, real output storage I/O throughput, device battery temperature, and thermal throttling status.
+- **Foreground Execution**: Android Foreground Service with CPU `WakeLock`, persistent notification bar with interactive Cancel action, and crash-recovery job markers.
+- **AMOLED & Adaptive Themes**: 7 visual theme options (*System Auto*, *Clean Light*, *AMOLED Pure*, *Snowfall*, *Sunlight*, *Midnight*, *Sakura*).
+- **100% Offline & Private**: Zero network permissions, zero telemetry, and zero external trackers.
 
 ---
 
@@ -89,7 +89,7 @@ flutter pub get
 flutter build apk --release
 ```
 
-Compiled binary : `build/app/outputs/flutter-apk/app-release.apk`
+Compiled binary: `build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 
