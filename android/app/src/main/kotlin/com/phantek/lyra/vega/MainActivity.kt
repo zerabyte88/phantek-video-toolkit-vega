@@ -1144,6 +1144,9 @@ class MainActivity : FlutterActivity() {
         }
 
         var inputTrackSummary = "none"
+        var is10BitHevcInput = false
+        var probedWidth = sourceWidth
+        var probedHeight = sourceHeight
         try {
             val extractor = MediaExtractor()
             try {
@@ -1156,12 +1159,22 @@ class MainActivity : FlutterActivity() {
                         val colorStandard = if (format.containsKey(MediaFormat.KEY_COLOR_STANDARD)) format.getInteger(MediaFormat.KEY_COLOR_STANDARD) else -1
                         val colorTransfer = if (format.containsKey(MediaFormat.KEY_COLOR_TRANSFER)) format.getInteger(MediaFormat.KEY_COLOR_TRANSFER) else -1
                         val colorRange = if (format.containsKey(MediaFormat.KEY_COLOR_RANGE)) format.getInteger(MediaFormat.KEY_COLOR_RANGE) else -1
+                        if (probedWidth <= 0 && format.containsKey(MediaFormat.KEY_WIDTH)) {
+                            probedWidth = format.getInteger(MediaFormat.KEY_WIDTH)
+                        }
+                        if (probedHeight <= 0 && format.containsKey(MediaFormat.KEY_HEIGHT)) {
+                            probedHeight = format.getInteger(MediaFormat.KEY_HEIGHT)
+                        }
                         val isHevc = trackMime.equals(MimeTypes.VIDEO_H265, ignoreCase = true) || trackMime.equals("video/hevc", ignoreCase = true)
-                        val is10BitHevcSdr = isHevc &&
-                            profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10 &&
+                        val isMain10Profile = profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10 ||
+                            profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10HDR10 ||
+                            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                                profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10HDR10Plus)
+                        is10BitHevcInput = isHevc && isMain10Profile
+                        val is10BitHevcSdr = is10BitHevcInput &&
                             colorTransfer != MediaFormat.COLOR_TRANSFER_ST2084 &&
                             colorTransfer != MediaFormat.COLOR_TRANSFER_HLG
-                        inputTrackSummary = "mime=$trackMime, profile=$profile, std=$colorStandard, trc=$colorTransfer, range=$colorRange, 10bitSdr=$is10BitHevcSdr"
+                        inputTrackSummary = "mime=$trackMime, profile=$profile, std=$colorStandard, trc=$colorTransfer, range=$colorRange, 10bit=$is10BitHevcInput, 10bitSdr=$is10BitHevcSdr"
                         sendLog("Input video track: $inputTrackSummary")
                         break
                     }
@@ -1172,6 +1185,45 @@ class MainActivity : FlutterActivity() {
         } catch (e: Exception) {
             inputTrackSummary = "probe_err=${e.message}"
             sendLog("Could not inspect input video metadata: ${e.message}")
+        }
+
+        if (is10BitHevcInput) {
+            val has10BitDecoder = try {
+                val codecList = MediaCodecList(MediaCodecList.REGULAR_CODECS)
+                codecList.codecInfos.any { info ->
+                    if (info.isEncoder) return@any false
+                    val hevcType = info.supportedTypes.firstOrNull {
+                        it.equals(MimeTypes.VIDEO_H265, ignoreCase = true) || it.equals("video/hevc", ignoreCase = true)
+                    } ?: return@any false
+                    val caps = info.getCapabilitiesForType(hevcType)
+                    val supportsMain10 = caps.profileLevels.any { pl ->
+                        pl.profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10 ||
+                            pl.profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10HDR10 ||
+                            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                                pl.profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10HDR10Plus)
+                    }
+                    if (!supportsMain10) return@any false
+                    if (probedWidth > 0 && probedHeight > 0) {
+                        val vCaps = caps.videoCapabilities
+                        vCaps == null ||
+                            vCaps.isSizeSupported(probedWidth, probedHeight) ||
+                            vCaps.isSizeSupported(probedHeight, probedWidth)
+                    } else {
+                        true
+                    }
+                }
+            } catch (_: Exception) {
+                true
+            }
+            if (!has10BitDecoder) {
+                releaseWakeLock()
+                activeTranscodeResult = null
+                val resLabel = if (probedWidth > 0 && probedHeight > 0) "${probedWidth}x${probedHeight}" else "this resolution"
+                val msg = "10-bit HEVC (Main 10) video at $resLabel is not supported by ${Build.MODEL}'s MediaCodec decoders. Record in 8-bit mode or convert on a device with 10-bit HEVC decoder support."
+                sendLog("Pre-flight check rejected unsupported 10-bit HEVC: $msg")
+                result.error("UNSUPPORTED_10BIT_HEVC", msg, null)
+                return
+            }
         }
 
         val effectiveDurationMs = if (sourceDurationArgMs > 0L) {
@@ -1259,7 +1311,6 @@ class MainActivity : FlutterActivity() {
         }
 
         var attemptToken = 0
-        val attemptDiagnostics = mutableListOf<String>()
 
         fun captureTraceSummary(): String {
             return try {
@@ -1278,8 +1329,8 @@ class MainActivity : FlutterActivity() {
             val activeDecoderName = java.util.concurrent.atomic.AtomicReference("none")
             val selectedEncoderName = java.util.concurrent.atomic.AtomicReference("none")
 
-            fun advanceOrFail(errorCode: String, reason: String) {
-                if (!isCancelled && attemptIndex + 1 < attempts.size) {
+            fun advanceOrFail(errorCode: String, reason: String, skipRemainingAttempts: Boolean = false) {
+                if (!isCancelled && !skipRemainingAttempts && attemptIndex + 1 < attempts.size) {
                     val nextAttempt = attempts[attemptIndex + 1]
                     sendLog("Automatically falling back to ${nextAttempt.label}...")
                     cleanupOutput(outputPath)
@@ -1290,20 +1341,7 @@ class MainActivity : FlutterActivity() {
                     cleanupOutput(outputPath)
                     val res = activeTranscodeResult
                     activeTranscodeResult = null
-                    val soc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Build.SOC_MODEL else "n/a"
-                    val header = "Device=${Build.MANUFACTURER} ${Build.MODEL} (API ${Build.VERSION.SDK_INT}, SoC=$soc) | " +
-                        "In=${sourceWidth}x${sourceHeight} -> Out=${targetWidth}x${targetHeight} ($targetVideoMime, fps=$targetFps, noAudio=$removeAudio, trim=${hasStartTrim || hasEndTrim}) | " +
-                        "Track=[$inputTrackSummary]"
-                    val fullReport = buildString {
-                        append(reason)
-                        append("\n")
-                        append(header)
-                        if (attemptDiagnostics.isNotEmpty()) {
-                            append("\n")
-                            append(attemptDiagnostics.joinToString("\n---\n"))
-                        }
-                    }
-                    res?.error(errorCode, fullReport, null)
+                    res?.error(errorCode, reason, null)
                 }
             }
 
@@ -1459,8 +1497,8 @@ class MainActivity : FlutterActivity() {
                             val causeMsg = exportException.cause?.localizedMessage ?: exportException.cause?.message
                             val fullErr = (if (!causeMsg.isNullOrBlank() && causeMsg != err) "$err ($causeMsg)" else err) +
                                 " [${exportException.errorCodeName}]"
-                            attemptDiagnostics.add("${attempt.label}[dec=${activeDecoderName.get()}, enc=${exportResult.videoEncoderName ?: selectedEncoderName.get()}]: ERROR $fullErr\n$trace")
-                            sendLog("${attempt.label} transcoding error: $fullErr")
+                            sendLog("${attempt.label} transcoding error [dec=${activeDecoderName.get()}, enc=${exportResult.videoEncoderName ?: selectedEncoderName.get()}]: $fullErr")
+                            sendLog("Trace: $trace")
                             advanceOrFail("TRANSCODE_FAILED", fullErr)
                         }
                     }
@@ -1471,7 +1509,7 @@ class MainActivity : FlutterActivity() {
                 activeTransformerHandler = attemptHandler
                 activeTransformerThread = thread
 
-                fun handleStall(reason: String) {
+                fun handleStall(reason: String, zeroFramesDecoded: Boolean) {
                     if (attemptHandled || currentToken != attemptToken || isCancelled) return
                     attemptHandled = true
                     stopProgressPolling()
@@ -1480,11 +1518,12 @@ class MainActivity : FlutterActivity() {
                         activeTransformerHandler = null
                         activeTransformerThread = null
                     }
+                    val decoderName = activeDecoderName.get()
                     val outFile = File(outputPath)
                     val fileState = "exists=${outFile.exists()}, bytes=${try { outFile.length() } catch (_: Exception) { -1L }}"
                     val trace = captureTraceSummary()
-                    attemptDiagnostics.add("${attempt.label}[dec=${activeDecoderName.get()}, enc=${selectedEncoderName.get()}, $fileState]: STALL $reason\n$trace")
-                    sendLog("${attempt.label} transcoding stalled: $reason ($fileState)")
+                    sendLog("${attempt.label} transcoding stalled [dec=$decoderName, enc=${selectedEncoderName.get()}, $fileState, zeroFrames=$zeroFramesDecoded]: $reason")
+                    sendLog("Trace: $trace")
                     val cancelLatch = CountDownLatch(1)
                     val posted = attemptHandler.post {
                         try {
@@ -1506,7 +1545,26 @@ class MainActivity : FlutterActivity() {
                         mainHandler.post {
                             cleanupOutput(outputPath)
                             if (isCancelled) return@post
-                            advanceOrFail("TRANSCODE_STALLED", reason)
+                            val isSoftwareDecoder = decoderName.startsWith("c2.android.", ignoreCase = true) ||
+                                decoderName.startsWith("OMX.google.", ignoreCase = true)
+                            val nextAttempt = if (attemptIndex + 1 < attempts.size) attempts[attemptIndex + 1] else null
+                            val skipRemaining = zeroFramesDecoded && (
+                                isSoftwareDecoder && (nextAttempt == null || nextAttempt.useSoftwareDecoder)
+                            )
+                            val errorCode = when {
+                                zeroFramesDecoded && is10BitHevcInput -> "UNSUPPORTED_10BIT_HEVC"
+                                zeroFramesDecoded -> "DECODER_NO_OUTPUT"
+                                else -> "TRANSCODE_STALLED"
+                            }
+                            val userMessage = when {
+                                zeroFramesDecoded && is10BitHevcInput -> {
+                                    val resLabel = if (probedWidth > 0 && probedHeight > 0) "${probedWidth}x${probedHeight}" else "this resolution"
+                                    "10-bit HEVC (Main 10) video at $resLabel is not supported by ${Build.MODEL}'s MediaCodec decoders ($decoderName decoded 0 frames). Record in 8-bit mode or convert on a device with 10-bit HEVC hardware decoding."
+                                }
+                                zeroFramesDecoded -> "Video decoder ($decoderName) produced 0 frames for this video."
+                                else -> "Transcoding stalled: $reason (${attempt.label}, decoder: $decoderName)."
+                            }
+                            advanceOrFail(errorCode, userMessage, skipRemainingAttempts = skipRemaining)
                         }
                     }, "VegaStallCancelWait").start()
                 }
@@ -1530,7 +1588,7 @@ class MainActivity : FlutterActivity() {
                             outputPath = outputPath,
                             pollingHandler = attemptHandler,
                             zeroByteTimeoutMs = if (attempt.useSoftwareEncoder) 60_000L else 35_000L,
-                            onStalled = { reason -> handleStall(reason) }
+                            onStalled = { reason, zeroFramesDecoded -> handleStall(reason, zeroFramesDecoded) }
                         )
                     } catch (t: Throwable) {
                         val trace = captureTraceSummary()
@@ -1545,8 +1603,8 @@ class MainActivity : FlutterActivity() {
                                 activeTransformerThread = null
                             }
                             val msg = t.localizedMessage ?: "Failed to start transcoding"
-                            attemptDiagnostics.add("${attempt.label}[dec=${activeDecoderName.get()}, enc=${selectedEncoderName.get()}]: START_ERR $msg\n$trace")
-                            sendLog("${attempt.label} start failed: $msg")
+                            sendLog("${attempt.label} start failed [dec=${activeDecoderName.get()}, enc=${selectedEncoderName.get()}]: $msg")
+                            sendLog("Trace: $trace")
                             advanceOrFail("TRANSCODE_INIT_FAILED", msg)
                         }
                     }
@@ -1560,7 +1618,6 @@ class MainActivity : FlutterActivity() {
                 activeTransformerHandler = null
                 activeTransformerThread = null
                 val msg = t.localizedMessage ?: "Failed to start transcoding"
-                attemptDiagnostics.add("${attempt.label}: INIT_ERR $msg")
                 sendLog("${attempt.label} init failed: $msg")
                 advanceOrFail("TRANSCODE_INIT_FAILED", msg)
             }
@@ -1793,12 +1850,59 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    private fun extractTraceSection(trace: String, key: String): String {
+        val marker = "\"$key\":{"
+        val startIdx = trace.indexOf(marker)
+        if (startIdx < 0) return ""
+        val braceStart = startIdx + marker.length - 1
+        var depth = 0
+        var inString = false
+        var escaped = false
+        for (i in braceStart until trace.length) {
+            val ch = trace[i]
+            if (inString) {
+                if (escaped) {
+                    escaped = false
+                } else if (ch == '\\') {
+                    escaped = true
+                } else if (ch == '"') {
+                    inString = false
+                }
+            } else {
+                when (ch) {
+                    '"' -> inString = true
+                    '{' -> depth++
+                    '}' -> {
+                        depth--
+                        if (depth == 0) {
+                            return trace.substring(braceStart, i + 1)
+                        }
+                    }
+                }
+            }
+        }
+        return trace.substring(braceStart)
+    }
+
+    private fun isDecoderEndedWithZeroFrames(trace: String): Boolean {
+        if (trace.isBlank()) return false
+        if (trace.contains("\"VideoEncoder\":{")) return false
+        val decoderSection = extractTraceSection(trace, "VideoDecoder")
+        if (decoderSection.isEmpty()) return false
+        val hasOutputEnded = decoderSection.contains("\"OutputEnded\"")
+        val hasProducedOutput = decoderSection.contains("\"ProducedOutput\"")
+        val vfpSection = extractTraceSection(trace, "VideoFrameProcessor")
+        val hasVfpEnded = vfpSection.contains("\"SignalEnded\"")
+        val hasVfpFrame = vfpSection.contains("\"QueueFrame\"") || vfpSection.contains("\"RenderedToOutputSurface\"")
+        return !hasVfpFrame && ((hasOutputEnded && !hasProducedOutput) || hasVfpEnded)
+    }
+
     private fun startProgressPolling(
         transformer: Transformer,
         outputPath: String,
         pollingHandler: Handler = mainHandler,
         zeroByteTimeoutMs: Long = 35_000L,
-        onStalled: ((String) -> Unit)? = null
+        onStalled: ((String, Boolean) -> Unit)? = null
     ) {
         stopProgressPolling()
         val progressHolder = ProgressHolder()
@@ -1845,10 +1949,22 @@ class MainActivity : FlutterActivity() {
                         highProgressZeroByteStartMs = -1L
                     } else {
                         val nowMs = SystemClock.elapsedRealtime()
+                        val totalZeroByteMs = nowMs - attemptStartMs
+                        if (lastRatio >= 0.90 && totalZeroByteMs >= 1_500L) {
+                            val trace = try {
+                                androidx.media3.effect.DebugTraceUtil.generateTraceSummary()
+                            } catch (_: Exception) {
+                                ""
+                            }
+                            if (isDecoderEndedWithZeroFrames(trace)) {
+                                stallTriggered = true
+                                mainHandler.post { onStalled("Decoder ended with 0 video frames", true) }
+                                return
+                            }
+                        }
                         if (lastRatio >= 0.95 && highProgressZeroByteStartMs < 0L) {
                             highProgressZeroByteStartMs = nowMs
                         }
-                        val totalZeroByteMs = nowMs - attemptStartMs
                         val highProgressStalledMs = if (highProgressZeroByteStartMs >= 0L) {
                             nowMs - highProgressZeroByteStartMs
                         } else {
@@ -1858,7 +1974,7 @@ class MainActivity : FlutterActivity() {
                             stallTriggered = true
                             val stalledMs = if (highProgressStalledMs >= 20_000L) highProgressStalledMs else totalZeroByteMs
                             val reason = "Output stayed 0 bytes for ${stalledMs / 1000}s at ${(lastRatio * 100).toInt()}% progress"
-                            mainHandler.post { onStalled(reason) }
+                            mainHandler.post { onStalled(reason, false) }
                             return
                         }
                     }

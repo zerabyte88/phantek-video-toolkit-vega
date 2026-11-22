@@ -22,8 +22,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsService = SettingsService();
   Map<String, dynamic>? _hardwareInfo;
-  String _appVersion = 'v2.6.2';
-  String _buildNumber = '85000';
+  String _appVersion = 'v2.6.3';
+  String _buildNumber = '85001';
   double? _dragCardOpacity;
 
   @override
@@ -52,14 +52,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _appVersion = 'v${packageInfo.version}';
           _buildNumber = packageInfo.buildNumber.isNotEmpty
               ? packageInfo.buildNumber
-              : '85000';
+              : '85001';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _appVersion = 'v2.6.2';
-          _buildNumber = '85000';
+          _appVersion = 'v2.6.3';
+          _buildNumber = '85001';
         });
       }
     }

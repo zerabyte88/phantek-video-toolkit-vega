@@ -96,14 +96,13 @@ class SettingsService extends ChangeNotifier {
     if (tier == DeviceTier.highEnd) preset = 'medium';
     if (tier == DeviceTier.lowEnd) preset = 'fast';
 
-    final initialTheme = resolveInitialTheme();
     final initialLang = resolveInitialLanguage();
 
     _settings = _settings.copyWith(
       isFirstLaunch: false,
       encodingPreset: preset,
       cpuThreads: 0, // Auto
-      themeMode: initialTheme,
+      themeMode: 'system',
       languageCode: initialLang,
     );
     await _saveSettings();
@@ -283,8 +282,7 @@ class SettingsService extends ChangeNotifier {
 
   Future<void> resetToDefaults() async {
     final currentLang = _settings.languageCode;
-    final initialTheme = resolveInitialTheme();
-    _settings = AppSettings(languageCode: currentLang, themeMode: initialTheme);
+    _settings = AppSettings(languageCode: currentLang, themeMode: 'system');
     _progressPreviewPercentage = 0.80;
     try {
       final prefs = await SharedPreferences.getInstance();

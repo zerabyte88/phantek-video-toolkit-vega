@@ -309,7 +309,7 @@ void main() {
       expect(settings.encodingPreset, equals('medium'));
       expect(settings.audioBitrateKbps, equals(128));
       expect(settings.languageCode, equals('en'));
-      expect(settings.themeMode, equals('oled_pure'));
+      expect(settings.themeMode, equals('system'));
       expect(settings.keepScreenAwake, isFalse);
       expect(settings.outputDirectory, equals(''));
       expect(settings.audioOutputDirectory, equals(''));
