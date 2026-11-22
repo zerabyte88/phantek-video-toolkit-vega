@@ -9,7 +9,16 @@ class AppTheme {
   static const midnightAccent = Color(0xFFA78BFA);
   static const daylightAccent = Color(0xFFFBBF24);
 
-  static ThemeData getTheme(String mode, {double cardOpacity = 1.0}) {
+  static ThemeData getTheme(
+    String mode, {
+    double cardOpacity = 1.0,
+    Brightness? platformBrightness,
+  }) {
+    if (mode == 'system') {
+      return platformBrightness == Brightness.light
+          ? buildLightTheme(cardOpacity: cardOpacity)
+          : buildOledTheme(cardOpacity: cardOpacity);
+    }
     switch (mode) {
       case 'oled_sakura':
       case 'sakura':

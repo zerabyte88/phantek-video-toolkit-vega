@@ -39,14 +39,28 @@ class PhantekVegaApp extends StatelessWidget {
       listenable: SettingsService(),
       builder: (context, child) {
         final settings = SettingsService().settings;
-        final theme = AppTheme.getTheme(
-          settings.themeMode,
-          cardOpacity: settings.cardOpacity,
-        );
+        final isSystemTheme = settings.themeMode == 'system';
+        final platformBrightness = MediaQuery.platformBrightnessOf(context);
+        final theme = isSystemTheme
+            ? AppTheme.buildLightTheme(cardOpacity: settings.cardOpacity)
+            : AppTheme.getTheme(
+                settings.themeMode,
+                cardOpacity: settings.cardOpacity,
+              );
+        final darkTheme = isSystemTheme
+            ? AppTheme.buildOledTheme(cardOpacity: settings.cardOpacity)
+            : null;
+        final activeTheme = isSystemTheme
+            ? AppTheme.getTheme(
+                settings.themeMode,
+                cardOpacity: settings.cardOpacity,
+                platformBrightness: platformBrightness,
+              )
+            : theme;
 
         // Sync system nav bar color with active theme
-        final navBarColor = theme.scaffoldBackgroundColor;
-        final isDark = theme.brightness == Brightness.dark;
+        final navBarColor = activeTheme.scaffoldBackgroundColor;
+        final isDark = activeTheme.brightness == Brightness.dark;
         SystemChrome.setSystemUIOverlayStyle(
           SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
@@ -64,6 +78,8 @@ class PhantekVegaApp extends StatelessWidget {
           title: 'Phantek',
           debugShowCheckedModeBanner: false,
           theme: theme,
+          darkTheme: darkTheme,
+          themeMode: isSystemTheme ? ThemeMode.system : ThemeMode.light,
           home: const HomeScreen(),
         );
       },

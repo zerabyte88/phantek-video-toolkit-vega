@@ -44,7 +44,9 @@ class _ThemeAnimatedBackgroundState extends State<ThemeAnimatedBackground>
 
     final initialTheme = SettingsService().settings.themeMode;
     final isStatic =
-        initialTheme == 'oled_pure' || initialTheme == 'light_clean';
+        initialTheme == 'system' ||
+        initialTheme == 'oled_pure' ||
+        initialTheme == 'light_clean';
 
     _controller = AnimationController(
       vsync: this,
@@ -69,7 +71,10 @@ class _ThemeAnimatedBackgroundState extends State<ThemeAnimatedBackground>
       listenable: Listenable.merge([_controller, settingsService]),
       builder: (context, _) {
         final themeMode = settingsService.settings.themeMode;
-        final isStatic = themeMode == 'oled_pure' || themeMode == 'light_clean';
+        final isStatic =
+            themeMode == 'system' ||
+            themeMode == 'oled_pure' ||
+            themeMode == 'light_clean';
 
         if (isStatic) {
           if (_controller.isAnimating) {

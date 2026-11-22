@@ -1143,6 +1143,7 @@ class MainActivity : FlutterActivity() {
             sendLog("Could not inspect codec capabilities: ${e.message}")
         }
 
+        var inputTrackSummary = "none"
         try {
             val extractor = MediaExtractor()
             try {
@@ -1160,7 +1161,8 @@ class MainActivity : FlutterActivity() {
                             profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10 &&
                             colorTransfer != MediaFormat.COLOR_TRANSFER_ST2084 &&
                             colorTransfer != MediaFormat.COLOR_TRANSFER_HLG
-                        sendLog("Input video track: mime=$trackMime, profile=$profile, colorStandard=$colorStandard, colorTransfer=$colorTransfer, colorRange=$colorRange, is10BitHevcSdr=$is10BitHevcSdr")
+                        inputTrackSummary = "mime=$trackMime, profile=$profile, std=$colorStandard, trc=$colorTransfer, range=$colorRange, 10bitSdr=$is10BitHevcSdr"
+                        sendLog("Input video track: $inputTrackSummary")
                         break
                     }
                 }
@@ -1168,6 +1170,7 @@ class MainActivity : FlutterActivity() {
                 try { extractor.release() } catch (_: Exception) {}
             }
         } catch (e: Exception) {
+            inputTrackSummary = "probe_err=${e.message}"
             sendLog("Could not inspect input video metadata: ${e.message}")
         }
 
@@ -1256,6 +1259,15 @@ class MainActivity : FlutterActivity() {
         }
 
         var attemptToken = 0
+        val attemptDiagnostics = mutableListOf<String>()
+
+        fun captureTraceSummary(): String {
+            return try {
+                androidx.media3.effect.DebugTraceUtil.generateTraceSummary().trim().take(2500)
+            } catch (e: Exception) {
+                "trace_err:${e.message}"
+            }
+        }
 
         fun startAttempt(attemptIndex: Int) {
             val attempt = attempts[attemptIndex]
@@ -1263,6 +1275,8 @@ class MainActivity : FlutterActivity() {
             val currentToken = ++attemptToken
             var attemptHandled = false
             var attemptThread: HandlerThread? = null
+            val activeDecoderName = java.util.concurrent.atomic.AtomicReference("none")
+            val selectedEncoderName = java.util.concurrent.atomic.AtomicReference("none")
 
             fun advanceOrFail(errorCode: String, reason: String) {
                 if (!isCancelled && attemptIndex + 1 < attempts.size) {
@@ -1276,7 +1290,20 @@ class MainActivity : FlutterActivity() {
                     cleanupOutput(outputPath)
                     val res = activeTranscodeResult
                     activeTranscodeResult = null
-                    res?.error(errorCode, reason, null)
+                    val soc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Build.SOC_MODEL else "n/a"
+                    val header = "Device=${Build.MANUFACTURER} ${Build.MODEL} (API ${Build.VERSION.SDK_INT}, SoC=$soc) | " +
+                        "In=${sourceWidth}x${sourceHeight} -> Out=${targetWidth}x${targetHeight} ($targetVideoMime, fps=$targetFps, noAudio=$removeAudio, trim=${hasStartTrim || hasEndTrim}) | " +
+                        "Track=[$inputTrackSummary]"
+                    val fullReport = buildString {
+                        append(reason)
+                        append("\n")
+                        append(header)
+                        if (attemptDiagnostics.isNotEmpty()) {
+                            append("\n")
+                            append(attemptDiagnostics.joinToString("\n---\n"))
+                        }
+                    }
+                    res?.error(errorCode, fullReport, null)
                 }
             }
 
@@ -1305,17 +1332,21 @@ class MainActivity : FlutterActivity() {
                         }
                         if (swList.isNotEmpty()) {
                             val chosen = swList.first().name
+                            selectedEncoderName.set(chosen)
                             sendLog("Software video encoder selected: $chosen")
                             ImmutableList.copyOf(swList)
                         } else {
+                            val fallbackList = EncoderSelector.DEFAULT.selectEncoderInfos(mimeType)
+                            selectedEncoderName.set(fallbackList.firstOrNull()?.name ?: "default")
                             sendLog("Warning: No software encoder found in MediaCodecList for $mimeType, falling back to default")
-                            EncoderSelector.DEFAULT.selectEncoderInfos(mimeType)
+                            fallbackList
                         }
                     })
                 } else {
                     encoderFactoryBuilder.setVideoEncoderSelector(EncoderSelector { mimeType ->
                         val defaultList = EncoderSelector.DEFAULT.selectEncoderInfos(mimeType)
                         val chosen = defaultList.firstOrNull()?.name ?: "auto"
+                        selectedEncoderName.set(chosen)
                         sendLog("Hardware video encoder selected: $chosen")
                         defaultList
                     })
@@ -1338,6 +1369,7 @@ class MainActivity : FlutterActivity() {
                 val decoderFactoryBuilder = DefaultDecoderFactory.Builder(applicationContext)
                     .setEnableDecoderFallback(true)
                     .setListener { codecName, codecExceptions ->
+                        activeDecoderName.set(codecName)
                         sendLog("Active decoder initialized: $codecName")
                         if (codecExceptions.isNotEmpty()) {
                             for (ex in codecExceptions) {
@@ -1411,6 +1443,7 @@ class MainActivity : FlutterActivity() {
                         exportResult: ExportResult,
                         exportException: ExportException
                     ) {
+                        val trace = captureTraceSummary()
                         thread.quitSafely()
                         mainHandler.post {
                             if (attemptHandled || currentToken != attemptToken) return@post
@@ -1426,6 +1459,7 @@ class MainActivity : FlutterActivity() {
                             val causeMsg = exportException.cause?.localizedMessage ?: exportException.cause?.message
                             val fullErr = (if (!causeMsg.isNullOrBlank() && causeMsg != err) "$err ($causeMsg)" else err) +
                                 " [${exportException.errorCodeName}]"
+                            attemptDiagnostics.add("${attempt.label}[dec=${activeDecoderName.get()}, enc=${exportResult.videoEncoderName ?: selectedEncoderName.get()}]: ERROR $fullErr\n$trace")
                             sendLog("${attempt.label} transcoding error: $fullErr")
                             advanceOrFail("TRANSCODE_FAILED", fullErr)
                         }
@@ -1446,7 +1480,11 @@ class MainActivity : FlutterActivity() {
                         activeTransformerHandler = null
                         activeTransformerThread = null
                     }
-                    sendLog("${attempt.label} transcoding stalled: $reason")
+                    val outFile = File(outputPath)
+                    val fileState = "exists=${outFile.exists()}, bytes=${try { outFile.length() } catch (_: Exception) { -1L }}"
+                    val trace = captureTraceSummary()
+                    attemptDiagnostics.add("${attempt.label}[dec=${activeDecoderName.get()}, enc=${selectedEncoderName.get()}, $fileState]: STALL $reason\n$trace")
+                    sendLog("${attempt.label} transcoding stalled: $reason ($fileState)")
                     val cancelLatch = CountDownLatch(1)
                     val posted = attemptHandler.post {
                         try {
@@ -1485,6 +1523,7 @@ class MainActivity : FlutterActivity() {
                         return@post
                     }
                     try {
+                        try { androidx.media3.effect.DebugTraceUtil.reset() } catch (_: Exception) {}
                         transformer.start(composition, outputPath)
                         startProgressPolling(
                             transformer = transformer,
@@ -1494,6 +1533,7 @@ class MainActivity : FlutterActivity() {
                             onStalled = { reason -> handleStall(reason) }
                         )
                     } catch (t: Throwable) {
+                        val trace = captureTraceSummary()
                         thread.quitSafely()
                         mainHandler.post {
                             if (attemptHandled || currentToken != attemptToken) return@post
@@ -1505,6 +1545,7 @@ class MainActivity : FlutterActivity() {
                                 activeTransformerThread = null
                             }
                             val msg = t.localizedMessage ?: "Failed to start transcoding"
+                            attemptDiagnostics.add("${attempt.label}[dec=${activeDecoderName.get()}, enc=${selectedEncoderName.get()}]: START_ERR $msg\n$trace")
                             sendLog("${attempt.label} start failed: $msg")
                             advanceOrFail("TRANSCODE_INIT_FAILED", msg)
                         }
@@ -1519,6 +1560,7 @@ class MainActivity : FlutterActivity() {
                 activeTransformerHandler = null
                 activeTransformerThread = null
                 val msg = t.localizedMessage ?: "Failed to start transcoding"
+                attemptDiagnostics.add("${attempt.label}: INIT_ERR $msg")
                 sendLog("${attempt.label} init failed: $msg")
                 advanceOrFail("TRANSCODE_INIT_FAILED", msg)
             }

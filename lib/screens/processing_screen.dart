@@ -653,7 +653,12 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     Color btnFg,
   })
   _getThemePalette() {
-    switch (widget.appSettings.themeMode) {
+    final effectiveMode = widget.appSettings.themeMode == 'system'
+        ? (Theme.of(context).brightness == Brightness.light
+              ? 'light_clean'
+              : 'oled_pure')
+        : widget.appSettings.themeMode;
+    switch (effectiveMode) {
       case 'light':
         return (
           primary: const Color(0xFFD97706),
