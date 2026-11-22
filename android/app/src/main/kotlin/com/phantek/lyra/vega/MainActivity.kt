@@ -20,8 +20,10 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.Environment
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.Looper
 import android.os.PowerManager
+import android.os.SystemClock
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
@@ -36,11 +38,13 @@ import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.Clock
 import androidx.media3.effect.FrameDropEffect
 import androidx.media3.effect.Presentation
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.DefaultAssetLoaderFactory
 import androidx.media3.transformer.DefaultEncoderFactory
 import androidx.media3.transformer.DefaultDecoderFactory
 import androidx.media3.transformer.EditedMediaItem
+import androidx.media3.transformer.EditedMediaItemSequence
 import androidx.media3.transformer.Effects
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
@@ -60,9 +64,21 @@ import java.io.FileOutputStream
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class MainActivity : FlutterActivity() {
+    private enum class PipelineAttempt(
+        val label: String,
+        val useSoftwareDecoder: Boolean,
+        val useSoftwareEncoder: Boolean
+    ) {
+        HARDWARE("Hardware", false, false),
+        SW_DECODE_HW_ENCODE("SW-Decode + HW-Encode", true, false),
+        SOFTWARE("Software Safe-Mode", true, true)
+    }
+
     private val MEDIA_SCANNER_CHANNEL = "com.phantek.lyra.vega/media_scanner"
     private val TRANSFORMER_CHANNEL = "com.phantek.lyra.vega/transformer"
 
@@ -76,11 +92,14 @@ class MainActivity : FlutterActivity() {
     private var pendingPickVideoResult: MethodChannel.Result? = null
     private var pendingShareIntentUri: Uri? = null
 
-    // Active transformer session
-    private var activeTransformer: Transformer? = null
+    @Volatile private var activeTransformer: Transformer? = null
+    private var activeTransformerHandler: Handler? = null
+    private var activeTransformerThread: HandlerThread? = null
+    private val pollingLock = Any()
     private var progressRunnable: Runnable? = null
+    private var progressHandler: Handler? = null
     private var activeOutputPath: String? = null
-    private var isCancelled = false
+    @Volatile private var isCancelled = false
 
     // Pending channel results to prevent hanging Futures on cancel
     private var activeTranscodeResult: MethodChannel.Result? = null
@@ -1085,6 +1104,7 @@ class MainActivity : FlutterActivity() {
         val removeAudio = call.argument<Boolean>("removeAudio") ?: false
         val trimStartMs = (call.argument<Number>("trimStartMs"))?.toLong()
         val trimEndMs = (call.argument<Number>("trimEndMs"))?.toLong()
+        val sourceDurationArgMs = (call.argument<Number>("sourceDurationMs"))?.toLong() ?: 0L
         val transcodeEngine = call.argument<String>("transcodeEngine") ?: "hardware"
         val enableEngineFallback = call.argument<Boolean>("enableEngineFallback") ?: true
 
@@ -1097,9 +1117,7 @@ class MainActivity : FlutterActivity() {
         activeOutputPath = outputPath
         isCancelled = false
         activeTranscodeResult = result
-        var hasFallenBack = false
 
-        // Select MIME type
         val targetVideoMime = if (videoCodec.equals("hevc", ignoreCase = true) || videoCodec.equals("h265", ignoreCase = true)) {
             MimeTypes.VIDEO_H265
         } else {
@@ -1125,17 +1143,60 @@ class MainActivity : FlutterActivity() {
             sendLog("Could not inspect codec capabilities: ${e.message}")
         }
 
+        try {
+            val extractor = MediaExtractor()
+            try {
+                extractor.setDataSource(inputPath)
+                for (i in 0 until extractor.trackCount) {
+                    val format = extractor.getTrackFormat(i)
+                    val trackMime = format.getString(MediaFormat.KEY_MIME) ?: ""
+                    if (trackMime.startsWith("video/")) {
+                        val profile = if (format.containsKey(MediaFormat.KEY_PROFILE)) format.getInteger(MediaFormat.KEY_PROFILE) else -1
+                        val colorStandard = if (format.containsKey(MediaFormat.KEY_COLOR_STANDARD)) format.getInteger(MediaFormat.KEY_COLOR_STANDARD) else -1
+                        val colorTransfer = if (format.containsKey(MediaFormat.KEY_COLOR_TRANSFER)) format.getInteger(MediaFormat.KEY_COLOR_TRANSFER) else -1
+                        val colorRange = if (format.containsKey(MediaFormat.KEY_COLOR_RANGE)) format.getInteger(MediaFormat.KEY_COLOR_RANGE) else -1
+                        val isHevc = trackMime.equals(MimeTypes.VIDEO_H265, ignoreCase = true) || trackMime.equals("video/hevc", ignoreCase = true)
+                        val is10BitHevcSdr = isHevc &&
+                            profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10 &&
+                            colorTransfer != MediaFormat.COLOR_TRANSFER_ST2084 &&
+                            colorTransfer != MediaFormat.COLOR_TRANSFER_HLG
+                        sendLog("Input video track: mime=$trackMime, profile=$profile, colorStandard=$colorStandard, colorTransfer=$colorTransfer, colorRange=$colorRange, is10BitHevcSdr=$is10BitHevcSdr")
+                        break
+                    }
+                }
+            } finally {
+                try { extractor.release() } catch (_: Exception) {}
+            }
+        } catch (e: Exception) {
+            sendLog("Could not inspect input video metadata: ${e.message}")
+        }
+
+        val effectiveDurationMs = if (sourceDurationArgMs > 0L) {
+            sourceDurationArgMs
+        } else {
+            val retriever = MediaMetadataRetriever()
+            try {
+                retriever.setDataSource(inputPath)
+                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+            } catch (_: Exception) {
+                0L
+            } finally {
+                try { retriever.release() } catch (_: Exception) {}
+            }
+        }
+
         val inputFile = File(inputPath)
         val mediaItemBuilder = MediaItem.Builder().setUri(Uri.fromFile(inputFile))
         val startMs = trimStartMs ?: 0L
         val endMs = trimEndMs ?: 0L
-        val isTrimmed = (startMs > 0L) || (endMs > 0L && endMs > startMs)
-        if (isTrimmed) {
+        val hasStartTrim = startMs > 0L
+        val hasEndTrim = endMs > startMs && (effectiveDurationMs <= 0L || endMs < effectiveDurationMs - 250L)
+        if (hasStartTrim || hasEndTrim) {
             val clippingBuilder = MediaItem.ClippingConfiguration.Builder()
-            if (startMs > 0L) {
+            if (hasStartTrim) {
                 clippingBuilder.setStartPositionMs(startMs)
             }
-            if (endMs > startMs) {
+            if (hasEndTrim) {
                 clippingBuilder.setEndPositionMs(endMs)
             }
             clippingBuilder.setStartsAtKeyFrame(false)
@@ -1143,7 +1204,6 @@ class MainActivity : FlutterActivity() {
         }
         val mediaItem = mediaItemBuilder.build()
 
-        // Bypass Presentation effect if dimensions match to skip GPU shader overhead
         val isScalingNeeded = (targetWidth > 0 && targetHeight > 0) &&
             (sourceWidth <= 0 || sourceHeight <= 0 || targetWidth != sourceWidth || targetHeight != sourceHeight)
 
@@ -1165,8 +1225,6 @@ class MainActivity : FlutterActivity() {
 
         val audioProcessors = mutableListOf<androidx.media3.common.audio.AudioProcessor>()
         if (!removeAudio) {
-            // Force decoding audio to raw PCM and re-encoding with pristine monotonic timestamps.
-            // Prevents MuxerWrapper deadlocks caused by audio passthrough gaps or PTS jitter.
             audioProcessors.add(SonicAudioProcessor())
         }
 
@@ -1175,13 +1233,59 @@ class MainActivity : FlutterActivity() {
             .setRemoveAudio(removeAudio)
             .build()
 
-        fun startTransformerPipeline(engine: String, isFallbackAttempt: Boolean) {
+        val compositionBuilder = Composition.Builder(
+            EditedMediaItemSequence.Builder(editedMediaItem).build()
+        )
+        if (targetVideoMime == MimeTypes.VIDEO_H264) {
+            compositionBuilder.setHdrMode(Composition.HDR_MODE_TONE_MAP_HDR_TO_SDR_USING_OPEN_GL)
+        }
+        val composition = compositionBuilder.build()
+
+        val attempts = if (transcodeEngine == "software") {
+            if (enableEngineFallback) {
+                listOf(PipelineAttempt.SOFTWARE, PipelineAttempt.HARDWARE)
+            } else {
+                listOf(PipelineAttempt.SOFTWARE)
+            }
+        } else {
+            if (enableEngineFallback) {
+                listOf(PipelineAttempt.HARDWARE, PipelineAttempt.SW_DECODE_HW_ENCODE, PipelineAttempt.SOFTWARE)
+            } else {
+                listOf(PipelineAttempt.HARDWARE)
+            }
+        }
+
+        var attemptToken = 0
+
+        fun startAttempt(attemptIndex: Int) {
+            val attempt = attempts[attemptIndex]
+            val isFallbackAttempt = attemptIndex > 0
+            val currentToken = ++attemptToken
+            var attemptHandled = false
+            var attemptThread: HandlerThread? = null
+
+            fun advanceOrFail(errorCode: String, reason: String) {
+                if (!isCancelled && attemptIndex + 1 < attempts.size) {
+                    val nextAttempt = attempts[attemptIndex + 1]
+                    sendLog("Automatically falling back to ${nextAttempt.label}...")
+                    cleanupOutput(outputPath)
+                    sendProgress(0.0, 0L)
+                    startAttempt(attemptIndex + 1)
+                } else {
+                    releaseWakeLock()
+                    cleanupOutput(outputPath)
+                    val res = activeTranscodeResult
+                    activeTranscodeResult = null
+                    res?.error(errorCode, reason, null)
+                }
+            }
+
             try {
                 acquireWakeLock()
                 val encoderFactoryBuilder = DefaultEncoderFactory.Builder(applicationContext)
                     .setEnableFallback(true)
 
-                if (engine == "software") {
+                if (attempt.useSoftwareEncoder) {
                     encoderFactoryBuilder.setVideoEncoderSelector(EncoderSelector { mimeType ->
                         val codecList = MediaCodecList(MediaCodecList.REGULAR_CODECS)
                         val swList = codecList.codecInfos.filter { info ->
@@ -1219,7 +1323,6 @@ class MainActivity : FlutterActivity() {
 
                 val videoSettingsBuilder = VideoEncoderSettings.Builder()
                     .setiFrameIntervalSeconds(2.0f)
-                    .setEncoderPerformanceParameters(120, 0)
 
                 if (bitrateBps > 0) {
                     videoSettingsBuilder.setBitrate(bitrateBps)
@@ -1232,9 +1335,7 @@ class MainActivity : FlutterActivity() {
                 encoderFactoryBuilder.setRequestedVideoEncoderSettings(videoSettingsBuilder.build())
                 val encoderFactory = encoderFactoryBuilder.build()
 
-                // Allow falling back to another (e.g. software) decoder when the
-                // preferred hardware decoder rejects the stream, common with 4K HEVC.
-                val decoderFactory = DefaultDecoderFactory.Builder(applicationContext)
+                val decoderFactoryBuilder = DefaultDecoderFactory.Builder(applicationContext)
                     .setEnableDecoderFallback(true)
                     .setListener { codecName, codecExceptions ->
                         sendLog("Active decoder initialized: $codecName")
@@ -1244,10 +1345,30 @@ class MainActivity : FlutterActivity() {
                             }
                         }
                     }
-                    .build()
 
+                if (attempt.useSoftwareDecoder) {
+                    decoderFactoryBuilder.setMediaCodecSelector(
+                        MediaCodecSelector { mimeType, requiresSecureDecoder, requiresTunnelingDecoder ->
+                            val allDecoders = MediaCodecSelector.DEFAULT.getDecoderInfos(
+                                mimeType,
+                                requiresSecureDecoder,
+                                requiresTunnelingDecoder
+                            )
+                            val swDecoders = allDecoders.filter { !it.hardwareAccelerated || it.softwareOnly }
+                            if (swDecoders.isNotEmpty()) swDecoders else allDecoders
+                        }
+                    )
+                }
+                val decoderFactory = decoderFactoryBuilder.build()
+
+                val thread = HandlerThread("VegaTransformer-${attempt.name}").apply { start() }
+                attemptThread = thread
+                val attemptHandler = Handler(thread.looper)
+
+                lateinit var transformer: Transformer
                 val muxerFactory = InAppMp4Muxer.Factory()
                 val transformerBuilder = Transformer.Builder(applicationContext)
+                    .setLooper(thread.looper)
                     .setAssetLoaderFactory(
                         DefaultAssetLoaderFactory(
                             applicationContext,
@@ -1264,15 +1385,22 @@ class MainActivity : FlutterActivity() {
 
                 transformerBuilder.addListener(object : Transformer.Listener {
                     override fun onCompleted(composition: Composition, exportResult: ExportResult) {
-                        releaseWakeLock()
-                        stopProgressPolling()
-                        activeTransformer = null
-                        val res = activeTranscodeResult
-                        activeTranscodeResult = null
-                        sendLog("Engine encoder used: videoEncoder=${exportResult.videoEncoderName ?: "none"}, audioEncoder=${exportResult.audioEncoderName ?: "none"}")
+                        thread.quitSafely()
                         mainHandler.post {
+                            if (attemptHandled || currentToken != attemptToken || isCancelled) return@post
+                            attemptHandled = true
+                            releaseWakeLock()
+                            stopProgressPolling()
+                            if (activeTransformer === transformer) {
+                                activeTransformer = null
+                                activeTransformerHandler = null
+                                activeTransformerThread = null
+                            }
+                            val res = activeTranscodeResult
+                            activeTranscodeResult = null
+                            sendLog("Engine encoder used: videoEncoder=${exportResult.videoEncoderName ?: "none"}, audioEncoder=${exportResult.audioEncoderName ?: "none"}")
                             sendProgress(1.0, File(outputPath).length())
-                            val engineLabel = if (isFallbackAttempt) "Fallback ($engine)" else (if (engine == "software") "Software Safe-Mode" else "Hardware")
+                            val engineLabel = if (isFallbackAttempt) "Fallback (${attempt.label})" else attempt.label
                             sendLog("$engineLabel transcoding completed successfully!")
                             res?.success(outputPath)
                         }
@@ -1283,78 +1411,120 @@ class MainActivity : FlutterActivity() {
                         exportResult: ExportResult,
                         exportException: ExportException
                     ) {
-                        if (enableEngineFallback && !hasFallenBack && !isCancelled) {
-                            hasFallenBack = true
-                            val fallbackEngine = if (engine == "hardware") "software" else "hardware"
-                            sendLog("Primary engine ($engine) failed: ${exportException.message}. Automatically falling back to $fallbackEngine engine...")
+                        thread.quitSafely()
+                        mainHandler.post {
+                            if (attemptHandled || currentToken != attemptToken) return@post
+                            attemptHandled = true
                             stopProgressPolling()
-                            activeTransformer = null
-                            try {
-                                File(outputPath).delete()
-                            } catch (_: Exception) {}
-                            mainHandler.post {
-                                startTransformerPipeline(fallbackEngine, isFallbackAttempt = true)
+                            if (activeTransformer === transformer) {
+                                activeTransformer = null
+                                activeTransformerHandler = null
+                                activeTransformerThread = null
                             }
-                        } else {
-                            releaseWakeLock()
-                            stopProgressPolling()
-                            activeTransformer = null
-                            val res = activeTranscodeResult
-                            activeTranscodeResult = null
                             sendLog("Engine encoder at failure: videoEncoder=${exportResult.videoEncoderName ?: "none"}, audioEncoder=${exportResult.audioEncoderName ?: "none"}")
                             val err = exportException.localizedMessage ?: "Transcoding failed"
                             val causeMsg = exportException.cause?.localizedMessage ?: exportException.cause?.message
                             val fullErr = (if (!causeMsg.isNullOrBlank() && causeMsg != err) "$err ($causeMsg)" else err) +
                                 " [${exportException.errorCodeName}]"
-                            sendLog("${if (engine == "software") "Software safe-mode" else "Hardware"} transcoding error: $fullErr")
-                            cleanupOutput(outputPath)
-                            mainHandler.post {
-                                res?.error("TRANSCODE_FAILED", fullErr, null)
-                            }
+                            sendLog("${attempt.label} transcoding error: $fullErr")
+                            advanceOrFail("TRANSCODE_FAILED", fullErr)
                         }
                     }
                 })
 
-                val transformer = transformerBuilder.build()
+                transformer = transformerBuilder.build()
                 activeTransformer = transformer
+                activeTransformerHandler = attemptHandler
+                activeTransformerThread = thread
 
-                val engineLabel = if (isFallbackAttempt) "Fallback ($engine)" else (if (engine == "software") "Software Safe-Mode" else "Hardware")
+                fun handleStall(reason: String) {
+                    if (attemptHandled || currentToken != attemptToken || isCancelled) return
+                    attemptHandled = true
+                    stopProgressPolling()
+                    if (activeTransformer === transformer) {
+                        activeTransformer = null
+                        activeTransformerHandler = null
+                        activeTransformerThread = null
+                    }
+                    sendLog("${attempt.label} transcoding stalled: $reason")
+                    val cancelLatch = CountDownLatch(1)
+                    val posted = attemptHandler.post {
+                        try {
+                            transformer.cancel()
+                        } catch (_: Exception) {
+                        } finally {
+                            thread.quitSafely()
+                            cancelLatch.countDown()
+                        }
+                    }
+                    if (!posted) {
+                        thread.quitSafely()
+                        cancelLatch.countDown()
+                    }
+                    Thread({
+                        try {
+                            cancelLatch.await(2, TimeUnit.SECONDS)
+                        } catch (_: InterruptedException) {}
+                        mainHandler.post {
+                            cleanupOutput(outputPath)
+                            if (isCancelled) return@post
+                            advanceOrFail("TRANSCODE_STALLED", reason)
+                        }
+                    }, "VegaStallCancelWait").start()
+                }
+
+                val engineLabel = if (isFallbackAttempt) "Fallback (${attempt.label})" else attempt.label
                 sendLog("Starting AndroidX Media3 Transformer $engineLabel engine...")
                 sendLog("Input: $inputPath")
                 sendLog("Target: ${targetWidth}x$targetHeight @ ${if (targetFps > 0) "$targetFps fps" else "Source FPS"}, ${if (bitrateBps > 0) "${bitrateBps / 1000} kbps" else "Auto Bitrate"} ($videoCodec - $rateControlMode)")
                 sendLog("Output: $outputPath")
 
-                transformer.start(editedMediaItem, outputPath)
-
-                // Start progress polling safely on Main Looper (applicationLooper)
-                startProgressPolling(transformer, outputPath)
-
-            } catch (t: Throwable) {
-                if (enableEngineFallback && !hasFallenBack && !isCancelled) {
-                    hasFallenBack = true
-                    val fallbackEngine = if (engine == "hardware") "software" else "hardware"
-                    sendLog("Primary engine ($engine) init failed: ${t.message}. Automatically falling back to $fallbackEngine engine...")
-                    stopProgressPolling()
-                    activeTransformer = null
-                    try {
-                        File(outputPath).delete()
-                    } catch (_: Exception) {}
-                    mainHandler.post {
-                        startTransformerPipeline(fallbackEngine, isFallbackAttempt = true)
+                attemptHandler.post {
+                    if (isCancelled || activeTransformer !== transformer) {
+                        thread.quitSafely()
+                        return@post
                     }
-                } else {
-                    releaseWakeLock()
-                    cleanupOutput(outputPath)
-                    activeTransformer = null
-                    stopProgressPolling()
-                    val res = activeTranscodeResult
-                    activeTranscodeResult = null
-                    res?.error("TRANSCODE_INIT_FAILED", t.localizedMessage ?: "Failed to start transcoding", null)
+                    try {
+                        transformer.start(composition, outputPath)
+                        startProgressPolling(
+                            transformer = transformer,
+                            outputPath = outputPath,
+                            pollingHandler = attemptHandler,
+                            zeroByteTimeoutMs = if (attempt.useSoftwareEncoder) 60_000L else 35_000L,
+                            onStalled = { reason -> handleStall(reason) }
+                        )
+                    } catch (t: Throwable) {
+                        thread.quitSafely()
+                        mainHandler.post {
+                            if (attemptHandled || currentToken != attemptToken) return@post
+                            attemptHandled = true
+                            stopProgressPolling()
+                            if (activeTransformer === transformer) {
+                                activeTransformer = null
+                                activeTransformerHandler = null
+                                activeTransformerThread = null
+                            }
+                            val msg = t.localizedMessage ?: "Failed to start transcoding"
+                            sendLog("${attempt.label} start failed: $msg")
+                            advanceOrFail("TRANSCODE_INIT_FAILED", msg)
+                        }
+                    }
                 }
+            } catch (t: Throwable) {
+                attemptThread?.quitSafely()
+                if (attemptHandled || currentToken != attemptToken) return
+                attemptHandled = true
+                stopProgressPolling()
+                activeTransformer = null
+                activeTransformerHandler = null
+                activeTransformerThread = null
+                val msg = t.localizedMessage ?: "Failed to start transcoding"
+                sendLog("${attempt.label} init failed: $msg")
+                advanceOrFail("TRANSCODE_INIT_FAILED", msg)
             }
         }
 
-        startTransformerPipeline(transcodeEngine, isFallbackAttempt = false)
+        startAttempt(0)
     }
 
     private fun handleExtractAudio(call: MethodCall, result: MethodChannel.Result) {
@@ -1474,6 +1644,8 @@ class MainActivity : FlutterActivity() {
                         releaseWakeLock()
                         stopProgressPolling()
                         activeTransformer = null
+                        activeTransformerHandler = null
+                        activeTransformerThread = null
                         val res = activeAudioExtractResult
                         activeAudioExtractResult = null
                         mainHandler.post {
@@ -1491,6 +1663,8 @@ class MainActivity : FlutterActivity() {
                         releaseWakeLock()
                         stopProgressPolling()
                         activeTransformer = null
+                        activeTransformerHandler = null
+                        activeTransformerThread = null
                         val res = activeAudioExtractResult
                         activeAudioExtractResult = null
                         val err = exportException.localizedMessage ?: "Audio extraction failed"
@@ -1506,6 +1680,8 @@ class MainActivity : FlutterActivity() {
                 .build()
 
             activeTransformer = transformer
+            activeTransformerHandler = mainHandler
+            activeTransformerThread = null
             sendLog("Starting Media3 audio extraction ($format @ $bitrateKbps kbps)...")
             transformer.start(editedMediaItem, outputPath)
             startProgressPolling(transformer, outputPath)
@@ -1514,6 +1690,8 @@ class MainActivity : FlutterActivity() {
             releaseWakeLock()
             cleanupOutput(outputPath)
             activeTransformer = null
+            activeTransformerHandler = null
+            activeTransformerThread = null
             stopProgressPolling()
             val res = activeAudioExtractResult
             activeAudioExtractResult = null
@@ -1526,10 +1704,33 @@ class MainActivity : FlutterActivity() {
         releaseWakeLock()
         stopProgressPolling()
         try {
-            activeTransformer?.cancel()
+            val transformer = activeTransformer
+            val handler = activeTransformerHandler
+            val thread = activeTransformerThread
             activeTransformer = null
+            activeTransformerHandler = null
+            activeTransformerThread = null
 
-            // Unblock any pending async transcode or extract requests
+            if (transformer != null) {
+                if (handler != null && handler !== mainHandler) {
+                    handler.post {
+                        try {
+                            transformer.cancel()
+                        } catch (_: Exception) {
+                        } finally {
+                            thread?.quitSafely()
+                        }
+                    }
+                } else {
+                    try {
+                        transformer.cancel()
+                    } catch (_: Exception) {}
+                    thread?.quitSafely()
+                }
+            } else {
+                thread?.quitSafely()
+            }
+
             activeTranscodeResult?.let {
                 it.error("CANCELLED", "Transformation cancelled by user", null)
                 activeTranscodeResult = null
@@ -1550,27 +1751,33 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    /**
-     * Polls progress on the application Looper (main Looper).
-     * Transformer strictly requires getProgress to be called on its application thread.
-     */
-    private fun startProgressPolling(transformer: Transformer, outputPath: String) {
+    private fun startProgressPolling(
+        transformer: Transformer,
+        outputPath: String,
+        pollingHandler: Handler = mainHandler,
+        zeroByteTimeoutMs: Long = 35_000L,
+        onStalled: ((String) -> Unit)? = null
+    ) {
         stopProgressPolling()
         val progressHolder = ProgressHolder()
+        val attemptStartMs = SystemClock.elapsedRealtime()
+        var highProgressZeroByteStartMs = -1L
+        var stallTriggered = false
         var lastRatio = 0.0
         var consecutiveWaitingCount = 0
 
         val runnable = object : Runnable {
             override fun run() {
-                if (isCancelled || activeTransformer != transformer) return
+                if (isCancelled || activeTransformer !== transformer) return
+                var currentBytes = 0L
                 try {
                     val state = transformer.getProgress(progressHolder)
-                    val currentBytes = try { File(outputPath).length() } catch (_: Exception) { 0L }
+                    currentBytes = try { File(outputPath).length() } catch (_: Exception) { 0L }
 
                     when (state) {
                         Transformer.PROGRESS_STATE_AVAILABLE -> {
                             consecutiveWaitingCount = 0
-                            val ratio = (progressHolder.progress / 100.0).coerceIn(0.0, 1.0)
+                            val ratio = (progressHolder.progress / 100.0).coerceIn(0.0, 0.99)
                             if (ratio >= lastRatio) {
                                 lastRatio = ratio
                             }
@@ -1591,18 +1798,54 @@ class MainActivity : FlutterActivity() {
                     sendLog("Progress polling issue: ${e.message ?: e.javaClass.simpleName}")
                 }
 
-                if (!isCancelled && activeTransformer == transformer) {
-                    mainHandler.postDelayed(this, 500)
+                if (onStalled != null && !stallTriggered) {
+                    if (currentBytes > 0L) {
+                        highProgressZeroByteStartMs = -1L
+                    } else {
+                        val nowMs = SystemClock.elapsedRealtime()
+                        if (lastRatio >= 0.95 && highProgressZeroByteStartMs < 0L) {
+                            highProgressZeroByteStartMs = nowMs
+                        }
+                        val totalZeroByteMs = nowMs - attemptStartMs
+                        val highProgressStalledMs = if (highProgressZeroByteStartMs >= 0L) {
+                            nowMs - highProgressZeroByteStartMs
+                        } else {
+                            0L
+                        }
+                        if (highProgressStalledMs >= 20_000L || totalZeroByteMs >= zeroByteTimeoutMs) {
+                            stallTriggered = true
+                            val stalledMs = if (highProgressStalledMs >= 20_000L) highProgressStalledMs else totalZeroByteMs
+                            val reason = "Output stayed 0 bytes for ${stalledMs / 1000}s at ${(lastRatio * 100).toInt()}% progress"
+                            mainHandler.post { onStalled(reason) }
+                            return
+                        }
+                    }
+                }
+
+                if (!isCancelled && activeTransformer === transformer) {
+                    pollingHandler.postDelayed(this, 500)
                 }
             }
         }
-        progressRunnable = runnable
-        mainHandler.postDelayed(runnable, 500)
+        synchronized(pollingLock) {
+            progressHandler = pollingHandler
+            progressRunnable = runnable
+        }
+        pollingHandler.postDelayed(runnable, 500)
     }
 
     private fun stopProgressPolling() {
-        progressRunnable?.let { mainHandler.removeCallbacks(it) }
-        progressRunnable = null
+        val handler: Handler?
+        val runnable: Runnable?
+        synchronized(pollingLock) {
+            handler = progressHandler
+            runnable = progressRunnable
+            progressHandler = null
+            progressRunnable = null
+        }
+        if (handler != null && runnable != null) {
+            handler.removeCallbacks(runnable)
+        }
     }
 
     private fun sendProgress(progress: Double, sizeBytes: Long) {

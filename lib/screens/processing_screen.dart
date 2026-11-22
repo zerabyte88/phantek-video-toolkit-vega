@@ -60,7 +60,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   final _settingsService = SettingsService();
   double _progress = 0.0;
   String _statusText = '';
-  String _speedText = '';
   String _currentSizeText = '';
   bool _isProcessing = true;
   bool _isSuccess = false;
@@ -91,7 +90,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
   );
   final List<double> _storageHistory = List<double>.generate(
     _historySampleCount,
-    (_) => 0.24,
+    (_) => 0.05,
     growable: true,
   );
   int _prevSizeBytes = 0;
@@ -158,9 +157,9 @@ class _ProcessingScreenState extends State<ProcessingScreen>
       ProcessingScreen.formatProgressPercentage(progress);
 
   Duration? _calculateRemainingTime(double progress, Duration elapsed) {
-    if (progress < 0.005 || progress >= 0.999) return null;
+    if (progress < 0.005 || progress >= 0.995) return null;
     final elapsedMs = elapsed.inMilliseconds;
-    if (elapsedMs < 1000) return null;
+    if (elapsedMs < 500) return null;
     final totalEstimatedMs = elapsedMs / progress;
     final remainingMs = (totalEstimatedMs - elapsedMs).clamp(0, 86400000);
     return Duration(milliseconds: remainingMs.round());
@@ -194,7 +193,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     _memoryHistory.clear();
     _memoryHistory.addAll(List.filled(_historySampleCount, 0.08));
     _storageHistory.clear();
-    _storageHistory.addAll(List.filled(_historySampleCount, 0.24));
+    _storageHistory.addAll(List.filled(_historySampleCount, 0.05));
 
     await ForegroundServiceManager().requestPermissions();
 
@@ -280,12 +279,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
             ioMb = (currentBytes / (1024 * 1024)) / sec;
           }
         }
-        if (ioMb <= 0.0 && _isProcessing) {
-          final baseSpeed =
-              double.tryParse(_speedText.replaceAll('x', '').trim()) ?? 1.5;
-          final wave = ((elapsed.inSeconds * 3 + 1) % 7) * 0.35;
-          ioMb = (1.2 * baseSpeed + wave).clamp(0.5, 12.0);
-        }
 
         final memRatio = (memMb / targetBuffer).clamp(0.05, 1.0);
         final memNorm = _isProcessing
@@ -296,9 +289,9 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           _memoryHistory.removeAt(0);
         }
 
-        final ioNorm = _isProcessing
-            ? (0.24 + (ioMb / 8.0) * 0.66).clamp(0.26, 0.95)
-            : 0.20;
+        final ioNorm = (_isProcessing && ioMb > 0.0)
+            ? (0.12 + (ioMb / 8.0) * 0.83).clamp(0.12, 0.95)
+            : 0.05;
         _storageHistory.add(ioNorm);
         if (_storageHistory.length > _historySampleCount) {
           _storageHistory.removeAt(0);
@@ -318,15 +311,23 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     });
 
     void handleProgress(double progress, String stats, [int? sizeBytes]) {
+      final isFallbackReset =
+          progress == 0.0 && _progress > 0.05 && _isProcessing;
+      if (isFallbackReset) {
+        _startTime = DateTime.now();
+        _estimatedRemaining = null;
+        _prevSizeBytes = 0;
+        _latestOutputBytes = 0;
+        _storageIoRateMb = 0.0;
+      }
+
       if (sizeBytes != null && sizeBytes > 0) {
         _latestOutputBytes = sizeBytes;
       }
-      String speed = '';
       String size = '';
       if (stats.contains('|')) {
         final parts = stats.split('|');
         size = parts[0].replaceAll('Size:', '').trim();
-        speed = parts[1].replaceAll('Speed:', '').trim();
         if (_latestOutputBytes <= 0) {
           if (size.contains('MB')) {
             final val = double.tryParse(size.replaceAll('MB', '').trim()) ?? 0;
@@ -339,9 +340,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
       } else {
         size = stats.replaceAll('Size:', '').trim();
       }
-      if (speed == 'HW Accel') {
-        speed = '';
-      }
 
       final now = DateTime.now();
       final elapsed = _startTime != null
@@ -352,7 +350,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           ? ' | ETA: ${_formatDuration(remaining)}'
           : '';
 
-      // Update foreground notification
       ForegroundServiceManager().updateService(
         title: l10n.t('app_title'),
         text: '$actionText ${_formatPercentage(progress)}$etaStr',
@@ -368,11 +365,16 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         setState(() {
           _progress = progress;
           _elapsedDuration = elapsed;
-          if (remaining != null) {
-            _estimatedRemaining = remaining;
+          if (isFallbackReset) {
+            _estimatedRemaining = null;
+            _storageIoRateMb = 0.0;
+            _currentSizeText = '';
+          } else {
+            if (remaining != null) {
+              _estimatedRemaining = remaining;
+            }
+            _currentSizeText = size;
           }
-          _speedText = speed;
-          _currentSizeText = size;
           _statusText = '$actionText ${_formatPercentage(progress)}';
         });
       }
@@ -460,7 +462,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         _isProcessing = false;
         _storageIoRateMb = 0.0;
         _thermalHistory.fillRange(0, _historySampleCount, 0.25);
-        _storageHistory.fillRange(0, _historySampleCount, 0.20);
+        _storageHistory.fillRange(0, _historySampleCount, 0.05);
         if (result != null) {
           _isSuccess = true;
           _outputPath = result;
@@ -1175,9 +1177,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
           child: _buildTelemetryTile(
             theme: theme,
             label: l10n.t('telemetry_storage_io'),
-            value: _storageIoRateMb >= 0.1
-                ? '${_storageIoRateMb.toStringAsFixed(1)} MB/s'
-                : (_isProcessing ? '0.8 MB/s' : '0.0 MB/s'),
+            value: '${_storageIoRateMb.toStringAsFixed(1)} MB/s',
             history: _storageHistory,
             graphColor: palette.deep,
           ),
@@ -1964,7 +1964,6 @@ class _ProcessingScreenState extends State<ProcessingScreen>
                         _isProcessing = true;
                         _progress = 0;
                         _statusText = l10n.t('proc_preparing');
-                        _speedText = '';
                         _currentSizeText = '';
                         _errorMessage = null;
                         _isOom = false;

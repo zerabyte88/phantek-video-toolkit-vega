@@ -636,6 +636,206 @@ void main() {
     );
 
     testWidgets(
+      'ProcessingScreen reports 0.0 MB/s Storage I/O when output bytes stay 0',
+      (WidgetTester tester) async {
+        void Function(double, String, [int?])? progressCallback;
+        final completer = Completer<String?>();
+        DeviceSpecHelper.mockBatteryTemperature = 36.0;
+
+        TransformerService.mockProcessVideo =
+            ({
+              required sourceVideo,
+              required targetResolution,
+              encodingOptions = const EncodingOptions(),
+              appSettings = const AppSettings(),
+              required onProgress,
+              required onLog,
+            }) async {
+              progressCallback = onProgress;
+              return completer.future;
+            };
+
+        addTearDown(() {
+          DeviceSpecHelper.mockBatteryTemperature = null;
+          TransformerService.mockProcessVideo = null;
+          if (!completer.isCompleted) {
+            completer.complete(null);
+          }
+        });
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ProcessingScreen(
+              videoInfo: testVideo,
+              targetResolution: testResolution,
+              encodingOptions: EncodingOptions(),
+              appSettings: AppSettings(),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        expect(find.text('0.0 MB/s'), findsOneWidget);
+        expect(find.text('0.8 MB/s'), findsNothing);
+
+        await tester.pump(const Duration(milliseconds: 50));
+        expect(progressCallback, isNotNull);
+        progressCallback!(0.95, 'Size: 0 KB', 0);
+
+        for (int i = 0; i < 3; i++) {
+          await tester.pump(const Duration(seconds: 1));
+          await tester.pump();
+        }
+
+        expect(find.text('0.0 MB/s'), findsOneWidget);
+        expect(find.text('0.8 MB/s'), findsNothing);
+
+        completer.complete(null);
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
+
+    test(
+      'TransformerService.processVideo passes sourceDurationMs to native transcodeVideo',
+      () async {
+        final tempDir = Directory.systemTemp.createTempSync(
+          'vega_source_duration_test_',
+        );
+        Map<dynamic, dynamic>? capturedArgs;
+        const channel = MethodChannel('com.phantek.lyra.vega/transformer');
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+              if (methodCall.method == 'transcodeVideo') {
+                capturedArgs = methodCall.arguments as Map<dynamic, dynamic>?;
+                final outPath = capturedArgs?['outputPath'] as String?;
+                if (outPath != null) {
+                  File(outPath).writeAsStringSync('dummy');
+                  return outPath;
+                }
+              }
+              return null;
+            });
+
+        TransformerService.forceNativeForTesting = true;
+        try {
+          const djiClip = VideoInfo(
+            filePath: '/mock/DJI_001.MP4',
+            fileName: 'DJI_001.MP4',
+            width: 3840,
+            height: 2160,
+            durationSeconds: 12.345,
+            bitrate: 45000000,
+            fps: 30.0,
+            codec: 'hevc',
+            fileSizeBytes: 60000000,
+            hasAudio: true,
+          );
+
+          await TransformerService.processVideo(
+            sourceVideo: djiClip,
+            targetResolution: testResolution,
+            appSettings: AppSettings(outputDirectory: tempDir.path),
+            onProgress: (progress, stats, [size]) {},
+            onLog: (msg) {},
+          );
+
+          expect(capturedArgs, isNotNull);
+          expect(capturedArgs!['sourceDurationMs'], equals(12345));
+        } finally {
+          TransformerService.forceNativeForTesting = false;
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(channel, null);
+          try {
+            tempDir.deleteSync(recursive: true);
+          } catch (_) {}
+        }
+      },
+    );
+
+    testWidgets(
+      'ProcessingScreen clears stale ETA and output bytes on fallback reset (0.95 -> 0.0)',
+      (WidgetTester tester) async {
+        void Function(double, String, [int?])? progressCallback;
+        final completer = Completer<String?>();
+        DeviceSpecHelper.mockBatteryTemperature = 36.0;
+        const wakelockChannelName =
+            'dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle';
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler(
+              wakelockChannelName,
+              (_) async =>
+                  const StandardMessageCodec().encodeMessage(<Object?>[null]),
+            );
+
+        TransformerService.mockProcessVideo =
+            ({
+              required sourceVideo,
+              required targetResolution,
+              encodingOptions = const EncodingOptions(),
+              appSettings = const AppSettings(),
+              required onProgress,
+              required onLog,
+            }) async {
+              progressCallback = onProgress;
+              return completer.future;
+            };
+
+        addTearDown(() {
+          DeviceSpecHelper.mockBatteryTemperature = null;
+          TransformerService.mockProcessVideo = null;
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMessageHandler(wakelockChannelName, null);
+          if (!completer.isCompleted) {
+            completer.complete(null);
+          }
+        });
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ProcessingScreen(
+              videoInfo: testVideo,
+              targetResolution: testResolution,
+              encodingOptions: EncodingOptions(),
+              appSettings: AppSettings(),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+        expect(progressCallback, isNotNull);
+
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 600)),
+        );
+
+        progressCallback!(0.50, 'Size: 4.0 MB', 4 * 1024 * 1024);
+        await tester.pump();
+        expect(find.textContaining('~'), findsOneWidget);
+        expect(find.text('4.0 MB'), findsOneWidget);
+
+        progressCallback!(0.95, 'Size: 8.0 MB', 8 * 1024 * 1024);
+        await tester.pump();
+        expect(find.textContaining('~'), findsOneWidget);
+        expect(find.text('8.0 MB'), findsOneWidget);
+
+        progressCallback!(0.0, 'Size: 0 KB', 0);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.textContaining('~'), findsNothing);
+        expect(find.text('8.0 MB'), findsNothing);
+        expect(find.text('0.0 MB/s'), findsOneWidget);
+        expect(find.text('0%'), findsWidgets);
+
+        completer.complete(null);
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
+
+    testWidgets(
       'Video mode uses Liquid Orb painter with 6 distinct theme primary colors',
       (WidgetTester tester) async {
         final completer = Completer<String?>();

@@ -602,6 +602,7 @@ class TransformerService {
         'outputPath': outputPath,
         'sourceWidth': sourceVideo.width,
         'sourceHeight': sourceVideo.height,
+        'sourceDurationMs': (sourceVideo.durationSeconds * 1000).round(),
         'targetWidth': targetW,
         'targetHeight': targetH,
         'bitrateBps': targetBitrateKbps * 1000,
