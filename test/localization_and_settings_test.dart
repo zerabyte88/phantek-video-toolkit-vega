@@ -3444,13 +3444,9 @@ void main() {
       final service = SettingsService();
       await service.init();
 
-      // First launch must automatically resolve initial theme & language
+      // First launch must automatically apply system (auto) theme & resolve language
       expect(service.settings.isFirstLaunch, isFalse);
-      expect(
-        service.settings.themeMode == 'oled_pure' ||
-            service.settings.themeMode == 'light_clean',
-        isTrue,
-      );
+      expect(service.settings.themeMode, equals('system'));
       expect(
         AppLocalizations.supportedLanguages.any(
           (m) => m['code'] == service.settings.languageCode,
@@ -3461,11 +3457,7 @@ void main() {
       // Mutate and resetToDefaults
       await service.setThemeMode('oled_snowfall');
       await service.resetToDefaults();
-      expect(
-        service.settings.themeMode == 'oled_pure' ||
-            service.settings.themeMode == 'light_clean',
-        isTrue,
-      );
+      expect(service.settings.themeMode, equals('system'));
     });
 
     test('VideoInfo accurately classifies 4K, long duration (>30m), and heavy processing', () {
